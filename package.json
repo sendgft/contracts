@@ -1,0 +1,83 @@
+{
+  "name": "@sendgft/contracts",
+  "version": "1.0.0",
+  "description": "gft.xyz smart contracts",
+  "main": "index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "index.js",
+    "releaseConfig.json",
+    "contracts.generated.js",
+    "artifacts/**",
+    "contracts/**",
+    "utils/**",
+    "deployedAddresses.json",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "scripts": {
+    "prepare": "husky install",
+    "devnet": "hardhat node",
+    "devnet-ci": "yarn devnet >ganache.log 2>&1 &",
+    "clean": "rm -rf ./cache && rm -rf ./artifacts",
+    "test": "hardhat test",
+    "coverage": "rm -rf coverage && yarn hardhat coverage",
+    "generate-index": "./scripts/generateIndex.js",
+    "setup-release-config-for-rinkeby": "NETWORK=rinkeby ./scripts/setupReleaseConfig.js",
+    "setup-release-config-for-mainnet": "NETWORK=mainnet ./scripts/setupReleaseConfig.js",
+    "setup-release-config-for-local": "NETWORK=local ./scripts/setupReleaseConfig.js",
+    "compile": "yarn clean && yarn hardhat compile && yarn generate-index",
+    "deploy:local": "yarn hardhat run ./deploy",
+    "deploy:rinkeby": "yarn hardhat run --network rinkeby ./deploy",
+    "deploy:mainnet": "yarn hardhat run --network mainnet ./deploy",
+    "publish-to-npm": "echo \"Publishing version: $(./scripts/outputVersion.js)\" && echo \"Publishing to tag: $(./scripts/outputNpmTag.js)\" && npm publish --tag $(./scripts/outputNpmTag.js)",
+    "lint": "solhint --config ./.solhint.json contracts/**/*.sol"
+  },
+  "author": "Ramesh Nair <ram@hiddentao.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/register": "^7.15.3",
+    "@commitlint/cli": "^12.1.1",
+    "@commitlint/config-conventional": "^12.1.1",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "@nomiclabs/hardhat-truffle5": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "chalk": "^2.4.2",
+    "commitlint-config-jira": "^1.5.1",
+    "commitlint-plugin-jira-rules": "^1.5.1",
+    "core-js": "^3.18.0",
+    "coveralls": "^3.0.6",
+    "eth-hd-wallet": "^0.5.1",
+    "ethereum-event-logs": "^1.3.1",
+    "ethereumjs-util": "^7.0.7",
+    "ethers": "^5.4.7",
+    "git-last-commit": "^1.0.0",
+    "glob": "^7.1.6",
+    "got": "^11.1.4",
+    "hardhat": "^2.6.4",
+    "husky": "^6.0.0",
+    "lodash": "^4.17.11",
+    "regenerator-runtime": "^0.13.9",
+    "solc": "=0.6.12",
+    "solhint": "^2.2.0",
+    "solidity-coverage": "^0.7.16"
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
