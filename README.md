@@ -15,7 +15,6 @@ The package exposes the following properties:
 * `contracts` - the key contracts (see below)
 * `addresses` - contents of `deployedAddresses.json`
 * `events` - ABIs for events to listen for
-* `releaseConfig` - the contents of `releaseConfig.json`, this is used to keep track of the build number in `VersionInfo.sol`.
 
 
 ## Development
@@ -50,12 +49,6 @@ Compile the contracts:
 yarn compile
 ```
 
-Setup release config:
-
-```shell
-yarn setup-release-config-for-local
-```
-
 Now deploy the contracts to it:
 
 ```shell
@@ -86,14 +79,12 @@ export INFURA_KEY="..."
 To deploy Rinkeby contracts:
 
 ```shell
-yarn setup-release-config-for-rinkeby
 yarn deploy:rinkeby
 ```
 
 For mainnet:
 
 ```shell
-yarn setup-release-config-for-mainnet
 yarn deploy:mainnet
 ```
 
