@@ -36,9 +36,9 @@ module.exports = {
         auto: true,
       },
     },
-    mainnet: {
-      chainId: 1,
-      url: `https://mainnet.infura.io/v3/${infuraKey}`,
+    avax: {
+      chainId: 43114,
+      url: `https://api.avax.network/ext/bc/C/rpc`,
       accounts: {
         mnemonic,
       },

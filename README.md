@@ -82,25 +82,23 @@ To deploy Rinkeby contracts:
 yarn deploy:rinkeby
 ```
 
-For mainnet:
+For Avalanche:
 
 ```shell
-yarn deploy:mainnet
+yarn deploy:avax
 ```
 
-**Update stored contract addresses**
+**Publishing**
 
-To update `deployedAddresses.json`, edit `releaseConfig.json` and add the following keys before running the deploy command:
+Ensure you deploy the contracts first (see above) so that `deployedAddresses.json` is updated.
+
+Commit the code and push the changes.
+
+Then run:
 
 ```shell
-{
-  ...
-  "extractDeployedAddresses": true,
-  ...
-}
+yarn release
 ```
-
-The `deployedAddresses.json` file will be modified once complete.
 
 ## License
 
