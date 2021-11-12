@@ -65,11 +65,23 @@ interface IGifter {
 
   /**
    * @dev Emitted when a new gift gets sent.
-   * @param recipient The recipient.
    * @param tokenId The gift NFT token id.
+   * @param sender The sender.
+   * @param recipient The recipient.
    */
   event NewGift(
-    address indexed recipient,
-    uint indexed tokenId
+    uint indexed tokenId,
+    address indexed sender,
+    address indexed recipient
+  );  
+
+  /**
+   * @dev Emitted when a gift gets claimed.
+   * @param tokenId The gift NFT token id.
+   * @param owner The gift owner.
+   */
+  event Claimed(
+    uint indexed tokenId,
+    address indexed owner
   );  
 }

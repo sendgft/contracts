@@ -89,6 +89,8 @@ contract Gifter is ERC721Enumerable, IGifter, IERC721Receiver, ReentrancyGuard {
     if (g.ethAsWei > 0) {
        payable(_msgSender()).transfer(g.ethAsWei);
     }
+
+    emit Claimed(_tokenId, _msgSender());
   }
 
   function send(
@@ -125,6 +127,6 @@ contract Gifter is ERC721Enumerable, IGifter, IERC721Receiver, ReentrancyGuard {
     // mint NFT
     _safeMint(_recipient, lastGiftId);
     // event
-    emit NewGift(_recipient, lastGiftId);
+    emit NewGift(lastGiftId, _msgSender(), _recipient);
   }
 }
