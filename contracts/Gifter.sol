@@ -4,10 +4,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./IGifter.sol";
 
-contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
+contract Gifter is ERC721Enumerable, IGifter, IERC721Receiver, ReentrancyGuard {
   struct Gift {
     address sender;
     string message;
@@ -23,6 +24,18 @@ contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
   uint public lastGiftId;
 
   constructor() ERC721("SENDGFT", "GFT") {}
+
+  // IERC721Receiver
+
+  function onERC721Received(
+    address /*operator*/,
+    address /*from*/,
+    uint256 /*tokenId*/,
+    bytes calldata /*data*/
+  ) external pure returns (bytes4) {
+    // confirm transfer (see https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol)
+    return IERC721Receiver.onERC721Received.selector;
+  }  
 
   // IGifter
 

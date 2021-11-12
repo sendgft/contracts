@@ -4,11 +4,13 @@ import { getAccounts } from '../deploy/utils'
 
 const Gifter = artifacts.require("Gifter")
 const DummyToken = artifacts.require("DummyToken")
+const DummyNFT = artifacts.require("DummyNFT")
 
 describe('Gifter', () => {
   const evmSnapshot = new EvmSnapshot()
   let accounts
   let gifter
+  let nft1
   let token1
   let token2
   let sender1
@@ -18,6 +20,7 @@ describe('Gifter', () => {
   before(async () => {
     accounts = await getAccounts()
     gifter = await Gifter.new()
+    nft1 = await DummyNFT.new()
     token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
     token2 = await DummyToken.new('Wrapped AVAX', 'WAVAX', 18, 0)
     sender1 = accounts[2]
@@ -130,20 +133,23 @@ describe('Gifter', () => {
       })
     })
 
-    it('send eth and erc20, and claim', async () => {
+    it('send eth and erc20 and NFTs, and claim', async () => {
       await token1.mint({ value: 10, from: sender1 })
       await token2.mint({ value: 10, from: sender1 })
 
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 10, { from: sender1 })
 
+      await nft1.mint({ from: sender1 })
+      await nft1.approve(gifter.address, 1, { from: sender1 })
+
       await gifter.send(
         receiver1,
         "test message",
         [token1.address, token2.address],
         [3, 4],
-        [],
-        [],
+        [nft1.address],
+        [1],
         { from: sender1, value: 45 }
       )
 
@@ -180,14 +186,15 @@ describe('Gifter', () => {
         ethAsWei_: 20,
         erc20Contracts: [token2.address],
         erc20Amounts: [2],
-        nftContracts: [],
-        nftTokenIds: []
+        nftContracts: [nft1.address],
+        nftTokenIds: [1]
       })
 
       // check token balances
       await token1.balanceOf(gifter.address).should.eventually.eq(3)
       await token2.balanceOf(gifter.address).should.eventually.eq(6)
       await getBalance(gifter.address).should.eventually.eq(65)
+      await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
       const preBal = new EthVal(await getBalance(receiver1))
@@ -207,8 +214,8 @@ describe('Gifter', () => {
         ethAsWei_: 45,
         erc20Contracts: [token1.address, token2.address],
         erc20Amounts: [3, 4],
-        nftContracts: [],
-        nftTokenIds: []
+        nftContracts: [nft1.address],
+        nftTokenIds: [1]
       })
       await gifter.getGift(gift2).should.eventually.matchObj({
         sender_: sender1,
@@ -226,6 +233,7 @@ describe('Gifter', () => {
       await token1.balanceOf(gifter.address).should.eventually.eq(0)
       await token2.balanceOf(gifter.address).should.eventually.eq(2)
       await getBalance(gifter.address).should.eventually.eq(20)
+      await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
       const postBal = new EthVal(await getBalance(receiver1))
@@ -246,7 +254,7 @@ describe('Gifter', () => {
       ).should.be.rejectedWith('empty message')
     })
 
-    it('send erc20 where one is not approved', async () => {
+    it('send erc20 where gifter is not approved', async () => {
       await token1.mint({ value: 10, from: sender1 })
       await token2.mint({ value: 10, from: sender1 })
 
@@ -279,6 +287,32 @@ describe('Gifter', () => {
         [],
         { from: sender1 }
       ).should.be.rejectedWith('exceeds balance')
+    })
+
+    it('send nft where id is invalid', async () => {
+      await gifter.send(
+        receiver1,
+        "test message",
+        [],
+        [],
+        [nft1.address],
+        [5],
+        { from: sender1 }
+      ).should.be.rejectedWith('ERC721: operator query for nonexistent token')
+    })
+
+    it('send nft where gifter is not approved', async () => {
+      await nft1.mint({ from: sender1 })
+
+      await gifter.send(
+        receiver1,
+        "test message",
+        [],
+        [],
+        [nft1.address],
+        [1],
+        { from: sender1 }
+      ).should.be.rejectedWith('ERC721: transfer caller is not owner nor approved')
     })
 
     it('claim invalid gift id', async () => {
