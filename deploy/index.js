@@ -1,4 +1,6 @@
 import { _ } from 'lodash'
+import path from 'path'
+import fs from 'fs'
 import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, deployContract } from './utils'
 
 async function main() {
