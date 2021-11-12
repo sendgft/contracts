@@ -1,5 +1,3 @@
-[![CircleCI](https://circleci.com/gh/sendgft/contracts/tree/master.svg?style=svg)](https://circleci.com/gh/sendgft/contracts/tree/master) [![Coverage Status](https://coveralls.io/repos/github/sendgft/contracts/badge.svg?branch=master)](https://coveralls.io/github/sendgft/contracts?branch=master)
-
 [gft.xyz](https://gft.xyz) Smart contracts.
 
 ## How to use
