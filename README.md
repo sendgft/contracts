@@ -24,6 +24,8 @@ The package exposes the following properties:
 * Node.js 14.16.0+
 * Yarn 1.22.10+ (use `npm i -g yarn` once Node.js is installed)
 
+Copy `.env.sample` to `.env` and fill in the values (available in our password vault).
+
 Install dependencies:
 
 ```shell
@@ -86,6 +88,12 @@ For Avalanche:
 
 ```shell
 yarn deploy:avax
+```
+
+To deploy for production (i.e. verify contract on Etherscan, update `deployedAddresses.json`), set the `PRODUCTION` env var:
+
+```shell
+PRODUCTION=true yarn deploy:rinkeby
 ```
 
 **Publishing**

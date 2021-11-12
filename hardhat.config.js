@@ -1,14 +1,13 @@
+require('dotenv').config()
 require('@babel/register')
 require("core-js/stable")
 require("regenerator-runtime/runtime")
 require("@nomiclabs/hardhat-ethers")
 require("@nomiclabs/hardhat-truffle5")
+require("@nomiclabs/hardhat-etherscan")
 require('solidity-coverage')
 
 const { TEST_MNEMONIC } = require('./utils/constants')
-
-const mnemonic = process.env.MNEMONIC || 'notset'
-const infuraKey = process.env.INFURA_KEY || process.env.INFURA_ID || 'notset'
 
 module.exports = {
   solidity: {
@@ -40,18 +39,22 @@ module.exports = {
       chainId: 43114,
       url: `https://api.avax.network/ext/bc/C/rpc`,
       accounts: {
-        mnemonic,
+        mnemonic: process.env.MNEMONIC,
       },
       timeout: 120000,
     },
     rinkeby: {
       chainId: 4,
-      url: `https://rinkeby.infura.io/v3/${infuraKey}`,
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
       accounts: {
-        mnemonic,
+        mnemonic: process.env.MNEMONIC,
       },
       timeout: 120000,
     }
+  },
+
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
   },
 
   mocha: {
