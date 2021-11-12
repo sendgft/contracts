@@ -72,7 +72,8 @@
     }
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.3.2"
+    "@openzeppelin/contracts": "^4.3.2",
+    "ethval": "^2.1.1"
   },
   "engines": {
     "node": ">=14.0.0"

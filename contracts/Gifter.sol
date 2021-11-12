@@ -9,6 +9,7 @@ import "./IGifter.sol";
 
 contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
   struct Gift {
+    address sender;
     string message;
     bool claimed;
     uint ethAsWei;
@@ -30,6 +31,7 @@ contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
   }
 
   function getGift(uint _tokenId) external view returns (
+    address sender_,
     bool claimed_,
     address recipient_, 
     string memory message_,
@@ -40,6 +42,7 @@ contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
     uint[] memory nftTokenIds_
   ) {
     Gift storage g = gifts[_tokenId];
+    sender_ = g.sender;
     claimed_ = g.claimed;
     recipient_ = ownerOf(_tokenId);
     message_ = g.message;
@@ -55,20 +58,18 @@ contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
 
     Gift storage g = gifts[_tokenId];
 
+    // check and flip flag
     require(!g.claimed, "already claimed");
-
-    // flip flag
     g.claimed = true;
 
     // erc20
     uint i;
-    while (i < g.erc20Tokens.length) {
+    for (i = 0; i < g.erc20Tokens.length; i += 1) {
       require(IERC20(g.erc20Tokens[i]).transfer(_msgSender(), g.erc20Amounts[i]), "ERC20 transfer failed");
     }
 
     // nfts
-    i = 0;
-    while (i < g.nftContracts.length) {
+    for (i = 0; i < g.nftContracts.length; i += 1) {
       IERC721(g.nftContracts[i]).safeTransferFrom(address(this), _msgSender(), g.nftTokenIds[i]);
     }
 
@@ -89,17 +90,25 @@ contract Gifter is ERC721Enumerable, IGifter, ReentrancyGuard {
 
     // erc20
     uint i;
-    while (i < _erc20Tokens.length) {
+    for (i = 0; i < _erc20Tokens.length; i += 1) {
       require(IERC20(_erc20Tokens[i]).transferFrom(_msgSender(), address(this), _erc20Amounts[i]), "ERC20 transfer failed");
     }
     // nfts
-    i = 0;
-    while (i < _nftContracts.length) {
+    for (i = 0; i < _nftContracts.length; i += 1) {
       IERC721(_nftContracts[i]).safeTransferFrom(_msgSender(), address(this), _nftTokenIds[i]);
     }
     // save data
     lastGiftId += 1;
-    gifts[lastGiftId] = Gift(_message, false, msg.value, _erc20Tokens, _erc20Amounts, _nftContracts, _nftTokenIds);
+    gifts[lastGiftId] = Gift(
+      _msgSender(), 
+      _message, 
+      false, 
+      msg.value, 
+      _erc20Tokens, 
+      _erc20Amounts, 
+      _nftContracts, 
+      _nftTokenIds
+    );
     // mint NFT
     _safeMint(_recipient, lastGiftId);
     // event

@@ -35,6 +35,7 @@ interface IGifter {
    *
    * @param _tokenId The gift token id.
    *
+   * @return sender_ The sender.
    * @return claimed_ Whether gift has been claimed.
    * @return recipient_ Gift recipient.
    * @return message_ Gift message.
@@ -45,6 +46,7 @@ interface IGifter {
    * @return nftTokenIds_ NFT token ids.
    */
   function getGift(uint _tokenId) external view returns (
+    address sender_,
     bool claimed_,
     address recipient_, 
     string memory message_,

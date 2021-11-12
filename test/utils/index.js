@@ -91,6 +91,8 @@ chai.use(chaiAsPromised)
 
 chai.should()
 
+export const getBalance = w => hre.ethers.provider.getBalance(w)
+
 export const hdWallet = EthHdWallet.fromMnemonic(TEST_MNEMONIC)
 hdWallet.generateAddresses(10)
 
