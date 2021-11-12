@@ -16,12 +16,11 @@ The package exposes the following properties:
 * `addresses` - contents of `deployedAddresses.json`
 * `events` - ABIs for events to listen for
 
-
 ## Development
 
 **Requirements:**
 
-* Node.js 14.16.0+
+* Node.js 14.18.0+
 * Yarn 1.22.10+ (use `npm i -g yarn` once Node.js is installed)
 
 Copy `.env.sample` to `.env` and fill in the values (available in our password vault).
