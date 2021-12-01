@@ -9,7 +9,7 @@ interface IGifter {
    *
    * @param _recipient The recipient.
    * @param _message The message to send.
-   * @param _erc20Tokens ERC20/ERC777 token contract addresses.
+   * @param _erc20Contracts ERC20/ERC777 token contract addresses.
    * @param _erc20Amounts ERC20/ERC777 token amounts.
    * @param _nftContracts NFT contract addresses.
    * @param _nftTokenIds NFT token ids.
@@ -17,7 +17,7 @@ interface IGifter {
   function send(
     address _recipient, 
     string calldata _message,
-    address[] calldata _erc20Tokens, 
+    address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
     uint[] calldata _nftTokenIds

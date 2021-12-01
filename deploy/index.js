@@ -5,6 +5,33 @@ import fs from 'fs'
 import delay from 'delay'
 import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, deployContract, getContractAt } from './utils'
 
+export const deploy = async ({ artifacts }, log) => {
+  if (!log) {
+    log = createLog()
+  }
+
+  let impl
+  await log.task('Deploy implementation contract', async task => {
+    impl = await deployContract({ artifacts }, 'GifterImplementationV1')
+    await task.log(`Deployed at ${impl.address}`)
+  })
+
+  let proxy
+  await log.task('Deploy proxy contract', async task => {
+    proxy = await deployContract({ artifacts }, 'Gifter', [
+      impl.address, impl.contract.methods.initialize().encodeABI()
+    ])
+    await task.log(`Deployed at ${proxy.address}`)
+  })
+
+  await log.task('Verify proxy <-> logic', async task => {
+    const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
+    assert.equal(await gifter.getVersion(), '1')
+  })
+
+  return { proxy, impl }
+}
+
 async function main() {
   const log = createLog(console.log.bind(console))
 
@@ -23,24 +50,7 @@ async function main() {
   }
 
   // do it
-  let impl
-  await log.task('Deploy implementation contract', async task => {
-    impl = await deployContract(ctx, 'GifterImplementationV1')
-    await task.log(`Deployed at ${impl.address}`)
-  })
-
-  let proxy
-  await log.task('Deploy proxy contract', async task => {
-    proxy = await deployContract(ctx, 'Gifter', [
-      impl.address, impl.contract.methods.initialize().encodeABI() 
-    ])
-    await task.log(`Deployed at ${proxy.address}`)
-  })
-
-  await log.task('Verify proxy <-> logic', async task => {
-    const gifter = await getContractAt(ctx, 'IGifter', proxy.address)
-    assert.equal(await gifter.getVersion(), '1')
-  })
+  const { impl, proxy } = await deploy(ctx, log)
 
   if (process.env.PRODUCTION) {
     console.log(`\nProduction release!!\n`)

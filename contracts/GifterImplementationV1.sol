@@ -16,7 +16,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     string message;
     bool claimed;
     uint ethAsWei;
-    address[] erc20Tokens;
+    address[] erc20Contracts;
     uint[] erc20Amounts;
     address[] nftContracts;
     uint[] nftTokenIds;
@@ -81,8 +81,8 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
 
     // erc20
     uint i;
-    for (i = 0; i < g.erc20Tokens.length; i += 1) {
-      require(IERC20(g.erc20Tokens[i]).transfer(_msgSender(), g.erc20Amounts[i]), "ERC20 transfer failed");
+    for (i = 0; i < g.erc20Contracts.length; i += 1) {
+      require(IERC20(g.erc20Contracts[i]).transfer(_msgSender(), g.erc20Amounts[i]), "ERC20 transfer failed");
     }
 
     // nfts
@@ -100,7 +100,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   function send(
     address _recipient,
     string calldata _message,
-    address[] calldata _erc20Tokens, 
+    address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
     uint[] calldata _nftTokenIds
@@ -109,8 +109,8 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
 
     // erc20
     uint i;
-    for (i = 0; i < _erc20Tokens.length; i += 1) {
-      require(IERC20(_erc20Tokens[i]).transferFrom(_msgSender(), address(this), _erc20Amounts[i]), "ERC20 transfer failed");
+    for (i = 0; i < _erc20Contracts.length; i += 1) {
+      require(IERC20(_erc20Contracts[i]).transferFrom(_msgSender(), address(this), _erc20Amounts[i]), "ERC20 transfer failed");
     }
     // nfts
     for (i = 0; i < _nftContracts.length; i += 1) {
@@ -123,7 +123,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
       _message, 
       false, 
       msg.value, 
-      _erc20Tokens, 
+      _erc20Contracts, 
       _erc20Amounts, 
       _nftContracts, 
       _nftTokenIds
