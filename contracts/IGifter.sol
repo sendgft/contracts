@@ -31,33 +31,6 @@ interface IGifter {
   function claim(uint _tokenId) external;
 
   /**
-   * @dev Get gift info.
-   *
-   * @param _tokenId The gift token id.
-   *
-   * @return sender_ The sender.
-   * @return claimed_ Whether gift has been claimed.
-   * @return recipient_ Gift recipient.
-   * @return message_ Gift message.
-   * @return ethAsWei_ Amount of ETH attached to gift.
-   * @return erc20Tokens_ ERC20 token contract addresses.
-   * @return erc20Amounts_ ERC20 token amounts.
-   * @return nftContracts_ NFT contract addresses.
-   * @return nftTokenIds_ NFT token ids.
-   */
-  function getGift(uint _tokenId) external view returns (
-    address sender_,
-    bool claimed_,
-    address recipient_, 
-    string memory message_,
-    uint256 ethAsWei_,
-    address[] memory erc20Tokens_, 
-    uint[] memory erc20Amounts_,
-    address[] memory nftContracts_,
-    uint[] memory nftTokenIds_
-  );
-
-  /**
    * @dev Get Gifter version.
    * @return version string
    */

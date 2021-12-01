@@ -1,8 +1,9 @@
 import { _ } from 'lodash'
+import { strict as assert } from 'assert'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
-import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, deployContract } from './utils'
+import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, deployContract, getContractAt } from './utils'
 
 async function main() {
   const log = createLog(console.log.bind(console))
@@ -22,10 +23,23 @@ async function main() {
   }
 
   // do it
-  let contract
-  await log.task('Deploy contract', async task => {
-    contract = await deployContract(ctx, 'Gifter')
-    await task.log(`Deployed at ${contract.address}`)
+  let impl
+  await log.task('Deploy implementation contract', async task => {
+    impl = await deployContract(ctx, 'GifterImplementationV1')
+    await task.log(`Deployed at ${impl.address}`)
+  })
+
+  let proxy
+  await log.task('Deploy proxy contract', async task => {
+    proxy = await deployContract(ctx, 'Gifter', [
+      impl.address, impl.contract.methods.initialize().encodeABI() 
+    ])
+    await task.log(`Deployed at ${proxy.address}`)
+  })
+
+  await log.task('Verify proxy <-> logic', async task => {
+    const gifter = await getContractAt(ctx, 'IGifter', proxy.address)
+    assert.equal(await gifter.getVersion(), '1')
   })
 
   if (process.env.PRODUCTION) {
@@ -33,16 +47,24 @@ async function main() {
 
     // for rinkeby let's verify contract on etherscan
     if (network.name === 'rinkeby') {
-      await log.task('Verify contract on Etherscan', async task => {
+      await log.task('Verify contracts on Etherscan', async task => {
         await task.log('Waiting 20 seconds for Etherscan backend to catch up')
         await delay(20000)
 
         await task.log('Verifying...')
-        await hre.run("verify:verify", {
-          network: network.name,
-          address: contract.address,
-          constructorArguments: [],
-        });
+
+        await Promise.all([
+          hre.run("verify:verify", {
+            network: network.name,
+            address: impl.address,
+            constructorArguments: [],
+          }),
+          hre.run("verify:verify", {
+            network: network.name,
+            address: proxy.address,
+            constructorArguments: [],
+          }),
+        ])
       })
     }
 
@@ -54,7 +76,7 @@ async function main() {
         json.Gifter = _.get(json, 'Gifter', {})
         json.Gifter.chains = _.get(json, 'Gifter.chains', {})
         json.Gifter.chains[network.id] = _.get(json, `Gifter.chains.${network.id}`, {})
-        json.Gifter.chains[network.id].address = contract.address
+        json.Gifter.chains[network.id].address = proxy.address
         fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(json, null, 2), 'utf-8')
       })
     }
