@@ -3,7 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
 
-import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts } from './utils'
+import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, verifyOnEtherscan } from './utils'
 import { deployGifter } from './modules/gifter'
 
 
@@ -24,8 +24,10 @@ async function main() {
     getTxParams,
   }
 
+  console.log(`Deploying from: ${accounts[0]}`)
+
   // do it
-  const { impl, proxy } = await deployGifter(ctx, log)
+  const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, log)
 
   if (process.env.PRODUCTION) {
     console.log(`\nProduction release!!\n`)
@@ -33,21 +35,28 @@ async function main() {
     // for rinkeby let's verify contract on etherscan
     if (network.name === 'rinkeby') {
       await log.task('Verify contracts on Etherscan', async task => {
-        await task.log('Waiting 20 seconds for Etherscan backend to catch up')
-        await delay(20000)
-
-        await task.log('Verifying...')
+        const secondsToWait = 60
+        await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
+        await delay(secondsToWait * 1000)
 
         await Promise.all([
-          hre.run("verify:verify", {
-            network: network.name,
-            address: impl.address,
-            constructorArguments: [],
+          verifyOnEtherscan({ 
+            task, 
+            name: 'proxy', 
+            args: {
+              network: network.name,
+              address: proxy.address,
+              constructorArguments: proxyConstructorArgs,
+            },
           }),
-          hre.run("verify:verify", {
-            network: network.name,
-            address: proxy.address,
-            constructorArguments: [],
+          verifyOnEtherscan({
+            task,
+            name: 'implementation',
+            args: {
+              network: network.name,
+              address: impl.address,
+              constructorArguments: implConstructorArgs,
+            },
           }),
         ])
       })

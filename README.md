@@ -87,7 +87,7 @@ For Avalanche:
 yarn deploy:avax
 ```
 
-To deploy for production (i.e. verify contract on Etherscan, update `deployedAddresses.json`), set the `PRODUCTION` env var:
+To deploy for production (i.e. verify contract on Etherscan, update `deployedAddresses.json`), set the `PRODUCTION` inline env var:
 
 ```shell
 PRODUCTION=true yarn deploy:rinkeby

@@ -8,16 +8,20 @@ export const deployGifter = async ({ artifacts }, log) => {
   }
 
   let impl
+  const implConstructorsArgs = []
   await log.task('Deploy implementation contract', async task => {
-    impl = await deployContract({ artifacts }, 'GifterImplementationV1')
+    impl = await deployContract({ artifacts }, 'GifterImplementationV1', implConstructorsArgs)
     await task.log(`Deployed at ${impl.address}`)
   })
 
   let proxy
+  let proxyConstructorArgs
+
   await log.task('Deploy proxy contract', async task => {
-    proxy = await deployContract({ artifacts }, 'Gifter', [
+    proxyConstructorArgs = [
       impl.address, impl.contract.methods.initialize().encodeABI()
-    ])
+    ]
+    proxy = await deployContract({ artifacts }, 'Gifter', proxyConstructorArgs)
     await task.log(`Deployed at ${proxy.address}`)
   })
 
@@ -26,5 +30,10 @@ export const deployGifter = async ({ artifacts }, log) => {
     assert.equal(await gifter.getVersion(), '1')
   })
 
-  return { proxy, impl }
+  return { 
+    proxy, 
+    proxyConstructorArgs,
+    impl,
+    implConstructorsArgs,
+  }
 }

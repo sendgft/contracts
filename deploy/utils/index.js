@@ -119,3 +119,10 @@ export const getDeployedContractInstance = async ({ lookupType, type, network, l
 
   return inst
 }
+
+export const verifyOnEtherscan = async ({ task, name, args }) => {
+  await task.task(`Verify on Etherscan: ${name}`, async t => {
+    await t.log(JSON.stringify(args))
+    await hre.run("verify:verify", args)
+  })
+}
