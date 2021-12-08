@@ -1,36 +1,11 @@
 import { _ } from 'lodash'
-import { strict as assert } from 'assert'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
-import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, deployContract, getContractAt } from './utils'
 
-export const deploy = async ({ artifacts }, log) => {
-  if (!log) {
-    log = createLog()
-  }
+import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts } from './utils'
+import { deployGifter } from './modules/gifter'
 
-  let impl
-  await log.task('Deploy implementation contract', async task => {
-    impl = await deployContract({ artifacts }, 'GifterImplementationV1')
-    await task.log(`Deployed at ${impl.address}`)
-  })
-
-  let proxy
-  await log.task('Deploy proxy contract', async task => {
-    proxy = await deployContract({ artifacts }, 'Gifter', [
-      impl.address, impl.contract.methods.initialize().encodeABI()
-    ])
-    await task.log(`Deployed at ${proxy.address}`)
-  })
-
-  await log.task('Verify proxy <-> logic', async task => {
-    const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
-    assert.equal(await gifter.getVersion(), '1')
-  })
-
-  return { proxy, impl }
-}
 
 async function main() {
   const log = createLog(console.log.bind(console))
@@ -50,7 +25,7 @@ async function main() {
   }
 
   // do it
-  const { impl, proxy } = await deploy(ctx, log)
+  const { impl, proxy } = await deployGifter(ctx, log)
 
   if (process.env.PRODUCTION) {
     console.log(`\nProduction release!!\n`)

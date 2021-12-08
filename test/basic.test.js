@@ -1,7 +1,7 @@
 import EthVal from 'ethval'
 import { EvmSnapshot, expect, getBalance } from './utils'
-import { deploy } from '../deploy'
-import { getAccounts } from '../deploy/utils'
+import { deployGifter } from '../deploy/modules/gifter'
+import { getAccounts, getContractAt } from '../deploy/utils'
 
 const DummyToken = artifacts.require("DummyToken")
 const DummyNFT = artifacts.require("DummyNFT")
@@ -19,7 +19,8 @@ describe('Gifter', () => {
 
   before(async () => {
     accounts = await getAccounts()
-    ;({ proxy: gifter }) = await deploy({ artifacts })
+    const { proxy } = await deployGifter({ artifacts })
+    gifter = await getContractAt({ artifacts }, 'GifterImplementationV1', proxy.address)
     nft1 = await DummyNFT.new()
     token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
     token2 = await DummyToken.new('Wrapped AVAX', 'WAVAX', 18, 0)
