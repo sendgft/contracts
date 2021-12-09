@@ -13,7 +13,6 @@ import "./IGifter.sol";
 contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumerable, ReentrancyGuard, IGifter, IERC721Receiver {
   struct GiftV1 {
     address sender;
-    string message;
     bool claimed;
     uint ethAsWei;
     address[] erc20Contracts;
@@ -99,14 +98,11 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
 
   function send(
     address _recipient,
-    string calldata _message,
     address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
     uint[] calldata _nftTokenIds
   ) payable external {
-    require(bytes(_message).length > 0, "empty message not allowed");
-
     // erc20
     uint i;
     for (i = 0; i < _erc20Contracts.length; i += 1) {
@@ -120,7 +116,6 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     lastGiftId += 1;
     giftsV1[lastGiftId] = GiftV1(
       _msgSender(), 
-      _message, 
       false, 
       msg.value, 
       _erc20Contracts, 

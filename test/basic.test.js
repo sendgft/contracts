@@ -42,60 +42,9 @@ describe('Gifter', () => {
   })
 
   describe('successes', () => { 
-    it('send a message', async () => {
-      await gifter.send(
-        receiver1,
-        "test message",
-        [],
-        [],
-        [],
-        [],
-        { from: sender1 }
-      )
-
-      await gifter.send(
-        receiver2,
-        "test message 2",
-        [],
-        [],
-        [],
-        [],
-        { from: sender1 }
-      )
-
-      await gifter.balanceOf(receiver1).should.eventually.eq(1)
-      let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      await gifter.giftsV1(id).should.eventually.matchObj({
-        sender_: sender1,
-        claimed_: false,
-        recipient_: receiver1,
-        message_: "test message",
-        ethAsWei_: 0,
-        erc20Contracts: [],
-        erc20Amounts: [],
-        nftContracts: [],
-        nftTokenIds: []
-      })
-
-      await gifter.balanceOf(receiver2).should.eventually.eq(1)
-      id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
-      await gifter.giftsV1(id).should.eventually.matchObj({
-        sender_: sender1,
-        claimed_: false,
-        recipient_: receiver2,
-        message_: "test message 2",
-        ethAsWei_: 0,
-        erc20Contracts: [],
-        erc20Amounts: [],
-        nftContracts: [],
-        nftTokenIds: []
-      })
-    })
-
     it('send eth', async () => {
       await gifter.send(
         receiver1,
-        "test message",
         [],
         [],
         [],
@@ -105,7 +54,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver2,
-        "test message 2",
         [],
         [],
         [],
@@ -119,7 +67,6 @@ describe('Gifter', () => {
         sender_: sender1,
         claimed_: false,
         recipient_: receiver1,
-        message_: "test message",
         ethAsWei_: 100,
       })
 
@@ -129,7 +76,6 @@ describe('Gifter', () => {
         sender_: sender1,
         claimed_: false,
         recipient_: receiver2,
-        message_: "test message 2",
         ethAsWei_: 200,
       })
     })
@@ -146,7 +92,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
-        "test message",
         [token1.address, token2.address],
         [3, 4],
         [nft1.address],
@@ -156,7 +101,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
-        "test message 2",
         [token2.address],
         [2],
         [],
@@ -170,7 +114,6 @@ describe('Gifter', () => {
         sender_: sender1,
         claimed_: false,
         recipient_: receiver1,
-        message_: "test message",
         ethAsWei_: 45,
         erc20Contracts: [token1.address, token2.address],
         erc20Amounts: [3, 4],
@@ -183,7 +126,6 @@ describe('Gifter', () => {
         sender_: sender1,
         claimed_: false,
         recipient_: receiver1,
-        message_: "test message 2",
         ethAsWei_: 20,
         erc20Contracts: [token2.address],
         erc20Amounts: [2],
@@ -211,7 +153,6 @@ describe('Gifter', () => {
         sender_: sender1,
         claimed_: true,
         recipient_: receiver1,
-        message_: "test message",
         ethAsWei_: 45,
         erc20Contracts: [token1.address, token2.address],
         erc20Amounts: [3, 4],
@@ -222,7 +163,6 @@ describe('Gifter', () => {
         sender_: sender1,
         claimed_: false,
         recipient_: receiver1,
-        message_: "test message 2",
         ethAsWei_: 20,
         erc20Contracts: [token2.address],
         erc20Amounts: [2],
@@ -243,18 +183,6 @@ describe('Gifter', () => {
   })
 
   describe('failures', () => {
-    it('send nothing', async () => {
-      await gifter.send(
-        receiver1,
-        "",
-        [],
-        [],
-        [],
-        [],
-        { from: sender1 }
-      ).should.be.rejectedWith('empty message')
-    })
-
     it('send erc20 where gifter is not approved', async () => {
       await token1.mint({ value: 10, from: sender1 })
       await token2.mint({ value: 10, from: sender1 })
@@ -264,7 +192,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
-        "test message",
         [token1.address, token2.address],
         [10, 10],
         [],
@@ -281,7 +208,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
-        "test message",
         [token1.address, token2.address],
         [10, 5],
         [],
@@ -293,7 +219,6 @@ describe('Gifter', () => {
     it('send nft where id is invalid', async () => {
       await gifter.send(
         receiver1,
-        "test message",
         [],
         [],
         [nft1.address],
@@ -307,7 +232,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
-        "test message",
         [],
         [],
         [nft1.address],
@@ -323,7 +247,6 @@ describe('Gifter', () => {
     it('claim when not owner', async () => {
       await gifter.send(
         receiver1,
-        "test message",
         [],
         [],
         [],
@@ -342,7 +265,6 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
-        "test message",
         [token1.address],
         [3],
         [],
