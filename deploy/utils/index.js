@@ -1,3 +1,4 @@
+import delay from 'delay'
 import _ from 'lodash'
 import got from 'got'
 import { createLog } from './log'
@@ -21,6 +22,7 @@ export const getAccounts = async () => {
 export const deployContract = async ({ artifacts, getTxParams = defaultGetTxParams }, name, args = [], overrides = {}) => {
   const C = artifacts.require(name)
   const c = await C.new(...args, { ...getTxParams(), ...overrides })
+  await delay(5000) // wait for endpoints to catch up
   return c
 }
 
