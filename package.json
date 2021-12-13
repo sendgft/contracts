@@ -8,6 +8,7 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "contracts.generated.js",
     "artifacts/**",
     "contracts/**",
@@ -80,6 +81,8 @@
     }
   },
   "dependencies": {
+    "@ethersproject/abi": "^5.5.0",
+    "@ethersproject/contracts": "^5.5.0",
     "@openzeppelin/contracts": "^4.3.2"
   },
   "engines": {

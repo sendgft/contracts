@@ -69,8 +69,7 @@ async function main() {
         const json = require(deployedAddressesJsonFilePath)
         json.Gifter = _.get(json, 'Gifter', {})
         json.Gifter.chains = _.get(json, 'Gifter.chains', {})
-        json.Gifter.chains[network.id] = _.get(json, `Gifter.chains.${network.id}`, {})
-        json.Gifter.chains[network.id].address = proxy.address
+        json.Gifter.chains[network.id] = proxy.address
         fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(json, null, 2), 'utf-8')
       })
     }

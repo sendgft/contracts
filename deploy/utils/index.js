@@ -125,6 +125,14 @@ export const getDeployedContractInstance = async ({ lookupType, type, network, l
 export const verifyOnEtherscan = async ({ task, name, args }) => {
   await task.task(`Verify on Etherscan: ${name}`, async t => {
     await t.log(JSON.stringify(args))
-    await hre.run("verify:verify", args)
+    try {
+      await hre.run("verify:verify", args)
+    } catch (err) {
+      if (!err.toString().includes('Already Verified')) {
+        throw err
+      } else {
+        console.warn('ALREADY VERIFIED!')
+      }
+    }
   })
 }

@@ -5,7 +5,7 @@ try {
 
 const contracts = require('./contracts.generated.js')
 
-const extractEventsFromAbis = abis => abis.reduce((output, contract) => {
+const extractEventsFromAbis = c => c.reduce((output, contract) => {
   contract.abi.filter(({ type }) => type === 'event').forEach(e => {
     if (!output[e.name]) {
       output[e.name] = e
