@@ -10,9 +10,21 @@ npm install @sendgft/contracts
 
 The package exposes the following properties:
 
-* `contracts` - the key contracts (see below)
+* `contracts` - the key contracts JSON artifact contents 
 * `addresses` - contents of `deployedAddresses.json`
 * `events` - ABIs for events to listen for
+
+**Example**
+
+```js
+const ethers = require('ethers')
+const { contracts, addresses } = require('@sendgft/contracts')
+
+const contract = new ethers.Contract(
+  addresses.Gifter.chains[4].address, // rinkeby
+  contracts.GifterImplementationV1.abi
+)
+```
 
 ## Development
 
@@ -105,6 +117,6 @@ Then run:
 yarn release
 ```
 
-## License
+## License
 
 MIT (see `LICENSE.md`)
