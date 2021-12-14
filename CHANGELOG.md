@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/sendgft/contracts/compare/v1.1.0...v1.2.0) (2021-12-14)
+
+
+### Features
+
+* add content hash ([b17514c](https://github.com/sendgft/contracts/commit/b17514ca1bfbba9a3f24146d0930fd78494c3f9e))
+
 # [1.1.0](https://github.com/sendgft/contracts/compare/v1.0.2...v1.1.0) (2021-12-13)
 
 
