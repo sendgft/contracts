@@ -45,6 +45,7 @@ describe('Gifter', () => {
     it('send eth', async () => {
       await gifter.send(
         receiver1,
+        'hash1',
         [],
         [],
         [],
@@ -54,6 +55,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver2,
+        'hash2',
         [],
         [],
         [],
@@ -65,6 +67,7 @@ describe('Gifter', () => {
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
       await gifter.giftsV1(id).should.eventually.matchObj({
         sender_: sender1,
+        content_: 'hash1',
         claimed_: false,
         recipient_: receiver1,
         ethAsWei_: 100,
@@ -74,6 +77,7 @@ describe('Gifter', () => {
       id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
       await gifter.giftsV1(id).should.eventually.matchObj({
         sender_: sender1,
+        content_: 'hash2',
         claimed_: false,
         recipient_: receiver2,
         ethAsWei_: 200,
@@ -92,6 +96,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
+        'hash',
         [token1.address, token2.address],
         [3, 4],
         [nft1.address],
@@ -101,6 +106,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
+        'hash',
         [token2.address],
         [2],
         [],
@@ -192,6 +198,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
+        'hash',
         [token1.address, token2.address],
         [10, 10],
         [],
@@ -208,6 +215,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
+        'hash',
         [token1.address, token2.address],
         [10, 5],
         [],
@@ -219,6 +227,7 @@ describe('Gifter', () => {
     it('send nft where id is invalid', async () => {
       await gifter.send(
         receiver1,
+        'hash',
         [],
         [],
         [nft1.address],
@@ -232,6 +241,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
+        'hash',
         [],
         [],
         [nft1.address],
@@ -247,6 +257,7 @@ describe('Gifter', () => {
     it('claim when not owner', async () => {
       await gifter.send(
         receiver1,
+        'hash',
         [],
         [],
         [],
@@ -265,6 +276,7 @@ describe('Gifter', () => {
 
       await gifter.send(
         receiver1,
+        'hash',
         [token1.address],
         [3],
         [],
@@ -276,6 +288,45 @@ describe('Gifter', () => {
 
       await gifter.claim(gift, { from: receiver1 })
       await gifter.claim(gift, { from: receiver1 }).should.be.rejectedWith('already claimed')
+    })
+  })
+
+  describe.only('token URI', () => {
+    let tokenId
+    
+    beforeEach(async () => {
+      await gifter.send(
+        receiver1,
+        'hash',
+        [],
+        [],
+        [],
+        [],
+        { from: sender1, value: 100 }
+      )
+
+      tokenId = (await gifter.lastGiftId()).toNumber()
+    })
+
+    it('must be a valid id', async () => {
+      await gifter.tokenURI(tokenId + 1).should.be.rejectedWith('ERC721Metadata: URI query for nonexistent token')
+    })
+
+    it('returns with empty base URI', async () => {
+      await gifter.tokenURI(tokenId).should.eventually.eq('hash')
+    })
+
+    it('base URI can be set, but not just by anyone', async () => {
+      await gifter.setBaseURI('https://google.com', { from: accounts[2] }).should.be.rejectedWith('must be admin')
+    })
+
+    it('base URI can be set by admin', async () => {
+      await gifter.setBaseURI('https://google.com').should.be.fulfilled
+    })
+
+    it('returns with non-empty base URI', async () => {
+      await gifter.setBaseURI('https://smoke.some/')
+      await gifter.tokenURI(tokenId).should.eventually.eq('https://smoke.some/hash')
     })
   })
 })

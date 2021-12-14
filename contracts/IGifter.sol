@@ -8,6 +8,7 @@ interface IGifter {
    * Any ETH sent to this function will also get sent as part of the gift.
    *
    * @param _recipient The recipient.
+   * @param _content The content (usually IPFS hash).
    * @param _erc20Contracts ERC20/ERC777 token contract addresses.
    * @param _erc20Amounts ERC20/ERC777 token amounts.
    * @param _nftContracts NFT contract addresses.
@@ -15,6 +16,7 @@ interface IGifter {
    */
   function send(
     address _recipient, 
+    string calldata _content,
     address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
@@ -33,6 +35,13 @@ interface IGifter {
    * @return version string
    */
   function getVersion() external pure returns (string memory);
+
+  /**
+   * Set Base URIs for token URIs.
+   * 
+   * @param _baseURI New base URI.
+   */
+  function setBaseURI(string memory _baseURI) external;
 
   /**
    * @dev Emitted when a new gift gets sent.

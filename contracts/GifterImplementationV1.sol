@@ -14,6 +14,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   struct GiftV1 {
     address sender;
     bool claimed;
+    string content;
     uint ethAsWei;
     address[] erc20Contracts;
     uint[] erc20Amounts;
@@ -21,10 +22,18 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     uint[] nftTokenIds;
   }
 
-  string private _name;
-  string private _symbol;
+  string private tokenName;
+  string private tokenSymbol;
+  string private baseURI;
   mapping(uint => GiftV1) public giftsV1;
   uint public lastGiftId;
+
+  // Modifiers
+
+  modifier isAdmin() {
+    require(msg.sender == _getAdmin(), 'must be admin');    
+    _;
+  }
 
   // Initializable
 
@@ -32,22 +41,29 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   constructor() ERC721("", "") {}
 
   function initialize() public initializer {
-    _name = "SENDGFT";
-    _symbol = "GFT";
+    tokenName = "SENDGFT";
+    tokenSymbol = "GFT";
   }
 
+  // IERC721Metadata
+
   function name() public view override returns (string memory) {
-    return _name;
+    return tokenName;
   }
 
   function symbol() public view override returns (string memory) {
-    return _symbol;
+    return tokenSymbol;
+  }
+
+  function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+      require(_exists(_tokenId), "ERC721Metadata: URI query for nonexistent token");
+      GiftV1 storage g = giftsV1[_tokenId];
+      return string(abi.encodePacked(baseURI, g.content));
   }
 
   // UUPSUpgradeable
 
-  function _authorizeUpgrade(address newImplementation) internal view override {
-    require(msg.sender == _getAdmin(), 'only admin can upgrade');
+  function _authorizeUpgrade(address newImplementation) internal view override isAdmin {
     require(newImplementation != _getImplementation(), 'cannot upgrade to same');
   }
 
@@ -67,6 +83,10 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
 
   function getVersion() external pure returns (string memory) {
     return "1";
+  }
+
+  function setBaseURI(string memory _baseURI) external isAdmin {
+    baseURI = _baseURI;
   }
 
   function claim(uint _tokenId) external nonReentrant {
@@ -98,6 +118,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
 
   function send(
     address _recipient,
+    string calldata _content,
     address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
@@ -117,6 +138,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     giftsV1[lastGiftId] = GiftV1(
       _msgSender(), 
       false, 
+      _content,
       msg.value, 
       _erc20Contracts, 
       _erc20Amounts, 
