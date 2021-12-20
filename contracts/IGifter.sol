@@ -8,15 +8,15 @@ interface IGifter {
    * Any ETH sent to this function will also get sent as part of the gift.
    *
    * @param _recipient The recipient.
-   * @param _content The content (usually IPFS hash).
+   * @param _config The card configuration data.
    * @param _erc20Contracts ERC20/ERC777 token contract addresses.
    * @param _erc20Amounts ERC20/ERC777 token amounts.
    * @param _nftContracts NFT contract addresses.
    * @param _nftTokenIds NFT token ids.
-   */
+  */
   function send(
     address _recipient, 
-    string calldata _content,
+    bytes calldata _config,
     address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
@@ -24,11 +24,12 @@ interface IGifter {
   ) payable external;
 
   /**
-   * @dev Claim the contents of a gift.
+   * @dev Open the gift and claim the assets within.
    *
    * @param _tokenId The gift token id.
+   * @param _contentHash The decentralized content hash for fetching the metadata representing the opened card.
    */
-  function claim(uint _tokenId) external;
+  function openAndClaim(uint _tokenId, string calldata _contentHash) external;
 
   /**
    * @dev Get Gifter version.
@@ -41,27 +42,32 @@ interface IGifter {
    * 
    * @param _baseURI New base URI.
    */
-  function setBaseURI(string memory _baseURI) external;
+  function setBaseURI(string calldata _baseURI) external;
 
   /**
-   * @dev Emitted when a new gift gets sent.
+   * Set default decentralized content hash for cards.
+   *
+   * The decentralied content hash is used to fetch the metadata representing an un-opened card.
+   * 
+   * @param _contentHash New default content hash.
+   */
+  function setDefaultContentHash(string calldata _contentHash) external;
+
+  /**
+   * @dev Emitted when a new gift gets created.
    * @param tokenId The gift NFT token id.
-   * @param sender The sender.
-   * @param recipient The recipient.
+   * @param config Card config data.
    */
   event NewGift(
     uint indexed tokenId,
-    address indexed sender,
-    address indexed recipient
+    bytes config
   );  
 
   /**
-   * @dev Emitted when a gift gets claimed.
+   * @dev Emitted when a gift gets opened.
    * @param tokenId The gift NFT token id.
-   * @param owner The gift owner.
    */
-  event Claimed(
-    uint indexed tokenId,
-    address indexed owner
+  event Opened(
+    uint indexed tokenId
   );  
 }

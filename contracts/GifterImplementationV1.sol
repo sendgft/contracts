@@ -14,7 +14,8 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   struct GiftV1 {
     address sender;
     bool claimed;
-    string content;
+    bytes config;
+    string contentHash;
     uint ethAsWei;
     address[] erc20Contracts;
     uint[] erc20Amounts;
@@ -25,6 +26,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   string private tokenName;
   string private tokenSymbol;
   string private baseURI;
+  string private defaultContentHash;
   mapping(uint => GiftV1) public giftsV1;
   uint public lastGiftId;
 
@@ -58,7 +60,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
       require(_exists(_tokenId), "ERC721Metadata: URI query for nonexistent token");
       GiftV1 storage g = giftsV1[_tokenId];
-      return string(abi.encodePacked(baseURI, g.content));
+      return string(abi.encodePacked(baseURI, g.contentHash));
   }
 
   // UUPSUpgradeable
@@ -85,11 +87,15 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     return "1";
   }
 
-  function setBaseURI(string memory _baseURI) external isAdmin {
+  function setBaseURI(string calldata _baseURI) external isAdmin {
     baseURI = _baseURI;
   }
 
-  function claim(uint _tokenId) external nonReentrant {
+  function setDefaultContentHash(string calldata _contentHash) external isAdmin {
+    defaultContentHash = _contentHash;
+  }
+
+  function openAndClaim(uint _tokenId, string calldata _contentHash) external nonReentrant {
     require(_msgSender() == ownerOf(_tokenId), "must be owner");
 
     GiftV1 storage g = giftsV1[_tokenId];
@@ -97,6 +103,9 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     // check and flip flag
     require(!g.claimed, "already claimed");
     g.claimed = true;
+
+    // set content hash
+    g.contentHash = _contentHash;
 
     // erc20
     uint i;
@@ -113,12 +122,12 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
        payable(_msgSender()).transfer(g.ethAsWei);
     }
 
-    emit Claimed(_tokenId, _msgSender());
+    emit Opened(_tokenId);
   }
 
   function send(
     address _recipient,
-    string calldata _content,
+    bytes calldata _config,
     address[] calldata _erc20Contracts, 
     uint[] calldata _erc20Amounts,
     address[] calldata _nftContracts,
@@ -138,7 +147,8 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     giftsV1[lastGiftId] = GiftV1(
       _msgSender(), 
       false, 
-      _content,
+      _config,
+      defaultContentHash,
       msg.value, 
       _erc20Contracts, 
       _erc20Amounts, 
@@ -148,6 +158,6 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     // mint NFT
     _safeMint(_recipient, lastGiftId);
     // event
-    emit NewGift(lastGiftId, _msgSender(), _recipient);
+    emit NewGift(lastGiftId, _config);
   }
 }
