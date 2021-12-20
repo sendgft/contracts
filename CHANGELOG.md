@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/sendgft/contracts/compare/v1.2.0...v1.3.0) (2021-12-20)
+
+
+### Features
+
+* refactor API ([095b576](https://github.com/sendgft/contracts/commit/095b57619254440d117ba7c48e90962f3d6c1aca))
+
 # [1.2.0](https://github.com/sendgft/contracts/compare/v1.1.0...v1.2.0) (2021-12-14)
 
 
