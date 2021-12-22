@@ -26,7 +26,7 @@
     "coverage": "rm -rf coverage && yarn hardhat coverage",
     "generate-index": "./scripts/generateIndex.js",
     "compile": "yarn clean && yarn hardhat compile && yarn generate-index",
-    "deploy:local": "yarn hardhat run ./deploy",
+    "deploy:local": "yarn hardhat run --network localhost ./deploy",
     "deploy:rinkeby": "yarn hardhat run --network rinkeby ./deploy",
     "deploy:avax": "yarn hardhat run --network avax ./deploy",
     "release": "semantic-release",
