@@ -14,6 +14,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   struct GiftV1 {
     address sender;
     bool claimed;
+    uint blockNumber;
     bytes config;
     string contentHash;
     uint ethAsWei;
@@ -149,6 +150,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     giftsV1[lastGiftId] = GiftV1(
       _msgSender(), 
       false, 
+      block.number,
       _config,
       defaultContentHash,
       msg.value, 

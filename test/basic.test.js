@@ -46,7 +46,7 @@ describe('Gifter', () => {
 
   describe('successes', () => { 
     it('send eth', async () => {
-      await gifter.create(
+      const tx1 = await gifter.create(
         receiver1,
         stringToBytesHex('hash1'),
         'msg1',
@@ -56,7 +56,7 @@ describe('Gifter', () => {
         { from: sender1, value: 100 }
       )
 
-      await gifter.create(
+      const tx2 = await gifter.create(
         receiver2,
         stringToBytesHex('hash2'),
         'msg2',
@@ -73,6 +73,7 @@ describe('Gifter', () => {
         config: stringToBytesHex('hash1'),
         contentHash: '',
         claimed: false,
+        blockNumber: tx1.receipt.blockNumber,
         recipient: receiver1,
         ethAsWei: 100,
         numErc20s: 0,
@@ -85,6 +86,7 @@ describe('Gifter', () => {
         config: stringToBytesHex('hash2'),
         contentHash: '',
         claimed: false,
+        blockNumber: tx2.receipt.blockNumber,
         recipient: receiver2,
         ethAsWei: 200,
         numErc20s: 0,
