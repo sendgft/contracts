@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 interface IGifter {
   /**
-   * @dev Send a new gift to someone.
+   * @dev Create a new gift to.
    *
    * Any ETH sent to this function will also get sent as part of the gift.
    *
@@ -14,7 +14,7 @@ interface IGifter {
    * @param _erc20AndNftContracts ERC20/ERC777 token contract addresses followed by NFT contract addresses.
    * @param _amountsAndIds ERC20/ERC777 token amounts followed by NFT ids.
   */
-  function send(
+  function create(
     address _recipient, 
     bytes calldata _config,
     string calldata _message,

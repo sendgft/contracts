@@ -125,7 +125,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     emit Claimed(_tokenId);
   }
 
-  function send(
+  function create(
     address _recipient,
     bytes calldata _config,
     string calldata _message,

@@ -46,7 +46,7 @@ describe('Gifter', () => {
 
   describe('successes', () => { 
     it('send eth', async () => {
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash1'),
         'msg1',
@@ -56,7 +56,7 @@ describe('Gifter', () => {
         { from: sender1, value: 100 }
       )
 
-      await gifter.send(
+      await gifter.create(
         receiver2,
         stringToBytesHex('hash2'),
         'msg2',
@@ -101,7 +101,7 @@ describe('Gifter', () => {
       await nft1.mint({ from: sender1 })
       await nft1.approve(gifter.address, 1, { from: sender1 })
 
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -111,7 +111,7 @@ describe('Gifter', () => {
         { from: sender1, value: 45 }
       )
 
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -198,7 +198,7 @@ describe('Gifter', () => {
     })
 
     it('emits event with message text when creating', async () => {
-      const tx = await gifter.send(
+      const tx = await gifter.create(
         receiver1,
         stringToBytesHex('hash1'),
         'The quick brown fox jumped over the lazy dog',
@@ -227,7 +227,7 @@ describe('Gifter', () => {
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 9, { from: sender1 })
 
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -244,7 +244,7 @@ describe('Gifter', () => {
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 5, { from: sender1 })
 
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -256,7 +256,7 @@ describe('Gifter', () => {
     })
 
     it('send nft where id is invalid', async () => {
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -270,7 +270,7 @@ describe('Gifter', () => {
     it('send nft where gifter is not approved', async () => {
       await nft1.mint({ from: sender1 })
 
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -286,7 +286,7 @@ describe('Gifter', () => {
     })
 
     it('claim when not owner', async () => {
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -305,7 +305,7 @@ describe('Gifter', () => {
       await token1.mint({ value: 3, from: sender1 })
       await token1.approve(gifter.address, 3, { from: sender1 })
 
-      await gifter.send(
+      await gifter.create(
         receiver1,
         stringToBytesHex('hash'),
         'msg1',
@@ -328,7 +328,7 @@ describe('Gifter', () => {
     
     beforeEach(async () => {
       createGift = async () => {
-        await gifter.send(
+        await gifter.create(
           receiver1,
           stringToBytesHex('hash'),
           'msg1',
