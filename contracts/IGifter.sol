@@ -9,18 +9,18 @@ interface IGifter {
    *
    * @param _recipient The recipient.
    * @param _config The card configuration data.
-   * @param _erc20Contracts ERC20/ERC777 token contract addresses.
-   * @param _erc20Amounts ERC20/ERC777 token amounts.
-   * @param _nftContracts NFT contract addresses.
-   * @param _nftTokenIds NFT token ids.
+   * @param _message The card message.
+   * @param _numErc20s No. of ERC20/ERC777 token contract addresses.
+   * @param _erc20AndNftContracts ERC20/ERC777 token contract addresses followed by NFT contract addresses.
+   * @param _amountsAndIds ERC20/ERC777 token amounts followed by NFT ids.
   */
   function send(
     address _recipient, 
     bytes calldata _config,
-    address[] calldata _erc20Contracts, 
-    uint[] calldata _erc20Amounts,
-    address[] calldata _nftContracts,
-    uint[] calldata _nftTokenIds
+    string calldata _message,
+    uint _numErc20s,
+    address[] calldata _erc20AndNftContracts, 
+    uint[] calldata _amountsAndIds
   ) payable external;
 
   /**
@@ -56,18 +56,18 @@ interface IGifter {
   /**
    * @dev Emitted when a new gift gets created.
    * @param tokenId The gift NFT token id.
-   * @param config Card config data.
+   * @param message Card message.
    */
-  event NewGift(
+  event Created(
     uint indexed tokenId,
-    bytes config
+    string message
   );  
 
   /**
-   * @dev Emitted when a gift gets opened.
+   * @dev Emitted when a gift gets claimed.
    * @param tokenId The gift NFT token id.
    */
-  event Opened(
+  event Claimed(
     uint indexed tokenId
   );  
 }

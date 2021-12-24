@@ -1,7 +1,8 @@
 import EthVal from 'ethval'
-import { EvmSnapshot, expect, getBalance } from './utils'
+import { EvmSnapshot, expect, extractEventArgs, getBalance } from './utils'
 import { deployGifter } from '../deploy/modules/gifter'
 import { getAccounts, getContractAt } from '../deploy/utils'
+import { events } from '../'
 
 const DummyToken = artifacts.require("DummyToken")
 const DummyNFT = artifacts.require("DummyNFT")
@@ -48,17 +49,18 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash1'),
-        [],
-        [],
+        'msg1',
+        0,
         [],
         [],
         { from: sender1, value: 100 }
       )
+
       await gifter.send(
         receiver2,
         stringToBytesHex('hash2'),
-        [],
-        [],
+        'msg2',
+        0,
         [],
         [],
         { from: sender1, value: 200 }
@@ -73,6 +75,7 @@ describe('Gifter', () => {
         claimed: false,
         recipient: receiver1,
         ethAsWei: 100,
+        numErc20s: 0,
       })
 
       await gifter.balanceOf(receiver2).should.eventually.eq(1)
@@ -84,10 +87,11 @@ describe('Gifter', () => {
         claimed: false,
         recipient: receiver2,
         ethAsWei: 200,
+        numErc20s: 0,
       })
     })
 
-    it('send eth and erc20 and NFTs, and open', async () => {
+    it('send eth and erc20 and NFTs, and claim', async () => {
       await token1.mint({ value: 10, from: sender1 })
       await token2.mint({ value: 10, from: sender1 })
 
@@ -100,20 +104,20 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
-        [token1.address, token2.address],
-        [3, 4],
-        [nft1.address],
-        [1],
+        'msg1',
+        2,
+        [token1.address, token2.address, nft1.address],
+        [3, 4, 1],
         { from: sender1, value: 45 }
       )
 
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
+        'msg1',
+        1,
         [token2.address],
         [2],
-        [],
-        [],
         { from: sender1, value: 20 }
       )
 
@@ -125,10 +129,9 @@ describe('Gifter', () => {
         config: stringToBytesHex('hash'),
         recipient: receiver1,
         ethAsWei: 45,
-        erc20Contracts: [token1.address, token2.address],
-        erc20Amounts: [3, 4],
-        nftContracts: [],
-        nftTokenIds: []
+        numErc20s: 2,
+        erc20AndNftContracts: [token1.address, token2.address],
+        amountsAndIds: [3, 4],
       })
 
       const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
@@ -138,10 +141,9 @@ describe('Gifter', () => {
         config: stringToBytesHex('hash'),
         recipient: receiver1,
         ethAsWei: 20,
-        erc20Contracts: [token2.address],
-        erc20Amounts: [2],
-        nftContracts: [nft1.address],
-        nftTokenIds: [1]
+        numErc20s: 1,
+        erc20AndNftContracts: [token2.address, nft1.address],
+        amountsAndIds: [2, 1],
       })
 
       // check token balances
@@ -159,6 +161,10 @@ describe('Gifter', () => {
       const gasUsed = new EthVal(tx.receipt.cumulativeGasUsed)
       const gasCost = gasUsed.mul(gasPrice)
 
+      // check event
+      const eventArgs = extractEventArgs(tx, events.Claimed)
+      expect(eventArgs).to.include({ tokenId: gift1.toString() })
+
       // check gifts
       await gifter.giftsV1(gift1).should.eventually.matchObj({
         sender: sender1,
@@ -166,20 +172,18 @@ describe('Gifter', () => {
         contentHash: 'content1',
         recipient: receiver1,
         ethAsWei: 45,
-        erc20Contracts: [token1.address, token2.address],
-        erc20Amounts: [3, 4],
-        nftContracts: [nft1.address],
-        nftTokenIds: [1]
+        numErc20s: 2,
+        erc20AndNftContracts: [token1.address, token2.address, nft1.address],
+        amountsAndIds: [3, 4, 1],
       })
       await gifter.giftsV1(gift2).should.eventually.matchObj({
         sender: sender1,
         claimed: false,
         recipient: receiver1,
         ethAsWei: 20,
-        erc20Contracts: [token2.address],
-        erc20Amounts: [2],
-        nftContracts: [],
-        nftTokenIds: []
+        numErc20s: 1,
+        erc20AndNftContracts: [token2.address],
+        amountsAndIds: [2],
       })
 
       // check balances
@@ -191,6 +195,27 @@ describe('Gifter', () => {
       await token2.balanceOf(receiver1).should.eventually.eq(4)
       const postBal = new EthVal(await getBalance(receiver1))
       expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
+    })
+
+    it('emits event with message text when creating', async () => {
+      const tx = await gifter.send(
+        receiver1,
+        stringToBytesHex('hash1'),
+        'The quick brown fox jumped over the lazy dog',
+        0,
+        [],
+        [],
+        { from: sender1, value: 100 }
+      )
+
+      const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+
+      // check event
+      const eventArgs = extractEventArgs(tx, events.Created)
+      expect(eventArgs).to.include({ 
+        tokenId: gift1.toString(),
+        message: 'The quick brown fox jumped over the lazy dog'
+      })
     })
   })
 
@@ -205,10 +230,10 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
+        'msg1',
+        2,
         [token1.address, token2.address],
         [10, 10],
-        [],
-        [],
         { from: sender1 }
       ).should.be.rejectedWith('exceeds allowance')
     })
@@ -222,10 +247,10 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
+        'msg1',
+        2,
         [token1.address, token2.address],
         [10, 5],
-        [],
-        [],
         { from: sender1 }
       ).should.be.rejectedWith('exceeds balance')
     })
@@ -234,8 +259,8 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
-        [],
-        [],
+        'msg1',
+        0,
         [nft1.address],
         [5],
         { from: sender1 }
@@ -248,8 +273,8 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
-        [],
-        [],
+        'msg1',
+        0,
         [nft1.address],
         [1],
         { from: sender1 }
@@ -264,8 +289,8 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
-        [],
-        [],
+        'msg1',
+        0,
         [],
         [],
         { from: sender1 }
@@ -283,10 +308,10 @@ describe('Gifter', () => {
       await gifter.send(
         receiver1,
         stringToBytesHex('hash'),
+        'msg1',
+        1,
         [token1.address],
         [3],
-        [],
-        [],
         { from: sender1 }
       )
 
@@ -306,8 +331,8 @@ describe('Gifter', () => {
         await gifter.send(
           receiver1,
           stringToBytesHex('hash'),
-          [],
-          [],
+          'msg1',
+          0,
           [],
           [],
           { from: sender1, value: 100 }
