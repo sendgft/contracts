@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/sendgft/contracts/compare/v1.5.0...v1.6.0) (2021-12-24)
+
+
+### Features
+
+* save block number for gift ([7aa6b9f](https://github.com/sendgft/contracts/commit/7aa6b9fb9f889b830d7a7287d244fd1b55df78e3))
+
 # [1.5.0](https://github.com/sendgft/contracts/compare/v1.4.0...v1.5.0) (2021-12-24)
 
 # [1.4.0](https://github.com/sendgft/contracts/compare/v1.3.0...v1.4.0) (2021-12-24)
