@@ -28,7 +28,9 @@ async function main() {
   console.log(`Deploying from: ${accounts[0]}`)
 
   // do multicall
-  await deployMulticall(ctx, log)
+  if (['hardhat', 'localhost'].includes(network.name)) {
+    await deployMulticall(ctx, log)
+  }
 
   // do proxy
   const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, log)
