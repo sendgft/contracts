@@ -5,6 +5,7 @@ import delay from 'delay'
 
 import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, verifyOnEtherscan } from './utils'
 import { deployGifter } from './modules/gifter'
+import { deployMulticall } from './modules/multicall'
 
 
 async function main() {
@@ -26,7 +27,10 @@ async function main() {
 
   console.log(`Deploying from: ${accounts[0]}`)
 
-  // do it
+  // do multicall
+  await deployMulticall(ctx, log)
+
+  // do proxy
   const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, log)
 
   if (process.env.PRODUCTION) {
