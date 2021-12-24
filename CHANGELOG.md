@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/sendgft/contracts/compare/v1.3.0...v1.4.0) (2021-12-24)
+
+
+### Bug Fixes
+
+* deployments to localhost ([35b7313](https://github.com/sendgft/contracts/commit/35b731371d9241e647d276bf4ab36a5063245d35))
+
+
+### Features
+
+* enable message text which gets emitted straight away ([4862c92](https://github.com/sendgft/contracts/commit/4862c92f5da7f08e9f4a4386a807bbc7e2d55613))
+
 # [1.3.0](https://github.com/sendgft/contracts/compare/v1.2.0...v1.3.0) (2021-12-20)
 
 
