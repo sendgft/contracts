@@ -24,6 +24,13 @@ interface IGifter {
   ) payable external;
 
   /**
+   * @dev Claim the assets within the gift without opening it.
+   *
+   * @param _tokenId The gift token id.
+   */
+  function claim(uint _tokenId) external;
+
+  /**
    * @dev Open the gift and claim the assets within.
    *
    * @param _tokenId The gift token id.

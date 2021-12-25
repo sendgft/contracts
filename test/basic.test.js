@@ -72,8 +72,9 @@ describe('Gifter', () => {
         sender: sender1,
         config: stringToBytesHex('hash1'),
         contentHash: '',
-        claimed: false,
-        blockNumber: tx1.receipt.blockNumber,
+        created: tx1.receipt.blockNumber,
+        claimed: 0,
+        opened: false,
         recipient: receiver1,
         ethAsWei: 100,
         numErc20s: 0,
@@ -84,16 +85,17 @@ describe('Gifter', () => {
       await gifter.giftsV1(id).should.eventually.matchObj({
         sender: sender1,
         config: stringToBytesHex('hash2'),
+        created: tx2.receipt.blockNumber,
+        claimed: 0,
+        opened: false,
         contentHash: '',
-        claimed: false,
-        blockNumber: tx2.receipt.blockNumber,
         recipient: receiver2,
         ethAsWei: 200,
         numErc20s: 0,
       })
     })
 
-    it('send eth and erc20 and NFTs, and claim', async () => {
+    it('send eth and erc20 and NFTs, and open and claim', async () => {
       await token1.mint({ value: 10, from: sender1 })
       await token2.mint({ value: 10, from: sender1 })
 
@@ -127,7 +129,8 @@ describe('Gifter', () => {
       const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
       await gifter.giftsV1(gift1).should.eventually.matchObj({
         sender: sender1,
-        claimed: false,
+        claimed: 0,
+        opened: false,
         config: stringToBytesHex('hash'),
         recipient: receiver1,
         ethAsWei: 45,
@@ -139,7 +142,8 @@ describe('Gifter', () => {
       const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
       await gifter.giftsV1(gift2).should.eventually.matchObj({
         sender: sender1,
-        claimed: false,
+        claimed: 0,
+        opened: false,
         config: stringToBytesHex('hash'),
         recipient: receiver1,
         ethAsWei: 20,
@@ -170,7 +174,8 @@ describe('Gifter', () => {
       // check gifts
       await gifter.giftsV1(gift1).should.eventually.matchObj({
         sender: sender1,
-        claimed: true,
+        claimed: tx.receipt.blockNumber,
+        opened: true,
         contentHash: 'content1',
         recipient: receiver1,
         ethAsWei: 45,
@@ -180,7 +185,8 @@ describe('Gifter', () => {
       })
       await gifter.giftsV1(gift2).should.eventually.matchObj({
         sender: sender1,
-        claimed: false,
+        claimed: 0,
+        opened: false,
         recipient: receiver1,
         ethAsWei: 20,
         numErc20s: 1,
@@ -197,6 +203,162 @@ describe('Gifter', () => {
       await token2.balanceOf(receiver1).should.eventually.eq(4)
       const postBal = new EthVal(await getBalance(receiver1))
       expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
+    })
+
+    it('send eth and erc20 and NFTs, and claim without opening', async () => {
+      await token1.mint({ value: 10, from: sender1 })
+      await token2.mint({ value: 10, from: sender1 })
+
+      await token1.approve(gifter.address, 10, { from: sender1 })
+      await token2.approve(gifter.address, 10, { from: sender1 })
+
+      await nft1.mint({ from: sender1 })
+      await nft1.approve(gifter.address, 1, { from: sender1 })
+
+      await gifter.create(
+        receiver1,
+        stringToBytesHex('hash'),
+        'msg1',
+        2,
+        [token1.address, token2.address, nft1.address],
+        [3, 4, 1],
+        { from: sender1, value: 45 }
+      )
+
+      await gifter.balanceOf(receiver1).should.eventually.eq(1)
+      const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      await gifter.giftsV1(gift1).should.eventually.matchObj({
+        sender: sender1,
+        claimed: 0,
+        opened: false,
+        config: stringToBytesHex('hash'),
+        recipient: receiver1,
+        ethAsWei: 45,
+        numErc20s: 2,
+        erc20AndNftContracts: [token1.address, token2.address],
+        amountsAndIds: [3, 4],
+      })
+
+      // check token balances
+      await token1.balanceOf(gifter.address).should.eventually.eq(3)
+      await token2.balanceOf(gifter.address).should.eventually.eq(4)
+      await getBalance(gifter.address).should.eventually.eq(45)
+      await nft1.ownerOf(1).should.eventually.eq(gifter.address)
+      await token1.balanceOf(receiver1).should.eventually.eq(0)
+      await token2.balanceOf(receiver1).should.eventually.eq(0)
+      const preBal = new EthVal(await getBalance(receiver1))
+
+      // claim
+      const tx = await gifter.claim(gift1, { from: receiver1 })
+      const gasPrice = new EthVal(tx.receipt.effectiveGasPrice)
+      const gasUsed = new EthVal(tx.receipt.cumulativeGasUsed)
+      const gasCost = gasUsed.mul(gasPrice)
+
+      // check event
+      const eventArgs = extractEventArgs(tx, events.Claimed)
+      expect(eventArgs).to.include({ tokenId: gift1.toString() })
+
+      // check gifts
+      await gifter.giftsV1(gift1).should.eventually.matchObj({
+        sender: sender1,
+        claimed: tx.receipt.blockNumber,
+        opened: false,
+        contentHash: '',
+        recipient: receiver1,
+        ethAsWei: 45,
+        numErc20s: 2,
+        erc20AndNftContracts: [token1.address, token2.address, nft1.address],
+        amountsAndIds: [3, 4, 1],
+      })
+
+      // check balances
+      await token1.balanceOf(gifter.address).should.eventually.eq(0)
+      await token2.balanceOf(gifter.address).should.eventually.eq(0)
+      await getBalance(gifter.address).should.eventually.eq(0)
+      await nft1.ownerOf(1).should.eventually.eq(receiver1)
+      await token1.balanceOf(receiver1).should.eventually.eq(3)
+      await token2.balanceOf(receiver1).should.eventually.eq(4)
+      const postBal = new EthVal(await getBalance(receiver1))
+      expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
+    })
+
+    it('send eth and erc20 and NFTs, and claim without opening, then open and claim later', async () => {
+      await token1.mint({ value: 10, from: sender1 })
+      await token2.mint({ value: 10, from: sender1 })
+
+      await token1.approve(gifter.address, 10, { from: sender1 })
+      await token2.approve(gifter.address, 10, { from: sender1 })
+
+      await nft1.mint({ from: sender1 })
+      await nft1.approve(gifter.address, 1, { from: sender1 })
+
+      await gifter.create(
+        receiver1,
+        stringToBytesHex('hash'),
+        'msg1',
+        2,
+        [token1.address, token2.address, nft1.address],
+        [3, 4, 1],
+        { from: sender1, value: 45 }
+      )
+
+      await gifter.balanceOf(receiver1).should.eventually.eq(1)
+      const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      await gifter.giftsV1(gift1).should.eventually.matchObj({
+        sender: sender1,
+        claimed: 0,
+        opened: false,
+        config: stringToBytesHex('hash'),
+        recipient: receiver1,
+        ethAsWei: 45,
+        numErc20s: 2,
+        erc20AndNftContracts: [token1.address, token2.address],
+        amountsAndIds: [3, 4],
+      })
+
+      // check token balances
+      await token1.balanceOf(gifter.address).should.eventually.eq(3)
+      await token2.balanceOf(gifter.address).should.eventually.eq(4)
+      await getBalance(gifter.address).should.eventually.eq(45)
+      await nft1.ownerOf(1).should.eventually.eq(gifter.address)
+      await token1.balanceOf(receiver1).should.eventually.eq(0)
+      await token2.balanceOf(receiver1).should.eventually.eq(0)
+      const preBal = new EthVal(await getBalance(receiver1))
+
+      // claim
+      const tx = await gifter.claim(gift1, { from: receiver1 })
+      let gasPrice = new EthVal(tx.receipt.effectiveGasPrice)
+      let gasUsed = new EthVal(tx.receipt.cumulativeGasUsed)
+      const gasCost1 = gasUsed.mul(gasPrice)
+
+      // open and claim
+      const tx2 = await gifter.openAndClaim(gift1, 'hash1', { from: receiver1 })
+      gasPrice = new EthVal(tx2.receipt.effectiveGasPrice)
+      gasUsed = new EthVal(tx2.receipt.cumulativeGasUsed)
+      const gasCost2 = gasUsed.mul(gasPrice)
+
+      // check gifts
+      await gifter.giftsV1(gift1).should.eventually.matchObj({
+        sender: sender1,
+        claimed: tx.receipt.blockNumber,
+        opened: true,
+        contentHash: 'hash1',
+        recipient: receiver1,
+        ethAsWei: 45,
+        numErc20s: 2,
+        erc20AndNftContracts: [token1.address, token2.address, nft1.address],
+        amountsAndIds: [3, 4, 1],
+      })
+
+      // check balances
+      await token1.balanceOf(gifter.address).should.eventually.eq(0)
+      await token2.balanceOf(gifter.address).should.eventually.eq(0)
+      await getBalance(gifter.address).should.eventually.eq(0)
+      await nft1.ownerOf(1).should.eventually.eq(receiver1)
+      await token1.balanceOf(receiver1).should.eventually.eq(3)
+      await token2.balanceOf(receiver1).should.eventually.eq(4)
+      const postBal = new EthVal(await getBalance(receiver1))
+      expect(postBal.sub(preBal.sub(gasCost1).sub(gasCost2)).toNumber()).to.eq(45)
     })
 
     it('emits event with message text when creating', async () => {
@@ -303,7 +465,7 @@ describe('Gifter', () => {
       await gifter.openAndClaim(gift, 'content1').should.be.rejectedWith('must be owner')
     })
 
-    it('claim when already claimed', async () => {
+    it('open and claim when already done so', async () => {
       await token1.mint({ value: 3, from: sender1 })
       await token1.approve(gifter.address, 3, { from: sender1 })
 
@@ -320,7 +482,27 @@ describe('Gifter', () => {
       const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
 
       await gifter.openAndClaim(gift, 'content1', { from: receiver1 })
-      await gifter.openAndClaim(gift, 'content1', { from: receiver1 }).should.be.rejectedWith('already claimed')
+      await gifter.openAndClaim(gift, 'content1', { from: receiver1 }).should.be.rejectedWith('already opened')
+    })
+
+    it('claim without openeing when already done so', async () => {
+      await token1.mint({ value: 3, from: sender1 })
+      await token1.approve(gifter.address, 3, { from: sender1 })
+
+      await gifter.create(
+        receiver1,
+        stringToBytesHex('hash'),
+        'msg1',
+        1,
+        [token1.address],
+        [3],
+        { from: sender1 }
+      )
+
+      const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+
+      await gifter.claim(gift, { from: receiver1 })
+      await gifter.claim(gift, { from: receiver1 }).should.be.rejectedWith('already claimed')
     })
   })
 

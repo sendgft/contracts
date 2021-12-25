@@ -13,8 +13,9 @@ import "./IGifter.sol";
 contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumerable, ReentrancyGuard, IGifter, IERC721Receiver {
   struct GiftV1 {
     address sender;
-    bool claimed;
-    uint blockNumber;
+    uint created;
+    uint claimed;
+    bool opened;
     bytes config;
     string contentHash;
     uint ethAsWei;
@@ -95,17 +96,14 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     defaultContentHash = _contentHash;
   }
 
-  function openAndClaim(uint _tokenId, string calldata _contentHash) external nonReentrant {
+  function claim(uint _tokenId) public nonReentrant {
     require(_msgSender() == ownerOf(_tokenId), "must be owner");
 
     GiftV1 storage g = giftsV1[_tokenId];
 
     // check and flip flag
-    require(!g.claimed, "already claimed");
-    g.claimed = true;
-
-    // set content hash
-    g.contentHash = _contentHash;
+    require(g.claimed == 0, "already claimed");
+    g.claimed = block.number;
 
     // erc20
     uint i;
@@ -124,6 +122,22 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     }
 
     emit Claimed(_tokenId);
+  }
+
+  function openAndClaim(uint _tokenId, string calldata _contentHash) external {
+    require(_msgSender() == ownerOf(_tokenId), "must be owner");
+
+    GiftV1 storage g = giftsV1[_tokenId];
+
+    // check and flip flag
+    require(!g.opened, "already opened");
+    g.opened = true;
+
+    g.contentHash = _contentHash;
+
+    if (g.claimed == 0) {
+      claim(_tokenId);
+    }
   }
 
   function create(
@@ -149,8 +163,9 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     lastGiftId += 1;
     giftsV1[lastGiftId] = GiftV1(
       _msgSender(), 
-      false, 
       block.number,
+      0, 
+      false,
       _config,
       defaultContentHash,
       msg.value, 
