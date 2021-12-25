@@ -20,8 +20,12 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     string contentHash;
     uint ethAsWei;
     uint numErc20s;
-    address[] erc20AndNftContracts;
-    uint[] amountsAndIds;
+    uint numNfts;
+  }
+
+  struct GiftV1Asset {
+    address tokenContract;
+    uint value;
   }
 
   string private tokenName;
@@ -29,6 +33,7 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   string private baseURI;
   string private defaultContentHash;
   mapping(uint => GiftV1) public giftsV1;
+  mapping(uint => GiftV1Asset[]) public giftsV1Assets;
   uint public lastGiftId;
 
   // Modifiers
@@ -99,26 +104,27 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   function claim(uint _tokenId) public nonReentrant {
     require(_msgSender() == ownerOf(_tokenId), "must be owner");
 
-    GiftV1 storage g = giftsV1[_tokenId];
+    GiftV1 storage gift = giftsV1[_tokenId];
+    GiftV1Asset[] storage assets = giftsV1Assets[_tokenId];
 
     // check and flip flag
-    require(g.claimed == 0, "already claimed");
-    g.claimed = block.number;
+    require(gift.claimed == 0, "already claimed");
+    gift.claimed = block.number;
 
-    // erc20
-    uint i;
-    while (i < g.numErc20s) {
-      require(IERC20(g.erc20AndNftContracts[i]).transfer(_msgSender(), g.amountsAndIds[i]), "ERC20 transfer failed");
-      i += 1;
-    }
-    // nfts
-    while (i < g.erc20AndNftContracts.length) {
-      IERC721(g.erc20AndNftContracts[i]).safeTransferFrom(address(this), _msgSender(), g.amountsAndIds[i]);
-      i += 1;
+    // assets
+    for (uint i = 0; i < assets.length; i += 1) {
+      // nfts
+      if (i >= gift.numErc20s) {
+        IERC721(assets[i].tokenContract).safeTransferFrom(address(this), _msgSender(), assets[i].value);
+      } 
+      // erc20
+      else {
+        require(IERC20(assets[i].tokenContract).transfer(_msgSender(), assets[i].value), "ERC20 transfer failed");
+      }
     }
 
-    if (g.ethAsWei > 0) {
-       payable(_msgSender()).transfer(g.ethAsWei);
+    if (gift.ethAsWei > 0) {
+       payable(_msgSender()).transfer(gift.ethAsWei);
     }
 
     emit Claimed(_tokenId);
@@ -148,19 +154,27 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
     address[] calldata _erc20AndNftContracts, 
     uint[] calldata _amountsAndIds
   ) payable external {
-    // erc20
-    uint i = 0;
-    while (i < _numErc20s) {
-      require(IERC20(_erc20AndNftContracts[i]).transferFrom(_msgSender(), address(this), _amountsAndIds[i]), "ERC20 transfer failed");
-      i += 1;
-    }
-    // nfts
-    while (i < _erc20AndNftContracts.length) {
-      IERC721(_erc20AndNftContracts[i]).safeTransferFrom(_msgSender(), address(this), _amountsAndIds[i]);
-      i += 1;
-    }
-    // save data
+    // new gift id
     lastGiftId += 1;
+
+    // assets
+    for (uint i = 0; i < _erc20AndNftContracts.length; i += 1) {
+      // nfts
+      if (i >= _numErc20s) {
+        IERC721(_erc20AndNftContracts[i]).safeTransferFrom(_msgSender(), address(this), _amountsAndIds[i]);
+      }
+      // erc20
+      else {
+        require(IERC20(_erc20AndNftContracts[i]).transferFrom(_msgSender(), address(this), _amountsAndIds[i]), "ERC20 transfer failed");
+      }
+
+      giftsV1Assets[lastGiftId].push(GiftV1Asset(
+        _erc20AndNftContracts[i],
+        _amountsAndIds[i]
+      ));
+    }
+
+    // save data
     giftsV1[lastGiftId] = GiftV1(
       _msgSender(), 
       block.number,
@@ -170,11 +184,12 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
       defaultContentHash,
       msg.value, 
       _numErc20s,
-      _erc20AndNftContracts,
-      _amountsAndIds
+      _erc20AndNftContracts.length - _numErc20s
     );
+
     // mint NFT
     _safeMint(_recipient, lastGiftId);
+
     // event
     emit Created(lastGiftId, _message);
   }

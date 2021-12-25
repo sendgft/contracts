@@ -1,5 +1,5 @@
 import EthVal from 'ethval'
-import { EvmSnapshot, expect, extractEventArgs, getBalance } from './utils'
+import { EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from './utils'
 import { deployGifter } from '../deploy/modules/gifter'
 import { getAccounts, getContractAt } from '../deploy/utils'
 import { events } from '../'
@@ -78,6 +78,7 @@ describe('Gifter', () => {
         recipient: receiver1,
         ethAsWei: 100,
         numErc20s: 0,
+        numNfts: 0,
       })
 
       await gifter.balanceOf(receiver2).should.eventually.eq(1)
@@ -92,6 +93,7 @@ describe('Gifter', () => {
         recipient: receiver2,
         ethAsWei: 200,
         numErc20s: 0,
+        numNfts: 0,
       })
     })
 
@@ -135,8 +137,19 @@ describe('Gifter', () => {
         recipient: receiver1,
         ethAsWei: 45,
         numErc20s: 2,
-        erc20AndNftContracts: [token1.address, token2.address],
-        amountsAndIds: [3, 4],
+        numNfts: 1,
+      })
+      await gifter.giftsV1Assets(gift1, 0).should.eventually.matchObj({
+        tokenContract: token1.address,
+        value: 3,
+      })
+      await gifter.giftsV1Assets(gift1, 1).should.eventually.matchObj({
+        tokenContract: token2.address,
+        value: 4,
+      })
+      await gifter.giftsV1Assets(gift1, 2).should.eventually.matchObj({
+        tokenContract: nft1.address,
+        value: 1,
       })
 
       const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
@@ -148,8 +161,11 @@ describe('Gifter', () => {
         recipient: receiver1,
         ethAsWei: 20,
         numErc20s: 1,
-        erc20AndNftContracts: [token2.address, nft1.address],
-        amountsAndIds: [2, 1],
+        numNfts: 0,
+      })
+      await gifter.giftsV1Assets(gift2, 0).should.eventually.matchObj({
+        tokenContract: token2.address,
+        value: 2,
       })
 
       // check token balances
@@ -180,8 +196,6 @@ describe('Gifter', () => {
         recipient: receiver1,
         ethAsWei: 45,
         numErc20s: 2,
-        erc20AndNftContracts: [token1.address, token2.address, nft1.address],
-        amountsAndIds: [3, 4, 1],
       })
       await gifter.giftsV1(gift2).should.eventually.matchObj({
         sender: sender1,
@@ -190,8 +204,6 @@ describe('Gifter', () => {
         recipient: receiver1,
         ethAsWei: 20,
         numErc20s: 1,
-        erc20AndNftContracts: [token2.address],
-        amountsAndIds: [2],
       })
 
       // check balances

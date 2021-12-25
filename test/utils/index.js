@@ -8,6 +8,8 @@ import { TEST_MNEMONIC } from '../../utils/constants'
 
 export { expect } from 'chai'
 
+export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+
 chai.use((_chai, utils) => {
   const sanitizeResultVal = (result, val) => {
     // if bignumber
