@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/sendgft/contracts/compare/v1.6.0...v1.7.0) (2021-12-25)
+
+
+### Features
+
+* allow claim without opening ([de8e054](https://github.com/sendgft/contracts/commit/de8e054ca18fedbd4d2aa4329801b54475448739))
+
 # [1.6.0](https://github.com/sendgft/contracts/compare/v1.5.0...v1.6.0) (2021-12-24)
 
 
