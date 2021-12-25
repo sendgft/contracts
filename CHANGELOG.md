@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/sendgft/contracts/compare/v1.7.0...v1.8.0) (2021-12-25)
+
+
+### Features
+
+* enable easy getter access to erc20s and nfts ([235a145](https://github.com/sendgft/contracts/commit/235a1455a664d345ab8c353fdab3064b5ab95374))
+
 # [1.7.0](https://github.com/sendgft/contracts/compare/v1.6.0...v1.7.0) (2021-12-25)
 
 
