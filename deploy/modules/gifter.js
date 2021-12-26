@@ -2,7 +2,7 @@ import { strict as assert } from 'assert'
 
 import { createLog, deployContract, getContractAt } from '../utils'
 
-export const deployGifter = async ({ artifacts }, log) => {
+export const deployGifter = async ({ artifacts, isLocalNetwork, log }) => {
   if (!log) {
     log = createLog()
   }

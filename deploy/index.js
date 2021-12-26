@@ -27,13 +27,15 @@ async function main() {
 
   console.log(`Deploying from: ${accounts[0]}`)
 
+  ctx.isLocalNetwork = ['hardhat', 'localhost'].includes(network.name)
+
   // do multicall
-  if (['hardhat', 'localhost'].includes(network.name)) {
-    await deployMulticall(ctx, log)
+  if (ctx.isLocalNetwork) {
+    await deployMulticall(ctx)
   }
 
   // do proxy
-  const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, log)
+  const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx)
 
   if (process.env.PRODUCTION) {
     console.log(`\nProduction release!!\n`)
