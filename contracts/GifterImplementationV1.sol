@@ -72,7 +72,14 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
   // UUPSUpgradeable
 
   function _authorizeUpgrade(address newImplementation) internal view override isAdmin {
-    require(newImplementation != _getImplementation(), 'cannot upgrade to same');
+    // cannot do zero address
+    require(newImplementation != address(0), 'null implementation');
+    // try calling getVersion() on new implementation
+    try IGifter(newImplementation).getVersion() returns (string memory) {
+      return;
+    } catch {
+      revert('invalid implementation');      
+    }    
   }
 
   // IERC721Receiver
@@ -91,6 +98,10 @@ contract GifterImplementationV1 is Initializable, UUPSUpgradeable, ERC721Enumera
 
   function getVersion() external pure returns (string memory) {
     return "1";
+  }
+
+  function getAdmin() external view returns (address) {
+    return _getAdmin();
   }
 
   function setBaseURI(string calldata _baseURI) external isAdmin {

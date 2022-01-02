@@ -39,6 +39,13 @@ interface IGifter {
   function openAndClaim(uint _tokenId, string calldata _contentHash) external;
 
   /**
+   * @dev Get admin.
+   *
+   * @return address
+   */
+  function getAdmin() external view returns (address);
+
+  /**
    * @dev Get Gifter version.
    * @return version string
    */

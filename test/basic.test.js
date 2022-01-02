@@ -12,6 +12,8 @@ const stringToBytesHex = s => hre.ethers.utils.hexlify(hre.ethers.utils.toUtf8By
 describe('Gifter', () => {
   const evmSnapshot = new EvmSnapshot()
   let accounts
+  let proxy
+  let impl
   let gifter
   let nft1
   let token1
@@ -22,7 +24,7 @@ describe('Gifter', () => {
 
   before(async () => {
     accounts = await getAccounts()
-    const { proxy } = await deployGifter({ artifacts })
+    ;({ proxy, impl } = await deployGifter({ artifacts }))
     gifter = await getContractAt({ artifacts }, 'GifterImplementationV1', proxy.address)
     nft1 = await DummyNFT.new()
     token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
@@ -42,6 +44,29 @@ describe('Gifter', () => {
 
   it('returns version', async () => {
     await gifter.getVersion().should.eventually.eq('1')
+  })
+
+  it('returns admin', async () => {
+    await gifter.getAdmin().should.eventually.eq(accounts[0])
+  })
+
+  describe('upgrades', () => {
+    it('cannot be done by randoms', async () => {
+      await gifter.upgradeTo(ADDRESS_ZERO, { from: accounts[1] }).should.be.rejectedWith('must be admin')
+    })
+
+    it('cannot upgrade to null address', async () => {
+      await gifter.upgradeTo(ADDRESS_ZERO).should.be.rejectedWith('null implementation')
+    })
+
+    it('cannot upgrade to non-valid implementation', async () => {
+      await gifter.upgradeTo(nft1.address).should.be.rejectedWith('invalid implementation')
+    })
+
+    it('can upgrade to same implementation', async () => {
+      await gifter.upgradeTo(impl.address).should.be.fulfilled
+      await gifter.getAdmin().should.eventually.eq(accounts[0])
+    })
   })
 
   describe('successes', () => { 
