@@ -20,5 +20,5 @@ ganache.log
 scTopics
 dapp*
 contracts.generated.js
-releaseConfig.json
+deployConfig.json
 .env

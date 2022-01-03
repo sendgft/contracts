@@ -1,8 +1,9 @@
 import { strict as assert } from 'assert'
+import got from 'got'
 
 import { createLog, deployContract, getContractAt } from '../utils'
 
-export const deployGifter = async ({ artifacts, log }) => {
+export const deployGifter = async ({ artifacts, log, deployConfig: { contractDefaults: { defaultContentHash, baseURI }} }) => {
   if (!log) {
     log = createLog()
   }
@@ -25,9 +26,23 @@ export const deployGifter = async ({ artifacts, log }) => {
     await task.log(`Deployed at ${proxy.address}`)
   })
 
-  await log.task('Verify proxy <-> logic', async () => {
+  await log.task('Check default content hash and base URI', async t => {
+    // check default metadata
+    const url = `${baseURI}/${defaultContentHash}`
+    await t.log(`Checking URL exists: ${url}`)
+    const { body } = await got(url)
+    await t.log(body)
+    assert(JSON.parse(body).name.length > 0)
+  })
+
+  await log.task('Set: default content hash', async () => {
     const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
-    assert.equal(await gifter.getVersion(), '1')
+    await gifter.setDefaultContentHash(defaultContentHash)
+  })
+
+  await log.task('Set: default base URI', async () => {
+    const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
+    await gifter.setBaseURI(baseURI)
   })
 
   return { 

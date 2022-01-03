@@ -26,6 +26,7 @@
     "coverage": "rm -rf coverage && yarn hardhat coverage",
     "generate-index": "./scripts/generateIndex.js",
     "compile": "yarn clean && yarn hardhat compile && yarn generate-index",
+    "setup-deploy-config:local": "./scripts/setupDeployConfig.js --network=localhost",
     "deploy:local": "yarn hardhat run --network localhost ./deploy",
     "deploy:rinkeby": "yarn hardhat run --network rinkeby ./deploy",
     "deploy:avax": "yarn hardhat run --network avax ./deploy",
@@ -73,7 +74,8 @@
     "semver": "^7.3.5",
     "solc": "=0.6.12",
     "solhint": "^2.2.0",
-    "solidity-coverage": "^0.7.16"
+    "solidity-coverage": "^0.7.16",
+    "yargs": "^17.3.1"
   },
   "husky": {
     "hooks": {

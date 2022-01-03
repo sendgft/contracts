@@ -7,6 +7,8 @@ import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, ve
 import { deployGifter } from './modules/gifter'
 import { deployMulticall } from './modules/multicall'
 
+const deployConfig = require('../releaseConfig.json')
+
 
 async function main() {
   const log = createLog(console.log.bind(console))
@@ -23,6 +25,7 @@ async function main() {
     log,
     network,
     getTxParams,
+    deployConfig,
   }
 
   console.log(`Deploying from: ${accounts[0]}`)
@@ -71,7 +74,7 @@ async function main() {
     }
 
     // write to deployed addresses
-    if (network.name === 'avax' || network.name === 'rinkeby') {
+    if (deployConfig.saveDeployedAddresses) {
       await log.task('Update deployedAddresses.json', async task => {
         const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
         const json = require(deployedAddressesJsonFilePath)
