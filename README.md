@@ -60,6 +60,13 @@ Compile the contracts:
 yarn compile
 ```
 
+Setup the deployment config (only need to run this once):
+
+```shell
+yarn setup-deploy-config:local
+```
+
+
 Now deploy the contracts to it:
 
 ```shell

@@ -12,17 +12,15 @@ const argv = yargs(hideBin(process.argv)).argv
 const projectDir = path.join(__dirname, '..')
 const releaseConfigFile = path.join(projectDir, 'releaseConfig.json')
 
-// const GNOSIS_SAFES = {
-//   mainnet: '',
-// }
-
 async function main() {
-  // check params
-  ;['cid', 'gateway'].forEach(p => {
-    if (!argv[p]) {
-      throw new Error(`Missing param: ${p}`)
-    }
-  })
+  if (argv.network !== 'localhost') {
+    // check params
+    ;['cid', 'gateway'].forEach(p => {
+      if (!argv[p]) {
+        throw new Error(`Missing param: ${p}`)
+      }
+    })
+  }
 
   const releaseInfo = {
     saveDeployedAddresses: (argv.network !== 'localhost'),
