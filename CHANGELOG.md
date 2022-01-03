@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/sendgft/contracts/compare/v1.8.1...v1.9.0) (2022-01-03)
+
+
+### Features
+
+* set default content hash and base URI on deployment ([0dcca02](https://github.com/sendgft/contracts/commit/0dcca021c7a1b699aa55d56fb5d465c6078f1bdc))
+
 ## [1.8.1](https://github.com/sendgft/contracts/compare/v1.8.0...v1.8.1) (2022-01-02)
 
 # [1.8.0](https://github.com/sendgft/contracts/compare/v1.7.0...v1.8.0) (2021-12-25)
