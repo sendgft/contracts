@@ -22,6 +22,10 @@ async function main() {
     })
   }
 
+  if (argv.gateway && argv.gateway.substr(-1) !== '/') {
+    argv.gateway = `${argv.gateway}/`
+  }
+
   const releaseInfo = {
     saveDeployedAddresses: (argv.network !== 'localhost'),
     contractDefaults: {
