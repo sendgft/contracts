@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/sendgft/contracts/compare/v1.9.0...v1.9.1) (2022-01-05)
+
+
+### Bug Fixes
+
+* I had accidentally deleted relase config, oops! ([ea210d9](https://github.com/sendgft/contracts/commit/ea210d94b98ae20dd1d34a3c1cc2e98e26703cfd))
+
 # [1.9.0](https://github.com/sendgft/contracts/compare/v1.8.1...v1.9.0) (2022-01-03)
 
 
