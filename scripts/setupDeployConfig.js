@@ -13,14 +13,8 @@ const projectDir = path.join(__dirname, '..')
 const releaseConfigFile = path.join(projectDir, 'releaseConfig.json')
 
 async function main() {
-  if (argv.network !== 'localhost') {
-    // check params
-    ;['cid', 'gateway'].forEach(p => {
-      if (!argv[p]) {
-        throw new Error(`Missing param: ${p}`)
-      }
-    })
-  }
+  argv.cid = argv.cid || 'QmThG83f8vVdvvvutZ7JgnpP2FztyxctBgNBFgzU39HkYB'
+  argv.gateway = argv.gateway || 'https://gateway.pinata.cloud/ipfs/'
 
   if (argv.gateway && argv.gateway.substr(-1) !== '/') {
     argv.gateway = `${argv.gateway}/`
