@@ -10,10 +10,10 @@ const { hideBin } = require('yargs/helpers')
 const argv = yargs(hideBin(process.argv)).argv
 
 const projectDir = path.join(__dirname, '..')
-const releaseConfigFile = path.join(projectDir, 'releaseConfig.json')
+const deployConfigFile = path.join(projectDir, 'deployConfig.json')
 
 async function main() {
-  argv.cid = argv.cid || 'QmcZTAAPxSoJDVXgKMseXhj5LhNJH1LygB7krMv1ShU89U'
+  argv.cid = argv.cid || 'QmfQqrNx75k8AjXeq2oqsqRVowGJQCgi6Cw4qHrfquyN6j'
   argv.gateway = argv.gateway || 'https://ipfs.gft.xyz/ipfs/'
 
   if (argv.gateway && argv.gateway.substr(-1) !== '/') {
@@ -28,7 +28,7 @@ async function main() {
     }
   }
 
-  fs.writeFileSync(releaseConfigFile, JSON.stringify(releaseInfo, null, 2), 'utf8')
+  fs.writeFileSync(deployConfigFile, JSON.stringify(releaseInfo, null, 2), 'utf8')
 
   console.log(`Release config created:
 

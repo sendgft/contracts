@@ -7,7 +7,7 @@ import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, ve
 import { deployGifter } from './modules/gifter'
 import { deployMulticall } from './modules/multicall'
 
-const deployConfig = require('../releaseConfig.json')
+const deployConfig = require('../deployConfig.json')
 
 
 async function main() {
