@@ -30,7 +30,7 @@ async function main() {
 
   fs.writeFileSync(deployConfigFile, JSON.stringify(releaseInfo, null, 2), 'utf8')
 
-  console.log(`Release config created:
+  console.log(`Deploy config created:
 
 ${JSON.stringify(releaseInfo, null, 2)}`)
 }
