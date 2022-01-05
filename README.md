@@ -97,6 +97,7 @@ export INFURA_KEY="..."
 To deploy Rinkeby contracts:
 
 ```shell
+yarn setup-deploy-config:rinkeby
 yarn deploy:rinkeby
 ```
 
@@ -104,12 +105,6 @@ For Avalanche:
 
 ```shell
 yarn deploy:avax
-```
-
-To deploy for production (i.e. verify contract on Etherscan, update `deployedAddresses.json`), set the `PRODUCTION` inline env var:
-
-```shell
-PRODUCTION=true yarn deploy:rinkeby
 ```
 
 **Publishing**

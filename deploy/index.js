@@ -40,50 +40,46 @@ async function main() {
   // do proxy
   const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx)
 
-  if (process.env.PRODUCTION) {
-    console.log(`\nProduction release!!\n`)
+  // for rinkeby let's verify contract on etherscan
+  if (network.name === 'rinkeby') {
+    await log.task('Verify contracts on Etherscan', async task => {
+      const secondsToWait = 60
+      await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
+      await delay(secondsToWait * 1000)
 
-    // for rinkeby let's verify contract on etherscan
-    if (network.name === 'rinkeby') {
-      await log.task('Verify contracts on Etherscan', async task => {
-        const secondsToWait = 60
-        await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
-        await delay(secondsToWait * 1000)
+      await Promise.all([
+        verifyOnEtherscan({ 
+          task, 
+          name: 'proxy', 
+          args: {
+            network: network.name,
+            address: proxy.address,
+            constructorArguments: proxyConstructorArgs,
+          },
+        }),
+        verifyOnEtherscan({
+          task,
+          name: 'implementation',
+          args: {
+            network: network.name,
+            address: impl.address,
+            constructorArguments: implConstructorArgs,
+          },
+        }),
+      ])
+    })
+  }
 
-        await Promise.all([
-          verifyOnEtherscan({ 
-            task, 
-            name: 'proxy', 
-            args: {
-              network: network.name,
-              address: proxy.address,
-              constructorArguments: proxyConstructorArgs,
-            },
-          }),
-          verifyOnEtherscan({
-            task,
-            name: 'implementation',
-            args: {
-              network: network.name,
-              address: impl.address,
-              constructorArguments: implConstructorArgs,
-            },
-          }),
-        ])
-      })
-    }
-
-    // write to deployed addresses
-    if (deployConfig.saveDeployedAddresses) {
-      await log.task('Update deployedAddresses.json', async task => {
-        const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
-        const json = require(deployedAddressesJsonFilePath)
-        json.Gifter = _.get(json, 'Gifter', {})
-        json.Gifter.chains = _.get(json, 'Gifter.chains', {})
-        json.Gifter.chains[network.id] = proxy.address
-        fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(json, null, 2), 'utf-8')
-      })
-    }
+  // write to deployed addresses
+  if (deployConfig.saveDeployedAddresses) {
+    await log.task('Update deployedAddresses.json', async task => {
+      const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
+      const json = require(deployedAddressesJsonFilePath)
+      json.Gifter = _.get(json, 'Gifter', {})
+      json.Gifter.chains = _.get(json, 'Gifter.chains', {})
+      json.Gifter.chains[network.id] = proxy.address
+      fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(json, null, 2), 'utf-8')
+    })
   }
 }
 

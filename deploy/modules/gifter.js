@@ -1,3 +1,4 @@
+import delay from 'delay'
 import { strict as assert } from 'assert'
 import got from 'got'
 
@@ -26,6 +27,8 @@ export const deployGifter = async ({ artifacts, log, deployConfig: { contractDef
     await task.log(`Deployed at ${proxy.address}`)
   })
 
+  await delay(5000)
+
   if (defaultContentHash && baseURI) {
     await log.task('Check default content hash and base URI', async t => {
       // check default metadata
@@ -36,12 +39,12 @@ export const deployGifter = async ({ artifacts, log, deployConfig: { contractDef
       assert(JSON.parse(body).name.length > 0)
     })
 
-    await log.task('Set: default content hash', async () => {
+    await log.task(`Set: default content hash: ${defaultContentHash}`, async () => {
       const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
       await gifter.setDefaultContentHash(defaultContentHash)
     })
 
-    await log.task('Set: default base URI', async () => {
+    await log.task(`Set: default base URI: ${baseURI}`, async () => {
       const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
       await gifter.setBaseURI(baseURI)
     })
