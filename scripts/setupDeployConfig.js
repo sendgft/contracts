@@ -14,7 +14,7 @@ const releaseConfigFile = path.join(projectDir, 'releaseConfig.json')
 
 async function main() {
   argv.cid = argv.cid || 'QmcZTAAPxSoJDVXgKMseXhj5LhNJH1LygB7krMv1ShU89U'
-  argv.gateway = argv.gateway || 'https://gateway.pinata.cloud/ipfs/'
+  argv.gateway = argv.gateway || 'https://ipfs.gft.xyz/ipfs/'
 
   if (argv.gateway && argv.gateway.substr(-1) !== '/') {
     argv.gateway = `${argv.gateway}/`
