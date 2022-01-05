@@ -1,7 +1,7 @@
 {
   "saveDeployedAddresses": false,
   "contractDefaults": {
-    "defaultContentHash": "QmThG83f8vVdvvvutZ7JgnpP2FztyxctBgNBFgzU39HkYB",
+    "defaultContentHash": "QmcZTAAPxSoJDVXgKMseXhj5LhNJH1LygB7krMv1ShU89U",
     "baseURI": "https://gateway.pinata.cloud/ipfs/"
   }
 }
