@@ -5,7 +5,7 @@ import got from 'got'
 
 import { createLog, deployContract, getContractAt } from '../utils'
 
-export const deployGifter = async ({ artifacts, log, deployConfig }) => {
+export const deployGifter = async ({ artifacts, log, deployConfig, deployedAddressesToSave }) => {
   if (!log) {
     log = createLog()
   }
@@ -51,6 +51,11 @@ export const deployGifter = async ({ artifacts, log, deployConfig }) => {
       const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
       await gifter.setBaseURI(baseURI)
     })
+  }
+
+  // tell context what addresses to save
+  if (deployedAddressesToSave) {
+    deployedAddressesToSave.Gifter = proxy.address
   }
 
   return { 
