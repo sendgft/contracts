@@ -123,13 +123,13 @@ describe('Gifter', () => {
     })
 
     it('send eth and erc20 and NFTs, and open and claim', async () => {
-      await token1.mint({ value: 10, from: sender1 })
-      await token2.mint({ value: 10, from: sender1 })
+      await token1.mint(sender1, 10)
+      await token2.mint(sender1, 10)
 
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 10, { from: sender1 })
 
-      await nft1.mint({ from: sender1 })
+      await nft1.mint(sender1)
       await nft1.approve(gifter.address, 1, { from: sender1 })
 
       await gifter.create(
@@ -243,13 +243,13 @@ describe('Gifter', () => {
     })
 
     it('send eth and erc20 and NFTs, and claim without opening', async () => {
-      await token1.mint({ value: 10, from: sender1 })
-      await token2.mint({ value: 10, from: sender1 })
+      await token1.mint(sender1, 10)
+      await token2.mint(sender1, 10)
 
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 10, { from: sender1 })
 
-      await nft1.mint({ from: sender1 })
+      await nft1.mint(sender1)
       await nft1.approve(gifter.address, 1, { from: sender1 })
 
       await gifter.create(
@@ -320,13 +320,13 @@ describe('Gifter', () => {
     })
 
     it('send eth and erc20 and NFTs, and claim without opening, then open and claim later', async () => {
-      await token1.mint({ value: 10, from: sender1 })
-      await token2.mint({ value: 10, from: sender1 })
+      await token1.mint(sender1, 10)
+      await token2.mint(sender1, 10)
 
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 10, { from: sender1 })
 
-      await nft1.mint({ from: sender1 })
+      await nft1.mint(sender1)
       await nft1.approve(gifter.address, 1, { from: sender1 })
 
       await gifter.create(
@@ -422,8 +422,8 @@ describe('Gifter', () => {
 
   describe('failures', () => {
     it('send erc20 where gifter is not approved', async () => {
-      await token1.mint({ value: 10, from: sender1 })
-      await token2.mint({ value: 10, from: sender1 })
+      await token1.mint(sender1, 10)
+      await token2.mint(sender1, 10)
 
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 9, { from: sender1 })
@@ -440,7 +440,7 @@ describe('Gifter', () => {
     })
 
     it('send erc20 where balance is insufficient', async () => {
-      await token1.mint({ value: 10, from: sender1 })
+      await token1.mint(sender1, 10)
 
       await token1.approve(gifter.address, 10, { from: sender1 })
       await token2.approve(gifter.address, 5, { from: sender1 })
@@ -469,7 +469,7 @@ describe('Gifter', () => {
     })
 
     it('send nft where gifter is not approved', async () => {
-      await nft1.mint({ from: sender1 })
+      await nft1.mint(sender1)
 
       await gifter.create(
         receiver1,
@@ -503,7 +503,7 @@ describe('Gifter', () => {
     })
 
     it('open and claim when already done so', async () => {
-      await token1.mint({ value: 3, from: sender1 })
+      await token1.mint(sender1, 3)
       await token1.approve(gifter.address, 3, { from: sender1 })
 
       await gifter.create(
@@ -523,7 +523,7 @@ describe('Gifter', () => {
     })
 
     it('claim without openeing when already done so', async () => {
-      await token1.mint({ value: 3, from: sender1 })
+      await token1.mint(sender1, 3)
       await token1.approve(gifter.address, 3, { from: sender1 })
 
       await gifter.create(

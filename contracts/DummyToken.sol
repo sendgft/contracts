@@ -62,15 +62,8 @@ contract DummyToken is IERC20, Context {
       emit Approval(owner, spender, amount);
   }
 
-  function mint() public payable {
-      balances[_msgSender()] = balances[_msgSender()].add(msg.value);
-      totalSupply = totalSupply.add(msg.value);
-  }
-
-  function burn(uint value) public {
-      // Balance covers value
-      balances[_msgSender()] = balances[_msgSender()].sub(value, 'DummyToken: insufficient balance');
-      totalSupply = totalSupply.sub(value);
-      payable(_msgSender()).transfer(value);
+  function mint(address _recipient, uint _numTokensWei) public payable {
+      balances[_recipient] = balances[_recipient].add(_numTokensWei);
+      totalSupply = totalSupply.add(_numTokensWei);
   }
 }
