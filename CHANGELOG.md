@@ -1,3 +1,11 @@
+# [1.10.0](https://github.com/sendgft/contracts/compare/v1.9.1...v1.10.0) (2022-01-10)
+
+
+### Features
+
+* export local devnet addresses ([bda2aea](https://github.com/sendgft/contracts/commit/bda2aea1078f0000508c16a586ee5bccad23765a))
+* on local devnet always deploy to same addresses ([1c8d09f](https://github.com/sendgft/contracts/commit/1c8d09f27c6188edf71068f8d442219e9948d823))
+
 ## [1.9.1](https://github.com/sendgft/contracts/compare/v1.9.0...v1.9.1) (2022-01-05)
 
 
