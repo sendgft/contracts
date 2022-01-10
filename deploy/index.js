@@ -1,4 +1,4 @@
-import { _ } from 'lodash'
+import _ from 'lodash'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
@@ -6,6 +6,7 @@ import delay from 'delay'
 import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, verifyOnEtherscan } from './utils'
 import { deployGifter } from './modules/gifter'
 import { deployMulticall } from './modules/multicall'
+import { deployDummyTokens } from './modules/dummyTokens'
 
 const deployConfig = require('../deployConfig.json')
 
@@ -26,6 +27,7 @@ async function main() {
     network,
     getTxParams,
     deployConfig,
+    deployedAddressesToSave: deployConfig.saveDeployedAddresses ? {} : null,
   }
 
   console.log(`Deploying from: ${accounts[0]}`)
@@ -37,8 +39,13 @@ async function main() {
     await deployMulticall(ctx)
   }
 
-  // do proxy
+  // proxy
   const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx)
+
+  // dummy tokens 
+  if (_.get(deployConfig, 'deployDummyTokens')) {
+    await deployDummyTokens(ctx)
+  }
 
   // for rinkeby let's verify contract on etherscan
   if (network.name === 'rinkeby') {
@@ -70,14 +77,16 @@ async function main() {
     })
   }
 
-  // write to deployed addresses
-  if (deployConfig.saveDeployedAddresses) {
+  // save deployed addresses
+  if (ctx.deployedAddressesToSave) {
     await log.task('Update deployedAddresses.json', async task => {
       const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
       const json = require(deployedAddressesJsonFilePath)
-      json.Gifter = _.get(json, 'Gifter', {})
-      json.Gifter.chains = _.get(json, 'Gifter.chains', {})
-      json.Gifter.chains[network.id] = proxy.address
+      Object.keys(ctx.deployedAddressesToSave).forEach(k => {
+        json[k] = _.get(json, k, {})
+        json[k].chains = _.get(json, `${k}.chains`, {})
+        json[k].chains[network.id] = ctx.deployedAddressesToSave[k]
+      })
       fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(json, null, 2), 'utf-8')
     })
   }

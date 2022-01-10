@@ -8,8 +8,8 @@ contract DummyNFT is ERC721Enumerable {
 
   constructor() ERC721("DUMMY", "DUM") {}
 
-  function mint() public {
+  function mint(address _owner) public {
     lastGiftId += 1;
-    _safeMint(_msgSender(), lastGiftId);
+    _safeMint(_owner, lastGiftId);
   }
 }

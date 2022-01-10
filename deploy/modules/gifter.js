@@ -1,10 +1,11 @@
+import _ from 'lodash'
 import delay from 'delay'
 import { strict as assert } from 'assert'
 import got from 'got'
 
 import { createLog, deployContract, getContractAt } from '../utils'
 
-export const deployGifter = async ({ artifacts, log, deployConfig: { contractDefaults: { defaultContentHash, baseURI }} }) => {
+export const deployGifter = async ({ artifacts, log, deployConfig, deployedAddressesToSave }) => {
   if (!log) {
     log = createLog()
   }
@@ -29,6 +30,8 @@ export const deployGifter = async ({ artifacts, log, deployConfig: { contractDef
 
   await delay(5000)
 
+  const { defaultContentHash, baseURI } = _.get(deployConfig, 'contractDefaults', {})
+  
   if (defaultContentHash && baseURI) {
     await log.task('Check default content hash and base URI', async t => {
       // check default metadata
@@ -48,6 +51,11 @@ export const deployGifter = async ({ artifacts, log, deployConfig: { contractDef
       const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
       await gifter.setBaseURI(baseURI)
     })
+  }
+
+  // tell context what addresses to save
+  if (deployedAddressesToSave) {
+    deployedAddressesToSave.Gifter = proxy.address
   }
 
   return { 
