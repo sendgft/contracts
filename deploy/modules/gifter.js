@@ -3,9 +3,12 @@ import delay from 'delay'
 import { strict as assert } from 'assert'
 import got from 'got'
 
-import { createLog, deployContract, getContractAt } from '../utils'
+import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
+import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 
-export const deployGifter = async ({ artifacts, log, deployConfig, deployedAddressesToSave }) => {
+export const deployGifter = async (ctx = {}) => {
+  const { artifacts, log, deployConfig, deployedAddressesToSave, isLocalDevnet } = ctx
+
   if (!log) {
     log = createLog()
   }
@@ -13,8 +16,12 @@ export const deployGifter = async ({ artifacts, log, deployConfig, deployedAddre
   let impl
   const implConstructorsArgs = []
   await log.task('Deploy implementation contract', async task => {
-    impl = await deployContract({ artifacts }, 'GifterImplementationV1', implConstructorsArgs)
+    impl = await deployContract(ctx, 'GifterImplementationV1', implConstructorsArgs)
     await task.log(`Deployed at ${impl.address}`)
+
+    if (isLocalDevnet) {
+      assertSameAddress(impl.address, LOCAL_DEVNET_ADDRESSES.gifterImpl, 'gifterImpl')
+    }
   })
 
   let proxy
@@ -24,8 +31,12 @@ export const deployGifter = async ({ artifacts, log, deployConfig, deployedAddre
     proxyConstructorArgs = [
       impl.address, impl.contract.methods.initialize().encodeABI()
     ]
-    proxy = await deployContract({ artifacts }, 'Gifter', proxyConstructorArgs)
+    proxy = await deployContract(ctx, 'Gifter', proxyConstructorArgs)
     await task.log(`Deployed at ${proxy.address}`)
+
+    if (isLocalDevnet) {
+      assertSameAddress(proxy.address, LOCAL_DEVNET_ADDRESSES.gifterProxy, 'gifterProxy')
+    }
   })
 
   await delay(5000)
@@ -42,20 +53,19 @@ export const deployGifter = async ({ artifacts, log, deployConfig, deployedAddre
       assert(JSON.parse(body).name.length > 0)
     })
 
-    await log.task(`Set: default content hash: ${defaultContentHash}`, async () => {
-      const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
-      await gifter.setDefaultContentHash(defaultContentHash)
+    const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
+
+    await log.task(`Set: default content hash: ${defaultContentHash}`, async task => {
+      await execMethod({ ctx, task }, gifter, 'setDefaultContentHash', [defaultContentHash])
     })
 
-    await log.task(`Set: default base URI: ${baseURI}`, async () => {
-      const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
-      await gifter.setBaseURI(baseURI)
+    await log.task(`Set: default base URI: ${baseURI}`, async task => {
+      await execMethod({ ctx, task }, gifter, 'setBaseURI', [baseURI])
     })
   }
 
-  // tell context what addresses to save
   if (deployedAddressesToSave) {
-    deployedAddressesToSave.Gifter = proxy.address
+    deployedAddressesToSave.Factory = proxy.address
   }
 
   return { 

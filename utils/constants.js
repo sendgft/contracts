@@ -1,1 +1,16 @@
 exports.TEST_MNEMONIC = 'funny door sample enrich female wedding stereo crane setup shop dwarf dismiss'
+
+exports.DEFAULT_WALLETS = {
+  test: `0x0b5Ce60a5cD884d68dFB124F956667386ee676dd`,
+  hua: `0xae48Ec9718e887f52758Cd1DeE1236b98CdfBA93`,
+  ram: `0xb1B6e377aA6ec6928A1D499AE58483B2B99658Ec`,
+}
+
+exports.LOCAL_DEVNET_ADDRESSES = {
+  multicall: '0x8A6A35A26D62Db4Ea074b4C6DBeb99975170375a',
+  gifterImpl: '0xdAee77CC809C9b9775d3b7c6E5840Bfe9726FbD0',
+  gifterProxy: '0xc8329bC2Fc94Ff6bB88545D74D0275AE1a52c629',
+  token1: '0xc5ACF4116B253e7BBf2195e2ec57B43FbAaD9Bb9',
+  token2: '0x6A766385d0a54aB01356DbdBc7E4dDb92C4394bE',
+  token3: '0x21D209C836d6624cF4A10F45D7BD461A6818b74D',
+}

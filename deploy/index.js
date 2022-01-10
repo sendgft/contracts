@@ -3,7 +3,7 @@ import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
 
-import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getAccounts, verifyOnEtherscan } from './utils'
+import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance } from './utils'
 import { deployGifter } from './modules/gifter'
 import { deployMulticall } from './modules/multicall'
 import { deployDummyTokens } from './modules/dummyTokens'
@@ -16,21 +16,43 @@ async function main() {
 
   const network = getMatchingNetwork(await hre.ethers.provider.getNetwork())
 
-  const accounts = await getAccounts()
+  const signers = await getSigners()
 
-  const getTxParams = await buildGetTxParamsHandler(network, { log })
+  let defaultSigner
+
+  if (deployConfig.isLocalDevnet) {
+    defaultSigner = signers[5]
+
+    await log.task(`Deploying from alternative address for local devnet: ${defaultSigner.address}`, async task => {
+      const bal = await getBalance(defaultSigner.address)
+
+      await task.log(`Balance ${bal.toEth().toString()} ETH`)
+
+      if (bal.toEth().lt(1)) {
+        await task.log(`Topping up balance ...`)
+
+        await fundAddress(defaultSigner.address, new EthVal(1, 'eth').sub(bal.toEth()).toString())
+
+        await task.log(`... topped up!`)
+      }
+    })
+  } else {
+    defaultSigner = signers[0]
+  }
+
+  const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, { log })
 
   const ctx = {
     artifacts,
-    accounts,
+    signers,
+    defaultSigner,
     log,
     network,
     getTxParams,
     deployConfig,
+    isLocalDevnet: !!deployConfig.isLocalDevnet,
     deployedAddressesToSave: deployConfig.saveDeployedAddresses ? {} : null,
   }
-
-  console.log(`Deploying from: ${accounts[0]}`)
 
   ctx.isLocalNetwork = ['hardhat', 'localhost'].includes(network.name)
 

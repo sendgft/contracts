@@ -22,6 +22,7 @@ async function main() {
 
   const releaseInfo = {
     saveDeployedAddresses: (argv.network !== 'localhost'),
+    isLocalDevnet: (argv.network === 'localhost'),
     deployDummyTokens: (['localhost', 'rinkeby'].includes(argv.network)),
     contractDefaults: {
       defaultContentHash: argv.cid,

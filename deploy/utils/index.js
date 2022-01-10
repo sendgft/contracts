@@ -1,4 +1,6 @@
 import delay from 'delay'
+import EthVal from 'ethval'
+import { strict as assert } from 'assert'
 import _ from 'lodash'
 import got from 'got'
 import { createLog } from './log'
@@ -8,25 +10,39 @@ import deployedAddresses from '../../deployedAddresses.json'
 export { createLog }
 
 const defaultGetTxParams = (txParamsOverride = {}) => Object.assign({
-  gasPrice: 1 * 1000000000, // 1 GWEI,
+ gasPrice: 1 * 1000000000, // 1 GWEI,
 }, txParamsOverride)
 
-let accounts
-export const getAccounts = async () => {
-  if (!accounts) {
-    accounts = (await hre.ethers.getSigners()).map(a => a.address)
+let signers
+export const getSigners = async () => {
+  if (!signers) {
+    signers = (await hre.ethers.getSigners())
   }
-  return accounts
+  return signers
 }
 
-export const deployContract = async ({ artifacts, getTxParams = defaultGetTxParams }, name, args = [], overrides = {}) => {
+export const getBalance = async (addr) => {
+  const val = await hre.ethers.provider.getBalance(addr)
+  return new EthVal(val)
+}
+
+export const fundAddress = async (addr, eth) => {
+  await (await signers[0].sendTransaction({
+    to: addr,
+    value: new EthVal(eth, 'eth')
+  })).wait()
+}
+
+export const deployContract = async ({ artifacts, getTxParams = defaultGetTxParams }, name, args = [], txOverrides = {}) => {
   const C = artifacts.require(name)
-  const c = await C.new(...args, { ...getTxParams(), ...overrides })
+  const c = await C.new(...args, { ...getTxParams(txOverrides) })
   await delay(5000) // wait for endpoints to catch up
   return c
 }
 
 export const getContractAt = async ({ artifacts }, name, addr) => {
+  const code = await hre.ethers.provider.getCode(addr)
+  assert(code !== '0x', `No code found at ${addr}, could not get instance of ${name}`)
   const C = artifacts.require(name)
   return C.at(addr)
 }
@@ -35,7 +51,7 @@ export const getMatchingNetwork = ({ chainId: id }) => {
   const match = Object.keys(networks).find(k => networks[k].chainId == id)
 
   if (!match) {
-  throw new Error(`Could not find matching network with id ${id}`)
+    throw new Error(`Could not find matching network with id ${id}`)
   }
 
   return Object.assign({
@@ -60,7 +76,7 @@ export const getLiveGasPrice = async ({ log }) => {
 }
 
 
-export const buildGetTxParamsHandler = async (network, { log }) => {
+export const buildGetTxParamsHandler = async (network, signer, { log }) => {
   // additional tx params (used to ensure enough gas is supplied alongside the correct nonce)
   let getTxParams
 
@@ -76,7 +92,6 @@ export const buildGetTxParamsHandler = async (network, { log }) => {
       gwei = 3
     }
 
-    const signer = (await hre.ethers.getSigners())[1] 
     const address = await signer.getAddress()
     
     let nonce = await signer.getTransactionCount()
@@ -98,15 +113,14 @@ export const buildGetTxParamsHandler = async (network, { log }) => {
 }
 
 
-export const execMethod = async ({ ctx, task, contract }, method, ...args) => {
+export const execMethod = async ({ ctx, task }, contract, method, args = [], txOverrides = {}) => {
   const { getTxParams = defaultGetTxParams } = ctx
-
   await task.task(`CALL ${method}() on ${contract.address}`, async () => {
-    return await contract[method].apply(contract, args.concat(getTxParams()))
+    return await contract[method].apply(contract, args.concat(getTxParams(txOverrides)))
   }, { col: 'yellow' })
 }
 
-export const getMethodExecutor = ({ ctx, task, contract }) => (method, ...args) => execMethod({ ctx, task, contract }, method, ...args)
+export const getMethodExecutor = ({ ctx, task }, contract) => (method, args = [], txOverrides = {}) => execMethod({ ctx, task }, contract, method, args, txOverrides)
 
 
 export const getDeployedContractInstance = async ({ lookupType, type, network, log }) => {
@@ -135,4 +149,10 @@ export const verifyOnEtherscan = async ({ task, name, args }) => {
       }
     }
   })
+}
+
+export const assertSameAddress = (input, expected, errorLabel) => {
+  if (input.toLowerCase() !== expected.toLowerCase()) {
+    throw new Error(`Mismatch for ${errorLabel}: ${input} was expected to equal ${expected}`)
+  }
 }
