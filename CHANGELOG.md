@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/sendgft/contracts/compare/v1.10.0...v1.10.1) (2022-01-10)
+
+
+### Bug Fixes
+
+* log creation was broken for tests ([0ae0539](https://github.com/sendgft/contracts/commit/0ae05394ae16344bf369bd3cb64287d832f5e385))
+
 # [1.10.0](https://github.com/sendgft/contracts/compare/v1.9.1...v1.10.0) (2022-01-10)
 
 
