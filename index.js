@@ -4,6 +4,7 @@ try {
 } catch (_ignore) {}
 
 const contracts = require('./contracts.generated.js')
+const { LOCAL_DEVNET_ADDRESSES } = require('./utils/constants.js')
 
 const extractEventsFromAbis = c => c.reduce((output, contract) => {
   contract.abi.filter(({ type }) => type === 'event').forEach(e => {
@@ -15,6 +16,7 @@ const extractEventsFromAbis = c => c.reduce((output, contract) => {
 }, {})
 
 module.exports = {
+  LOCAL_DEVNET_ADDRESSES,
   addresses: deployedAddresses,
   contracts,
   events: extractEventsFromAbis(Object.values(contracts)),
