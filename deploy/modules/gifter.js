@@ -7,11 +7,7 @@ import { createLog, deployContract, getContractAt, execMethod, assertSameAddress
 import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 
 export const deployGifter = async (ctx = {}) => {
-  const { artifacts, log, deployConfig, deployedAddressesToSave, isLocalDevnet } = ctx
-
-  if (!log) {
-    log = createLog()
-  }
+  const { artifacts, log = createLog(), deployConfig, deployedAddressesToSave, isLocalDevnet } = ctx
 
   let impl
   const implConstructorsArgs = []

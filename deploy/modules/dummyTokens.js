@@ -6,11 +6,7 @@ import { DEFAULT_WALLETS, LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 
 
 export const deployDummyTokens = async (ctx = {}) => {
-  const { artifacts, log, isLocalDevnet, deployedAddressesToSave } = ctx
-
-  if (!log) {
-    log = createLog()
-  }
+  const { artifacts, log = createLog(), isLocalDevnet, deployedAddressesToSave } = ctx
 
   const tokens = []
 
