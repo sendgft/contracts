@@ -27,7 +27,7 @@ export const deployDummyTokens = async (ctx = {}) => {
       await task.log(`Deployed at ${token.address}`)
 
       if (isLocalDevnet) {
-        assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[`token${i + 1}`], symbol)
+        assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[symbol], symbol)
       }
 
       if (deployedAddressesToSave) {
