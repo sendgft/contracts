@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/sendgft/contracts/compare/v1.10.1...v1.11.0) (2022-01-13)
+
+
+### Features
+
+* add types for local devnet addresses ([a9a415e](https://github.com/sendgft/contracts/commit/a9a415ee92a165660babd08fa9a5bdf746ce6018))
+
 ## [1.10.1](https://github.com/sendgft/contracts/compare/v1.10.0...v1.10.1) (2022-01-10)
 
 
