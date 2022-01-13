@@ -1,4 +1,3 @@
-import EthVal from 'ethval'
 import _ from 'lodash'
 
 import { createLog, deployContract, assertSameAddress } from '../utils'

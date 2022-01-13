@@ -21,3 +21,7 @@ export const contracts: ContractJsons
 type EventAbis = Record<string, EventFragment>
 
 export const events: EventAbis
+
+type LocalDevnetAddresses = Record<string, string>
+
+export const LOCAL_DEVNET_ADDRESSES: LocalDevnetAddresses
