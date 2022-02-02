@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript">
+      /* BEGIN: DO NOT MODIFY */
+      let gift = {}
+      let updateUi
+
+      window.onload = () => {
+        if (!Object.keys(gift).length) {
+          window.addEventListener("message", (event) => {
+            gift = event.data.gift
+            updateUi()
+          }, false)
+        } else {
+          updateUi()          
+        }
+      }
+      /* END: DO NOT MODIFY */
+
+      // NOTE: The `updateUI` method must always be set
+      updateUi = () => {
+        const spacer = '<p>&nbsp;</p>'
+        let html = `<p>From: ${gift.sender}</p>`
+        if (gift.message) {
+          html += `${spacer}<p>${gift.message}</p>`
+        }
+        let assetsHtml = ''
+        if (gift.native) {
+          assetsHtml += `<p>${gift.native.symbol} ${gift.native.amount}</p>`
+        }
+        if (gift.tokens && gift.tokens.length) {
+          for (let token of gift.tokens) {
+            assetsHtml += `<p>${token.symbol} ${token.amount}</p>`
+          }
+        }
+
+        if (assetsHtml) {
+          html += `${spacer}<p>Received:</p>${assetsHtml}`
+        }
+
+        document.getElementById("main").innerHTML = html
+      }
+     </script>
+    <style media="all">
+      body {
+        background-color: #EF3F6B;
+        color: #fff;
+        font-family: Verdana, Arial, sans-serif;
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+      }
+    
+      main {
+        text-align: center;
+        position: absolute;
+        width: 100vw;
+        top: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="main"></main>
+  </body>
+</html>

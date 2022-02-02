@@ -37,18 +37,10 @@ export const deployGifter = async (ctx = {}) => {
 
   await delay(5000)
 
-  const { defaultMetadataCid, baseURI } = _.get(deployConfig, 'contractDefaults', {})
+  const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
+  const { defaultMetadataCid } = _.get(ctx, 'cids', {})
   
   if (defaultMetadataCid && baseURI) {
-    await log.task('Check default content hash and base URI', async t => {
-      // check default metadata
-      const url = `${baseURI}/${defaultMetadataCid}`
-      await t.log(`Checking URL exists: ${url}`)
-      const { body } = await got(url)
-      await t.log(body)
-      assert(JSON.parse(body).name.length > 0)
-    })
-
     const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
 
     await log.task(`Set: default content hash: ${defaultMetadataCid}`, async task => {

@@ -2009,9 +2009,9 @@
     lodash "^4.17.4"
     read-pkg-up "^7.0.0"
 
-"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#8fcbed709e58ff750a2ff3b517a0296336837be2":
+"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#2dd2efac6900ec3be964d717f9a47eeb0e6f815e":
   version "1.0.0"
-  resolved "https://github.com/sendgft/ipfs-tools.git#8fcbed709e58ff750a2ff3b517a0296336837be2"
+  resolved "https://github.com/sendgft/ipfs-tools.git#2dd2efac6900ec3be964d717f9a47eeb0e6f815e"
   dependencies:
     "@pinata/sdk" "^1.1.23"
     chalk "4"
@@ -2022,9 +2022,9 @@
     got "11"
     ipfs-http-client "^56.0.0"
 
-"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#9332fa9ce645c87a398284c03fc784353e7133ca":
+"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#8fcbed709e58ff750a2ff3b517a0296336837be2":
   version "1.0.0"
-  resolved "https://github.com/sendgft/ipfs-tools.git#9332fa9ce645c87a398284c03fc784353e7133ca"
+  resolved "https://github.com/sendgft/ipfs-tools.git#8fcbed709e58ff750a2ff3b517a0296336837be2"
   dependencies:
     "@pinata/sdk" "^1.1.23"
     chalk "4"

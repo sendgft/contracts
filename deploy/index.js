@@ -7,6 +7,7 @@ import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, ver
 import { deployGifter } from './modules/gifter'
 import { deployMulticall } from './modules/multicall'
 import { deployDummyTokens } from './modules/dummyTokens'
+import { deployIpfsAssets } from './modules/ipfs'
 
 const deployConfig = require('../deployConfig.json')
 
@@ -63,6 +64,9 @@ async function main() {
     isLocalDevnet: !!deployConfig.isLocalDevnet,
     deployedAddressesToSave: deployConfig.saveDeployedAddresses ? {} : null,
   }
+
+  // ipfs
+  await deployIpfsAssets(ctx)
 
   // do multicall
   if (ctx.isLocalDevnet) {
