@@ -16,6 +16,16 @@ async function main() {
 
   const network = getMatchingNetwork(await hre.ethers.provider.getNetwork())
 
+  console.log(`Network: ${network.name} (chainId: ${network.chainId})`)
+
+  if (network.name === 'hardhat') {
+    network.name = 'localhost'
+  }
+
+  if (network.name !== deployConfig.network) {
+    throw new Error(`Network mismatch: ${network.name} !== ${deployConfig.network}`)
+  }
+
   const signers = await getSigners()
 
   let defaultSigner
@@ -54,10 +64,8 @@ async function main() {
     deployedAddressesToSave: deployConfig.saveDeployedAddresses ? {} : null,
   }
 
-  ctx.isLocalNetwork = ['hardhat', 'localhost'].includes(network.name)
-
   // do multicall
-  if (ctx.isLocalNetwork) {
+  if (ctx.isLocalDevnet) {
     await deployMulticall(ctx)
   }
 

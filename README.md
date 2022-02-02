@@ -66,7 +66,6 @@ Setup the deployment config (only need to run this once):
 yarn setup-deploy-config:local
 ```
 
-
 Now deploy the contracts to it:
 
 ```shell
