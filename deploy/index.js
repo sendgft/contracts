@@ -5,6 +5,7 @@ import delay from 'delay'
 
 import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance } from './utils'
 import { deployGifter } from './modules/gifter'
+import { deployCardMarket } from './modules/cardMarket'
 import { deployMulticall } from './modules/multicall'
 import { deployDummyTokens } from './modules/dummyTokens'
 import { deployIpfsAssets } from './modules/ipfs'
@@ -33,6 +34,11 @@ async function main() {
 
   if (deployConfig.isLocalDevnet) {
     defaultSigner = signers[5]
+
+    const nonce = await defaultSigner.getTransactionCount()
+    if (nonce > 0) {
+      throw new Error(`Signer nonce must be 0!`)
+    }
 
     await log.task(`Deploying from alternative address for local devnet: ${defaultSigner.address}`, async task => {
       const bal = await getBalance(defaultSigner.address)
@@ -73,8 +79,11 @@ async function main() {
     await deployMulticall(ctx)
   }
 
-  // proxy
-  const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx)
+  // card market
+  const { proxy: cardMarketProxy } = await deployCardMarket(ctx)
+
+  // gifter
+  const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, { cardMarketAddress: cardMarketProxy.address })
 
   // dummy tokens 
   if (_.get(deployConfig, 'deployDummyTokens')) {

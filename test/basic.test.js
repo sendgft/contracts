@@ -25,7 +25,7 @@ describe('Gifter', () => {
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
     ;({ proxy, impl } = await deployGifter({ artifacts }))
-    gifter = await getContractAt({ artifacts }, 'GifterImplementationV1', proxy.address)
+    gifter = await getContractAt({ artifacts }, 'GifterV1', proxy.address)
     nft1 = await DummyNFT.new()
     token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
     token2 = await DummyToken.new('Wrapped AVAX', 'WAVAX', 18, 0)
