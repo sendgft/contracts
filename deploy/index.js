@@ -37,7 +37,7 @@ async function main() {
 
     const nonce = await defaultSigner.getTransactionCount()
     if (nonce > 0) {
-      throw new Error(`Signer nonce must be 0!`)
+      throw new Error(`Signer nonce must be 0. Please restart the devnet!`)
     }
 
     await log.task(`Deploying from alternative address for local devnet: ${defaultSigner.address}`, async task => {

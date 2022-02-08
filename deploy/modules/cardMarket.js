@@ -3,6 +3,7 @@ import delay from 'delay'
 
 import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
 import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
+import { ADDRESS_ZERO } from '../../test/utils'
 
 export const deployCardMarket = async (ctx = {}) => {
   const { artifacts, log = createLog(), deployedAddressesToSave, isLocalDevnet } = ctx
@@ -38,13 +39,17 @@ export const deployCardMarket = async (ctx = {}) => {
 
     const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
 
-    if (baseURI) {
-      const cardMarket = await getContractAt({ artifacts }, 'ICardMarket', proxy.address)
+    const cardMarket = await getContractAt({ artifacts }, 'ICardMarket', proxy.address)
 
+    if (baseURI) {
       await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
         await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
       })
     }
+
+    await parentTask.task(`Add card1 to card market`, async task => {
+      await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
+    })
 
     if (deployedAddressesToSave) {
       deployedAddressesToSave.CardMarket = proxy.address
