@@ -1,3 +1,15 @@
+# [1.13.0](https://github.com/sendgft/contracts/compare/v1.12.0...v1.13.0) (2022-02-08)
+
+
+### Bug Fixes
+
+* dummy token balances ([a75c3b1](https://github.com/sendgft/contracts/commit/a75c3b1e646fb5123d31418c73f1c694322384e5))
+
+
+### Features
+
+* deploy assets to IPFS as part of contract deployment ([1f8604c](https://github.com/sendgft/contracts/commit/1f8604c11b731d9d3254fe104312cfe7fea5f774))
+
 # [1.12.0](https://github.com/sendgft/contracts/compare/v1.11.0...v1.12.0) (2022-01-13)
 
 # [1.11.0](https://github.com/sendgft/contracts/compare/v1.10.1...v1.11.0) (2022-01-13)
