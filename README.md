@@ -22,7 +22,7 @@ const { contracts, addresses } = require('@sendgft/contracts')
 
 const contract = new ethers.Contract(
   addresses.Gifter.chains[4].address, // rinkeby
-  contracts.GifterImplementationV1.abi
+  contracts.GifterV1.abi
 )
 ```
 

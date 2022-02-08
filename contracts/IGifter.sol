@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IGifter {
+import "./INftBase.sol";
+
+abstract contract IGifter is INftBase {
   /**
    * @dev Create a new gift to.
    *
@@ -21,14 +23,14 @@ interface IGifter {
     uint _numErc20s,
     address[] calldata _erc20AndNftContracts, 
     uint[] calldata _amountsAndIds
-  ) payable external;
+  ) payable external virtual;
 
   /**
    * @dev Claim the assets within the gift without opening it.
    *
    * @param _tokenId The gift token id.
    */
-  function claim(uint _tokenId) external;
+  function claim(uint _tokenId) external virtual;
 
   /**
    * @dev Open the gift and claim the assets within.
@@ -36,27 +38,7 @@ interface IGifter {
    * @param _tokenId The gift token id.
    * @param _contentHash The decentralized content hash for fetching the metadata representing the opened card.
    */
-  function openAndClaim(uint _tokenId, string calldata _contentHash) external;
-
-  /**
-   * @dev Get admin.
-   *
-   * @return address
-   */
-  function getAdmin() external view returns (address);
-
-  /**
-   * @dev Get Gifter version.
-   * @return version string
-   */
-  function getVersion() external pure returns (string memory);
-
-  /**
-   * Set Base URIs for token URIs.
-   * 
-   * @param _baseURI New base URI.
-   */
-  function setBaseURI(string calldata _baseURI) external;
+  function openAndClaim(uint _tokenId, string calldata _contentHash) external virtual;
 
   /**
    * Set default decentralized content hash for cards.
@@ -65,7 +47,14 @@ interface IGifter {
    * 
    * @param _contentHash New default content hash.
    */
-  function setDefaultContentHash(string calldata _contentHash) external;
+  function setDefaultContentHash(string calldata _contentHash) external virtual;
+
+  /**
+   * Set card market.
+   *
+   * @param _cardMarket card market address.
+   */
+  function setCardMarket(address _cardMarket) external virtual;
 
   /**
    * @dev Emitted when a new gift gets created.
