@@ -50,7 +50,7 @@
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/exec": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
-    "@sendgft/ipfs-tools": "https://github.com/sendgft/ipfs-tools.git#2dd2efac6900ec3be964d717f9a47eeb0e6f815e",
+    "@sendgft/ipfs-tools": "https://github.com/sendgft/ipfs-tools.git#5fd586a1bc991fddc8e62ab5772a7c1a13bcbf2a",
     "bigval": "^1.4.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
@@ -91,6 +91,6 @@
     "@openzeppelin/contracts": "^4.3.2"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=14.0.0"
   }
 }
