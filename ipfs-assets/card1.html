@@ -3,18 +3,10 @@
   <head>
     <script type="text/javascript">
       /* BEGIN: DO NOT MODIFY */
-      let gift = {}
+      const gift = {}
       let updateUi
-
       window.onload = () => {
-        if (!Object.keys(gift).length) {
-          window.addEventListener("message", (event) => {
-            gift = event.data.gift
-            updateUi()
-          }, false)
-        } else {
-          updateUi()          
-        }
+        updateUi()          
       }
       /* END: DO NOT MODIFY */
 
@@ -29,8 +21,8 @@
         if (gift.native) {
           assetsHtml += `<p>${gift.native.symbol} ${gift.native.amount}</p>`
         }
-        if (gift.tokens && gift.tokens.length) {
-          for (let token of gift.tokens) {
+        if (gift.erc20s && gift.erc20s.length) {
+          for (let token of gift.erc20s) {
             assetsHtml += `<p>${token.symbol} ${token.amount}</p>`
           }
         }
