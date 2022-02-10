@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/sendgft/contracts/compare/v1.13.0...v1.13.1) (2022-02-10)
+
+
+### Bug Fixes
+
+* card code ([e4fa826](https://github.com/sendgft/contracts/commit/e4fa8266e5aeae7a6455e639c85cada54795da32))
+
 # [1.13.0](https://github.com/sendgft/contracts/compare/v1.12.0...v1.13.0) (2022-02-08)
 
 
