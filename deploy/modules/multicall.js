@@ -8,20 +8,23 @@ const ABI = [{ "constant": true, "inputs": [], "name": "getCurrentBlockTimestamp
 export const deployMulticall = async (ctx = {}) => {
   const { log = createLog(), defaultSigner, getTxParams, isLocalDevnet, deployedAddressesToSave } = ctx
 
+  const factory = new hre.ethers.ContractFactory(ABI, BYTECODE, defaultSigner)
+
   let contract
 
-  await log.task('Deploy multicall contract', async task => {
-    const factory = new hre.ethers.ContractFactory(ABI, BYTECODE, defaultSigner)
-    contract = await factory.deploy(getTxParams({ from: undefined }))
-    await task.log(`Deployed at ${contract.address}`)
+  if (!deployedAddressesToSave.Multicall) {
+    await log.task('Deploy multicall contract', async task => {
+      contract = await factory.deploy(getTxParams({ from: undefined }))
+      await task.log(`Deployed at ${contract.address}`)
 
-    if (isLocalDevnet) {
-      assertSameAddress(contract.address, LOCAL_DEVNET_ADDRESSES.multicall, 'multicall')
-    }
-  })
+      if (isLocalDevnet) {
+        assertSameAddress(contract.address, LOCAL_DEVNET_ADDRESSES.multicall, 'multicall')
+      }
+    })
 
-  if (deployedAddressesToSave) {
     deployedAddressesToSave.Multicall = contract.address
+  } else {
+    contract = factory.attach(deployedAddressesToSave.Multicall)
   }
 
   return contract

@@ -12,6 +12,9 @@ import { deployIpfsAssets } from './modules/ipfs'
 
 const deployConfig = require('../deployConfig.json')
 
+const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
+const deployedAddresses = require(deployedAddressesJsonFilePath)
+
 
 async function main() {
   const log = createLog(console.log.bind(console))
@@ -35,12 +38,7 @@ async function main() {
   if (deployConfig.isLocalDevnet) {
     defaultSigner = signers[5]
 
-    const nonce = await defaultSigner.getTransactionCount()
-    if (nonce > 0) {
-      throw new Error(`Signer nonce must be 0. Please restart the devnet!`)
-    }
-
-    await log.task(`Deploying from alternative address for local devnet: ${defaultSigner.address}`, async task => {
+    await log.task(`Deploying from alternative address: ${defaultSigner.address}`, async task => {
       const bal = await getBalance(defaultSigner.address)
 
       await task.log(`Balance ${bal.toEth().toString()} ETH`)
@@ -59,6 +57,8 @@ async function main() {
 
   const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, { log })
 
+  deployedAddresses[network.id] = deployedAddresses[network.id] || {}
+
   const ctx = {
     artifacts,
     signers,
@@ -68,7 +68,7 @@ async function main() {
     getTxParams,
     deployConfig,
     isLocalDevnet: !!deployConfig.isLocalDevnet,
-    deployedAddressesToSave: deployConfig.saveDeployedAddresses ? {} : null,
+    deployedAddressesToSave: deployedAddresses[network.id],
   }
 
   // ipfs
@@ -86,7 +86,7 @@ async function main() {
   const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, { cardMarketAddress: cardMarketProxy.address })
 
   // dummy tokens 
-  if (_.get(deployConfig, 'deployDummyTokens')) {
+  if (deployConfig.deployDummyTokens) {
     await deployDummyTokens(ctx)
   }
 
@@ -121,16 +121,9 @@ async function main() {
   }
 
   // save deployed addresses
-  if (ctx.deployedAddressesToSave) {
+  if (!ctx.isLocalDevnet) {
     await log.task('Update deployedAddresses.json', async task => {
-      const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
-      const json = require(deployedAddressesJsonFilePath)
-      Object.keys(ctx.deployedAddressesToSave).forEach(k => {
-        json[k] = _.get(json, k, {})
-        json[k].chains = _.get(json, `${k}.chains`, {})
-        json[k].chains[network.id] = ctx.deployedAddressesToSave[k]
-      })
-      fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(json, null, 2), 'utf-8')
+      fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(deployedAddresses, null, 2), 'utf-8')
     })
   }
 }

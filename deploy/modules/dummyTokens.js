@@ -11,41 +11,43 @@ export const deployDummyTokens = async (ctx = {}) => {
   const tokens = []
 
   for (let i = 0; i < 3; i += 1) {
-    let token
+    const label = `Token${i + 1}`
 
-    const symbol = `GFT_TOKEN_${i + 1}`
+    if (!deployedAddressesToSave[label]) {
+      let token
 
-    await log.task(`Deploy ERC-20: ${symbol}`, async task => {
-      tokens.push(await deployContract({ artifacts }, 'DummyToken', [
-        `GFT Dummy Token ${i + 1}`,
-        symbol,
-        18,
-        0,
-      ]))
+      const symbol = `GFT_TOKEN_${i + 1}`
 
-      token = tokens[tokens.length - 1]
-      
-      await task.log(`Deployed at ${token.address}`)
+      await log.task(`Deploy ERC-20: ${symbol}`, async task => {
+        tokens.push(await deployContract({ artifacts }, 'DummyToken', [
+          `GFT Dummy Token ${i + 1}`,
+          symbol,
+          18,
+          0,
+        ]))
 
-      if (isLocalDevnet) {
-        assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[symbol], symbol)
-      }
+        token = tokens[tokens.length - 1]
 
-      if (deployedAddressesToSave) {
-        deployedAddressesToSave[`Token${i + 1}`] = token.address
-      }
-    })
+        await task.log(`Deployed at ${token.address}`)
 
-    await log.task(`Set initial balances`, async task => {
-      const wallets = Object.values(DEFAULT_WALLETS)
+        if (isLocalDevnet) {
+          assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[symbol], symbol)
+        }
 
-      for (let i = 0; wallets.length > i; i += 1) {
-        await token.mint(wallets[i], new BigVal(100, 'coins').toMinScale().toString())
-      }
+        deployedAddressesToSave[label] = token.address
+      })
 
-      await task.log(`Balances set.`)
-    })
-  }
+      await log.task(`Set initial balances`, async task => {
+        const wallets = Object.values(DEFAULT_WALLETS)
+
+        for (let i = 0; wallets.length > i; i += 1) {
+          await token.mint(wallets[i], new BigVal(100, 'coins').toMinScale().toString())
+        }
+
+        await task.log(`Balances set.`)
+      })
+    }
+ }
 
   return tokens
 }

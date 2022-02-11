@@ -86,11 +86,18 @@ yarn test ./test/testName.js --network test
 
 ### Deployments
 
+We use the same wallet on every network to deploy from. Deployment always happens at the same wallet nonce so that our contract addresses are the same on every network.
+
+The deployment script will check to ensure that the wallet nonce is at the expected 
+number prior to deploying. Once the contracts are deployed on a given network, subsequent deployments will simply result in an upgrade call.
+
 Set up the env vars:
 
 ```shell
 export MNEMONIC="..."
 export INFURA_KEY="..."
+export PINATA_API_KEY="..."
+export PINATA_SECRET="..."
 ```
 
 To deploy Rinkeby contracts:
@@ -98,12 +105,6 @@ To deploy Rinkeby contracts:
 ```shell
 yarn setup-deploy-config:rinkeby
 yarn deploy:rinkeby
-```
-
-For Avalanche:
-
-```shell
-yarn deploy:avax
 ```
 
 **Publishing**

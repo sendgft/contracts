@@ -31,7 +31,6 @@ async function main() {
 
   const releaseInfo = {
     network: argv.network,
-    saveDeployedAddresses: (argv.network !== 'localhost'),
     isLocalDevnet: (argv.network === 'localhost'),
     deployDummyTokens: (['localhost', 'rinkeby'].includes(argv.network)),
     ipfs: {

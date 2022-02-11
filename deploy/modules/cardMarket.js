@@ -10,56 +10,56 @@ export const deployCardMarket = async (ctx = {}) => {
 
   return await log.task(`Deploy Card market`, async parentTask => {
     let impl
-    const implConstructorsArgs = []
-    await parentTask.task('Deploy implementation contract', async task => {
-      impl = await deployContract(ctx, 'CardMarketV1', implConstructorsArgs)
-      await task.log(`Deployed at ${impl.address}`)
 
-      if (isLocalDevnet) {
-        assertSameAddress(impl.address, LOCAL_DEVNET_ADDRESSES.cardMarketImpl, 'cardMarketImpl')
-      }
+    await parentTask.task('Deploy implementation contract', async task => {
+      impl = await deployContract(ctx, 'CardMarketV1', [])
+      await task.log(`Deployed at ${impl.address}`)
     })
 
     let proxy
-    let proxyConstructorArgs
 
-    await parentTask.task('Deploy proxy contract', async task => {
-      proxyConstructorArgs = [
-        impl.address, impl.contract.methods.initialize().encodeABI()
-      ]
-      proxy = await deployContract(ctx, 'CardMarket', proxyConstructorArgs)
-      await task.log(`Deployed at ${proxy.address}`)
+    if (!deployedAddressesToSave.CardMarket) {
+      await parentTask.task('Deploy proxy contract', async task => {
+        proxyConstructorArgs = [
+          impl.address, impl.contract.methods.initialize().encodeABI()
+        ]
+        proxy = await deployContract(ctx, 'CardMarket', proxyConstructorArgs)
+        await task.log(`Deployed at ${proxy.address}`)
 
-      if (isLocalDevnet) {
-        assertSameAddress(proxy.address, LOCAL_DEVNET_ADDRESSES.cardMarketProxy, 'cardMarketProxy')
-      }
-    })
-
-    await delay(5000)
-
-    const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
-
-    const cardMarket = await getContractAt({ artifacts }, 'ICardMarket', proxy.address)
-
-    if (baseURI) {
-      await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
-        await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
+        if (isLocalDevnet) {
+          assertSameAddress(proxy.address, LOCAL_DEVNET_ADDRESSES.cardMarketProxy, 'cardMarketProxy')
+        }
       })
-    }
 
-    await parentTask.task(`Add card1 to card market`, async task => {
-      await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
-    })
+      deployedAddressesToSave.CardMarket = proxy.address        
 
-    if (deployedAddressesToSave) {
-      deployedAddressesToSave.CardMarket = proxy.address
+      await delay(5000)
+
+      const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
+
+      const cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', proxy.address)
+
+      if (baseURI) {
+        await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
+          await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
+        })
+      }
+
+      await parentTask.task(`Add card1 to card market`, async task => {
+        await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
+      })
+
+    } else {
+      await parentTask.task('Upgrade proxy contract', async task => {
+        proxy = await getContractAt({ artifacts }, 'CardMarket', deployedAddressesToSave.CardMarket)
+        const instance = await getContractAt({ artifacts }, 'CardMarketV1', deployedAddressesToSave.CardMarket)
+        await execMethod({ ctx, task }, instance, 'upgradeTo', [impl.address])
+      })
     }
 
     return {
       proxy,
-      proxyConstructorArgs,
       impl,
-      implConstructorsArgs,
     }
   })
 }

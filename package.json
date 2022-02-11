@@ -30,7 +30,6 @@
     "setup-deploy-config:rinkeby": "./scripts/setupDeployConfig.js --network=rinkeby",
     "deploy:local": "yarn hardhat run --network localhost ./deploy",
     "deploy:rinkeby": "yarn hardhat run --network rinkeby ./deploy",
-    "deploy:avax": "yarn hardhat run --network avax ./deploy",
     "release": "semantic-release",
     "lint": "solhint --config ./.solhint.json contracts/**/*.sol"
   },
