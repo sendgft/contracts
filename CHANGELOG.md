@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/sendgft/contracts/compare/v1.13.2...v1.14.0) (2022-02-11)
+
+
+### Features
+
+* contract upgrades supported ([f7a19db](https://github.com/sendgft/contracts/commit/f7a19dbfa4901b37a1fdf149fa02539666435b3d))
+
 ## [1.13.2](https://github.com/sendgft/contracts/compare/v1.13.1...v1.13.2) (2022-02-10)
 
 ## [1.13.1](https://github.com/sendgft/contracts/compare/v1.13.0...v1.13.1) (2022-02-10)

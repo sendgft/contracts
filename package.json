@@ -1,6 +1,6 @@
 {
   "name": "@sendgft/contracts",
-  "version": "1.13.2",
+  "version": "1.14.0",
   "description": "gft.xyz smart contracts",
   "main": "index.js",
   "publishConfig": {
