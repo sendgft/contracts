@@ -55,6 +55,8 @@ async function main() {
     defaultSigner = signers[0]
   }
 
+  console.log(`Deployer address: ${defaultSigner.address}`)
+
   const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, { log })
 
   deployedAddresses[network.id] = deployedAddresses[network.id] || {}

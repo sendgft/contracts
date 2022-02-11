@@ -31,12 +31,15 @@ async function main() {
 
   const releaseInfo = {
     network: argv.network,
-    isLocalDevnet: (argv.network === 'localhost'),
     deployDummyTokens: (['localhost', 'rinkeby'].includes(argv.network)),
     ipfs: {
       api,
       gateway,
     }
+  }
+
+  if (argv.network === 'localhost') {
+    releaseInfo.isLocalDevnet = true
   }
 
   fs.writeFileSync(deployConfigFile, JSON.stringify(releaseInfo, null, 2), 'utf8')
