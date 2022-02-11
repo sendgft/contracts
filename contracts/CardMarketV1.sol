@@ -14,6 +14,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   }
 
   mapping(uint => Card) public cards;
+  mapping(string => uint) public cardByCid;
 
   // Initializable
 
@@ -41,6 +42,9 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external override {
     // new id
     lastId += 1;
+
+    // check that card hasn't already been added
+    require(cardByCid[_cid] == 0, "card already added");
 
     // save data
     cards[lastId] = Card(

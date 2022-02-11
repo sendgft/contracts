@@ -35,26 +35,29 @@ export const deployCardMarket = async (ctx = {}) => {
       deployedAddressesToSave.CardMarket = proxy.address        
 
       await delay(5000)
-
-      const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
-
-      const cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', proxy.address)
-
-      if (baseURI) {
-        await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
-          await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
-        })
-      }
-
-      await parentTask.task(`Add card1 to card market`, async task => {
-        await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
-      })
-
     } else {
       await parentTask.task('Upgrade proxy contract', async task => {
         proxy = await getContractAt({ artifacts }, 'CardMarket', deployedAddressesToSave.CardMarket)
         const instance = await getContractAt({ artifacts }, 'CardMarketV1', deployedAddressesToSave.CardMarket)
         await execMethod({ ctx, task }, instance, 'upgradeTo', [impl.address])
+      })
+    }
+
+    const cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', proxy.address)
+    
+    // set baseURI
+    const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
+    if (baseURI) {
+      await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
+        await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
+      })
+    }
+
+    // add card if it hasn't already been added
+    const cardId = (await cardMarket.cardByCid(ctx.cids.card1MetadataCid)).toNumber()
+    if (0 >= cardId) {
+      await parentTask.task(`Add card1 to card market`, async task => {
+        await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
       })
     }
 

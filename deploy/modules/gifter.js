@@ -39,28 +39,30 @@ export const deployGifter = async (ctx = {}, { cardMarketAddress }) => {
 
       const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
 
-      const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
-      const { defaultMetadataCid } = _.get(ctx, 'cids', {})
-
-      if (defaultMetadataCid && baseURI) {
-        await parentTask.task(`Set: default content hash: ${defaultMetadataCid}`, async task => {
-          await execMethod({ ctx, task }, gifter, 'setDefaultContentHash', [defaultMetadataCid])
-        })
-
-        await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
-          await execMethod({ ctx, task }, gifter, 'setBaseURI', [baseURI])
-        })
-      }
-
       await parentTask.task(`Set: card market to: ${cardMarketAddress}`, async task => {
         await execMethod({ ctx, task }, gifter, 'setCardMarket', [cardMarketAddress])
       })
     } else {
       await parentTask.task('Upgrade proxy contract', async task => {
-        proxy = await getContractAt({ artifacts }, 'IGifter', deployedAddressesToSave.Gifter)
+        proxy = await getContractAt({ artifacts }, 'Gifter', deployedAddressesToSave.Gifter)
 
         const instance = await getContractAt({ artifacts }, 'GifterV1', deployedAddressesToSave.Gifter)
         await execMethod({ ctx, task }, instance, 'upgradeTo', [impl.address])
+      })
+    }
+
+    const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
+    
+    const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
+    const { defaultMetadataCid } = _.get(ctx, 'cids', {})
+
+    if (defaultMetadataCid && baseURI) {
+      await parentTask.task(`Set: default content hash: ${defaultMetadataCid}`, async task => {
+        await execMethod({ ctx, task }, gifter, 'setDefaultContentHash', [defaultMetadataCid])
+      })
+
+      await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
+        await execMethod({ ctx, task }, gifter, 'setBaseURI', [baseURI])
       })
     }
 
