@@ -10,19 +10,20 @@ export const deployCardMarket = async (ctx = {}) => {
 
   return await log.task(`Deploy Card market`, async parentTask => {
     let impl
+    const implConstructorArgs = []
 
     await parentTask.task('Deploy implementation contract', async task => {
-      impl = await deployContract(ctx, 'CardMarketV1', [])
+      impl = await deployContract(ctx, 'CardMarketV1', implConstructorArgs)
       await task.log(`Deployed at ${impl.address}`)
     })
 
     let proxy
+    const proxyConstructorArgs = [
+      impl.address, impl.contract.methods.initialize().encodeABI()
+    ]
 
     if (!deployedAddressesToSave.CardMarket) {
       await parentTask.task('Deploy proxy contract', async task => {
-        proxyConstructorArgs = [
-          impl.address, impl.contract.methods.initialize().encodeABI()
-        ]
         proxy = await deployContract(ctx, 'CardMarket', proxyConstructorArgs)
         await task.log(`Deployed at ${proxy.address}`)
 
@@ -59,7 +60,9 @@ export const deployCardMarket = async (ctx = {}) => {
 
     return {
       proxy,
+      proxyConstructorArgs,
       impl,
+      implConstructorArgs,
     }
   })
 }

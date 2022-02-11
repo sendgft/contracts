@@ -1,5 +1,5 @@
 import delay from 'delay'
-import EthVal from 'ethval'
+import { BigVal } from 'bigval'
 import { strict as assert } from 'assert'
 import _ from 'lodash'
 import got from 'got'
@@ -23,13 +23,13 @@ export const getSigners = async () => {
 
 export const getBalance = async (addr) => {
   const val = await hre.ethers.provider.getBalance(addr)
-  return new EthVal(val)
+  return new BigVal(val)
 }
 
-export const fundAddress = async (addr, eth) => {
+export const fundAddress = async (addr, weiString) => {
   await (await signers[0].sendTransaction({
     to: addr,
-    value: new EthVal(eth, 'eth')
+    value: hre.ethers.BigNumber.from(weiString),
   })).wait()
 }
 

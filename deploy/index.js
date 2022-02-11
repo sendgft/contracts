@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import { BigVal } from 'bigval'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
@@ -37,25 +38,25 @@ async function main() {
 
   if (deployConfig.isLocalDevnet) {
     defaultSigner = signers[5]
-
-    await log.task(`Deploying from alternative address: ${defaultSigner.address}`, async task => {
-      const bal = await getBalance(defaultSigner.address)
-
-      await task.log(`Balance ${bal.toEth().toString()} ETH`)
-
-      if (bal.toEth().lt(1)) {
-        await task.log(`Topping up balance ...`)
-
-        await fundAddress(defaultSigner.address, new EthVal(1, 'eth').sub(bal.toEth()).toString())
-
-        await task.log(`... topped up!`)
-      }
-    })
   } else {
-    defaultSigner = signers[0]
+    defaultSigner = signers[6]
   }
 
-  console.log(`Deployer address: ${defaultSigner.address}`)
+  console.log(`Deploying from: ${defaultSigner.address}`)
+
+  await log.task(`Deployment process`, async task => {
+    const bal = (await getBalance(defaultSigner.address)).toCoinScale()
+
+    await task.log(`Balance ${bal.toString()} ETH`)
+
+    if (bal.lt(1)) {
+      await task.log(`Topping up balance ...`)
+
+      await fundAddress(defaultSigner.address, new BigVal(1, 'coins').sub(bal).toMinScale().toString())
+
+      await task.log(`... topped up!`)
+    }
+  })
 
   const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, { log })
 
@@ -82,14 +83,21 @@ async function main() {
   }
 
   // card market
-  const { proxy: cardMarketProxy } = await deployCardMarket(ctx)
+  const cardMarket = await deployCardMarket(ctx)
 
   // gifter
-  const { impl, proxy, proxyConstructorArgs, implConstructorArgs } = await deployGifter(ctx, { cardMarketAddress: cardMarketProxy.address })
+  const gifter = await deployGifter(ctx, { cardMarketAddress: cardMarket.proxy.address })
 
   // dummy tokens 
   if (deployConfig.deployDummyTokens) {
     await deployDummyTokens(ctx)
+  }
+
+  // save deployed addresses
+  if (!ctx.isLocalDevnet) {
+    await log.task('Update deployedAddresses.json', async task => {
+      fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(deployedAddresses, null, 2), 'utf-8')
+    })
   }
 
   // for rinkeby let's verify contract on etherscan
@@ -100,32 +108,38 @@ async function main() {
       await delay(secondsToWait * 1000)
 
       await Promise.all([
-        verifyOnEtherscan({ 
-          task, 
-          name: 'proxy', 
-          args: {
-            network: network.name,
-            address: proxy.address,
-            constructorArguments: proxyConstructorArgs,
-          },
-        }),
+        {
+          contract: 'contracts/CardMarket.sol:CardMarket',
+          address: cardMarket.proxy.address,
+          constructorArgs: cardMarket.proxyConstructorArgs,
+        },
+        {
+          contract: 'contracts/CardMarketV1.sol:CardMarketV1',
+          address: cardMarket.impl.address,
+          constructorArgs: cardMarket.implConstructorArgs,
+        },
+        {
+          contract: 'contracts/Gifter.sol:Gifter',
+          address: gifter.proxy.address,
+          constructorArgs: gifter.proxyConstructorArgs,
+        },
+        {
+          contract: 'contracts/GifterV1.sol:GifterV1',
+          address: gifter.impl.address,
+          constructorArgs: gifter.implConstructorArgs,
+        },
+      ].map(a => (
         verifyOnEtherscan({
           task,
-          name: 'implementation',
+          name: a.contract,
           args: {
+            contract: a.contract,
             network: network.name,
-            address: impl.address,
-            constructorArguments: implConstructorArgs,
+            address: a.address,
+            constructorArguments: a.constructorArgs,
           },
-        }),
-      ])
-    })
-  }
-
-  // save deployed addresses
-  if (!ctx.isLocalDevnet) {
-    await log.task('Update deployedAddresses.json', async task => {
-      fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(deployedAddresses, null, 2), 'utf-8')
+        })
+      )))
     })
   }
 }

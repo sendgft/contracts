@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { BigVal } from 'bigval'
 
-import { createLog, deployContract, assertSameAddress } from '../utils'
+import { createLog, deployContract, assertSameAddress, execMethod, getContractAt } from '../utils'
 import { DEFAULT_WALLETS, LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 
 
@@ -11,43 +11,47 @@ export const deployDummyTokens = async (ctx = {}) => {
   const tokens = []
 
   for (let i = 0; i < 3; i += 1) {
-    const label = `Token${i + 1}`
+    const symbol = `GFT_TOKEN_${i + 1}`
 
-    if (!deployedAddressesToSave[label]) {
-      let token
+    let token
 
-      const symbol = `GFT_TOKEN_${i + 1}`
+    await log.task(`Setup ERC-20: ${symbol}`, async parentTask => {
+      if (!deployedAddressesToSave[symbol]) {
 
-      await log.task(`Deploy ERC-20: ${symbol}`, async task => {
-        tokens.push(await deployContract({ artifacts }, 'DummyToken', [
-          `GFT Dummy Token ${i + 1}`,
-          symbol,
-          18,
-          0,
-        ]))
+        await parentTask.task(`Deploy token contract`, async task => {
+          tokens.push(await deployContract({ artifacts }, 'DummyToken', [
+            `GFT Dummy Token ${i + 1}`,
+            symbol,
+            18,
+            0,
+          ]))
 
-        token = tokens[tokens.length - 1]
+          token = tokens[tokens.length - 1]
 
-        await task.log(`Deployed at ${token.address}`)
+          await task.log(`Deployed at ${token.address}`)
 
-        if (isLocalDevnet) {
-          assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[symbol], symbol)
-        }
+          if (isLocalDevnet) {
+            assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[symbol], symbol)
+          }
 
-        deployedAddressesToSave[label] = token.address
-      })
+          deployedAddressesToSave[symbol] = token.address
+        })
+      } else {
+        token = await getContractAt({ artifacts }, 'DummyToken', deployedAddressesToSave[symbol])
+      }
 
-      await log.task(`Set initial balances`, async task => {
+      await parentTask.task(`Mint balances`, async task => {
         const wallets = Object.values(DEFAULT_WALLETS)
+        const AMT = new BigVal(100, 'coins').toMinScale().toString()
 
         for (let i = 0; wallets.length > i; i += 1) {
-          await token.mint(wallets[i], new BigVal(100, 'coins').toMinScale().toString())
+          await execMethod({ ctx, task }, token, 'mint', [wallets[i], AMT])
         }
 
         await task.log(`Balances set.`)
       })
-    }
- }
+    })
+  }
 
   return tokens
 }
