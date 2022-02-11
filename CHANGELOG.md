@@ -1,3 +1,10 @@
+## [1.14.2](https://github.com/sendgft/contracts/compare/v1.14.1...v1.14.2) (2022-02-11)
+
+
+### Bug Fixes
+
+* use SVG for preview image, update devnet addresses ([d59ca05](https://github.com/sendgft/contracts/commit/d59ca05a1e83f4de0a6490cec2e1f2e28afca7e0))
+
 ## [1.14.1](https://github.com/sendgft/contracts/compare/v1.14.0...v1.14.1) (2022-02-11)
 
 
