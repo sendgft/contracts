@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/sendgft/contracts/compare/v1.14.0...v1.14.1) (2022-02-11)
+
+
+### Bug Fixes
+
+* update types ([b9e4611](https://github.com/sendgft/contracts/commit/b9e4611992a1049eeb0039c47c57b054118beb54))
+
 # [1.14.0](https://github.com/sendgft/contracts/compare/v1.13.2...v1.14.0) (2022-02-11)
 
 
