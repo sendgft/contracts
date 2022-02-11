@@ -1,13 +1,11 @@
 import { EventFragment } from "@ethersproject/abi"
 import { ContractInterface } from "@ethersproject/contracts"
 
-interface ContractDeployedAddresses {
-  chains: Record<string, string>
-}
+type ContractDeployedAddresses = Record<string, string>
 
-type DeployedAddresses = Record<string, ContractDeployedAddresses>
+type ChainDeployedAddresses = Record<string, ContractDeployedAddresses>
 
-export const addresses: DeployedAddresses
+export const addresses: ChainDeployedAddresses
 
 interface ContractJson {
   abi: ContractInterface
