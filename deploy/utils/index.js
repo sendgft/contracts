@@ -115,7 +115,7 @@ export const buildGetTxParamsHandler = async (network, signer, { log }) => {
 
 export const execMethod = async ({ ctx, task }, contract, method, args = [], txOverrides = {}) => {
   const { getTxParams = defaultGetTxParams } = ctx
-  await task.task(`CALL ${method}() on ${contract.address}`, async () => {
+  await task.task(`CALL ${method}() on ${contract.address} [${args.join(', ')}]`, async () => {
     return await contract[method].apply(contract, args.concat(getTxParams(txOverrides)))
   }, { col: 'yellow' })
 }

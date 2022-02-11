@@ -44,7 +44,7 @@ export const deployCardMarket = async (ctx = {}) => {
     }
 
     const cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', proxy.address)
-    
+
     // set baseURI
     const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
     if (baseURI) {
