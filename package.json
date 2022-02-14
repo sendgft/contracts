@@ -49,7 +49,7 @@
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/exec": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
-    "@sendgft/ipfs-tools": "https://github.com/sendgft/ipfs-tools.git#33ce908342f053209a7bdab6e7d0ed49148c6e2b",
+    "@sendgft/ipfs-tools": "https://github.com/sendgft/ipfs-tools.git#6e6eec3f4c2ca8b240e3a3ce39e19308b5848fe7",
     "bigval": "^1.4.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",

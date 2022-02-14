@@ -14,57 +14,57 @@ export const deployIpfsAssets = async (ctx) => {
 
   const ipfsClient = getIpfsClient(api)
 
-  const openedGftImgCid = await log.task('Upload "opened GFT" image to IPFS', async task => {
-    const cid = await ipfsClient.uploadFile(GFT_OPENED_SVG, { verifyViaGateway: gateway })
-    await task.log(`CID: ${cid}`)
-    return cid
+  const openedGftImg = await log.task('Upload "opened GFT" image to IPFS', async task => {
+    const ret = await ipfsClient.uploadFile(GFT_OPENED_SVG, { verifyViaGateway: gateway })
+    await task.log(`CID: ${ret.cid}`)
+    return ret
   })
 
-  const unopenedGftImgCid = await log.task('Upload "unopened GFT" image to IPFS', async task => {
-    const cid = await ipfsClient.uploadFile(GFT_UNOPENED_SVG, { verifyViaGateway: gateway })
-    await task.log(`CID: ${cid}`)
-    return cid
+  const unopenedGftImg = await log.task('Upload "unopened GFT" image to IPFS', async task => {
+    const ret = await ipfsClient.uploadFile(GFT_UNOPENED_SVG, { verifyViaGateway: gateway })
+    await task.log(`CID: ${ret.cid}`)
+    return ret
   })
 
-  const card1Cid = await log.task('Upload "Card 1" html to IPFS', async task => {
-    const cid = await ipfsClient.uploadFile(CARD_1_HTML, { verifyViaGateway: gateway })
-    await task.log(`CID: ${cid}`)
-    return cid
+  const card1 = await log.task('Upload "Card 1" html to IPFS', async task => {
+    const ret = await ipfsClient.uploadFile(CARD_1_HTML, { verifyViaGateway: gateway })
+    await task.log(`CID: ${ret.cid}`)
+    return ret
   })
 
-  const card1ThumbnailImgCid = await log.task('Upload "Card 1 thumbnail" image to IPFS', async task => {
-    const cid = await ipfsClient.uploadFile(CARD_1_THUMB_IMG, { verifyViaGateway: gateway })
-    await task.log(`CID: ${cid}`)
-    return cid
+  const card1ThumbnailImg = await log.task('Upload "Card 1 thumbnail" image to IPFS', async task => {
+    const ret = await ipfsClient.uploadFile(CARD_1_THUMB_IMG, { verifyViaGateway: gateway })
+    await task.log(`CID: ${ret.cid}`)
+    return ret
   })
 
   const gatewayUrl = cid => `${gateway}${cid}`
 
-  const defaultMetadataCid = await log.task('Upload default metadata to IPFS', async task => {
-    const cid = await ipfsClient.uploadJson({
+  const defaultMetadata = await log.task('Upload default metadata to IPFS', async task => {
+    const ret = await ipfsClient.uploadJson({
       name: 'Unopened GFT',
       description: 'This is an unopened GFT sent via https://gft.xyz',
-      image: gatewayUrl(unopenedGftImgCid),
+      image: gatewayUrl(unopenedGftImg.path),
     })
-    await task.log(`CID: ${cid}`)
-    return cid
+    await task.log(`CID: ${ret.cid}`)
+    return ret
   })
 
-  const card1MetadataCid = await log.task('Upload card1 metadata to IPFS', async task => {
-    const cid = await ipfsClient.uploadJson({
+  const card1Metadata = await log.task('Upload card1 metadata to IPFS', async task => {
+    const ret = await ipfsClient.uploadJson({
       name: 'Card1',
       description: 'This is default card 1 sent via https://gft.xyz',
-      image: gatewayUrl(card1ThumbnailImgCid),
-      external_url: gatewayUrl(card1Cid),
+      image: gatewayUrl(card1ThumbnailImg.path),
+      external_url: gatewayUrl(card1.path),
     })
-    await task.log(`CID: ${cid}`)
-    return cid
+    await task.log(`CID: ${ret.cid}`)
+    return ret
   })
 
   ctx.cids = {
-    defaultMetadataCid,
-    openedGftImgCid,
-    card1MetadataCid,
+    defaultMetadataCid: defaultMetadata.cid,
+    openedGftImgCid: openedGftImg.cid,
+    card1MetadataCid: card1Metadata.cid,
   }
 
   return ctx.cids

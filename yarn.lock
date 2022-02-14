@@ -2028,9 +2028,9 @@
     lodash "^4.17.4"
     read-pkg-up "^7.0.0"
 
-"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#33ce908342f053209a7bdab6e7d0ed49148c6e2b":
+"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#6e6eec3f4c2ca8b240e3a3ce39e19308b5848fe7":
   version "1.0.0"
-  resolved "https://github.com/sendgft/ipfs-tools.git#33ce908342f053209a7bdab6e7d0ed49148c6e2b"
+  resolved "https://github.com/sendgft/ipfs-tools.git#6e6eec3f4c2ca8b240e3a3ce39e19308b5848fe7"
   dependencies:
     "@pinata/sdk" "^1.1.23"
     chalk "4"
@@ -7829,9 +7829,9 @@ multicodec@^1.0.0, multicodec@^1.0.1:
     varint "^5.0.0"
 
 multiformats@^9.4.1, multiformats@^9.4.2, multiformats@^9.4.5, multiformats@^9.5.4:
-  version "9.6.3"
-  resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.6.3.tgz#9f2aef711ddd0e7b05a1b5f1ad70928544c8c190"
-  integrity sha512-yfXKI66fL0nFzt0nJl26i4wV1qAqbAEIBvfFbkbsne9GrLz6IHvHUoRyxUtlJcdP181ssOgjama6E/VSk4pbrA==
+  version "9.6.4"
+  resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.6.4.tgz#5dce1f11a407dbb69aa612cb7e5076069bb759ca"
+  integrity sha512-fCCB6XMrr6CqJiHNjfFNGT0v//dxOBMrOMqUIzpPc/mmITweLEyhvMpY9bF+jZ9z3vaMAau5E8B68DW77QMXkg==
 
 multihashes@^0.4.15, multihashes@~0.4.13, multihashes@~0.4.15:
   version "0.4.21"
