@@ -7,7 +7,7 @@ const ASSETS_PATH = path.join(__dirname, '..', '..', 'ipfs-assets')
 const GFT_OPENED_SVG = path.join(ASSETS_PATH, 'gft-opened.svg')
 const GFT_UNOPENED_SVG = path.join(ASSETS_PATH, 'gft-unopened.svg')
 const CARD_1_HTML = path.join(ASSETS_PATH, 'card1.html')
-const CARD_1_THUMB_IMG = path.join(ASSETS_PATH, 'card1-thumbnail.svg')
+const CARD_1_THUMB_IMG = path.join(ASSETS_PATH, 'card1-thumbnail.png')
 
 export const deployIpfsAssets = async (ctx) => {
   const { log = createLog(), deployConfig: { ipfs: { api, gateway } } } = ctx
