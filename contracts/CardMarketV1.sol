@@ -7,7 +7,8 @@ import "./ICardMarket.sol";
 
 contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   struct Card {
-    address creator;
+    bool enabled;
+    address owner;
     string contentHash;
     address feeToken;
     uint feeAmount;
@@ -15,6 +16,11 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
   mapping(uint => Card) public cards;
   mapping(string => uint) public cardByCid;
+
+  modifier isOwner (uint _id) {
+    require(msg.sender == cards[_id].owner, "must be owner");
+    _;
+  }
 
   // Initializable
 
@@ -39,7 +45,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
   // ICardMarket
 
-  function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external override {
+  function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external override isAdmin {
     // new id
     lastId += 1;
 
@@ -48,6 +54,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
     // save data
     cards[lastId] = Card(
+      true,
       _msgSender(), 
       _cid,
       _feeToken,
@@ -59,5 +66,17 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
     // event
     emit Added(lastId);
+  }
+
+  function setCardEnabled(uint _id, bool _enabled) external override isOwner(_id) {
+    cards[_id].enabled = _enabled;
+  }
+
+  function useCard(uint _id) payable external override {
+    require(cards[_id].enabled, "card design not enabled");
+  }
+
+  function setBaseURI(string calldata _baseURI) external override isAdmin {
+    _setBaseURI(_baseURI);
   }
 }

@@ -41,7 +41,7 @@ abstract contract INftBase is IERC721, IERC721Receiver, ERC721Enumerable {
 
   // INftBase
 
-  function setBaseURI(string calldata _baseURI) external {
+  function _setBaseURI(string calldata _baseURI) internal {
     baseURI = _baseURI;
   }
 

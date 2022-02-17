@@ -1,6 +1,7 @@
 import EthVal from 'ethval'
 import { EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from './utils'
 import { deployGifter } from '../deploy/modules/gifter'
+import { deployCardMarket } from '../deploy/modules/cardMarket'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { events } from '../'
 
@@ -12,9 +13,10 @@ const stringToBytesHex = s => hre.ethers.utils.hexlify(hre.ethers.utils.toUtf8By
 describe('Gifter', () => {
   const evmSnapshot = new EvmSnapshot()
   let accounts
-  let proxy
-  let impl
+  let gifterDeployment
   let gifter
+  let cardMarketDeployment
+  let cardMarket
   let nft1
   let token1
   let token2
@@ -24,14 +26,19 @@ describe('Gifter', () => {
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    ;({ proxy, impl } = await deployGifter({ artifacts }))
-    gifter = await getContractAt({ artifacts }, 'GifterV1', proxy.address)
+    cardMarketDeployment = await deployCardMarket({ artifacts })
+    cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
+    gifterDeployment = await deployGifter({ artifacts }, { cardMarketAddress: cardMarket.address })
+    gifter = await getContractAt({ artifacts }, 'GifterV1', gifterDeployment.proxy.address)
     nft1 = await DummyNFT.new()
     token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
     token2 = await DummyToken.new('Wrapped AVAX', 'WAVAX', 18, 0)
     sender1 = accounts[2]
     receiver1 = accounts[5]
     receiver2 = accounts[6]
+
+    // add a card design
+    await cardMarket.addCard("test", ADDRESS_ZERO, 0)
   })
 
   beforeEach(async () => {
@@ -42,8 +49,13 @@ describe('Gifter', () => {
     await evmSnapshot.restore()
   })
 
+  describe('card market', () => {
+    
+  })
+
   it('returns version', async () => {
     await gifter.getVersion().should.eventually.eq('1')
+    await cardMarket.getVersion().should.eventually.eq('1')
   })
 
   it('returns admin', async () => {

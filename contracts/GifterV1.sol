@@ -111,7 +111,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
   function create(
     address _recipient,
-    bytes calldata _config,
+    bytes memory _config,
     string calldata _message,
     uint _numErc20s,
     address[] calldata _erc20AndNftContracts, 
@@ -152,6 +152,13 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // mint NFT
     _safeMint(_recipient, lastId);
+
+    // check and pay card design fee
+    uint256 cardDesignId;
+    assembly {
+      cardDesignId := mload(add(_config, 0x20) /* we skip first slot since that stores the length */)
+    }
+    cardMarket.useCard(cardDesignId);
 
     // event
     emit Created(lastId, _message);

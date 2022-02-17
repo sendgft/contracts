@@ -7,7 +7,7 @@ import { createLog, deployContract, getContractAt, execMethod, assertSameAddress
 import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 
 export const deployGifter = async (ctx = {}, { cardMarketAddress }) => {
-  const { artifacts, log = createLog(), deployedAddressesToSave, isLocalDevnet } = ctx
+  const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
 
   return await log.task(`Deploy Gifter`, async parentTask => {
     let impl
