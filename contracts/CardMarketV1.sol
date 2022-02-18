@@ -18,7 +18,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   mapping(string => uint) public cardByCid;
 
   modifier isOwner (uint _id) {
-    require(msg.sender == cards[_id].owner, "must be owner");
+    require(msg.sender == cards[_id].owner, "CardMarket: must be owner");
     _;
   }
 
@@ -50,7 +50,8 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     lastId += 1;
 
     // check that card hasn't already been added
-    require(cardByCid[_cid] == 0, "card already added");
+    require(cardByCid[_cid] == 0, "CardMarket: already added");
+    cardByCid[_cid] = lastId;
 
     // save data
     cards[lastId] = Card(
@@ -73,7 +74,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   }
 
   function useCard(uint _id) payable external override {
-    require(cards[_id].enabled, "card design not enabled");
+    require(cards[_id].enabled, "CardMarket: card not enabled");
   }
 
   function setBaseURI(string calldata _baseURI) external override isAdmin {

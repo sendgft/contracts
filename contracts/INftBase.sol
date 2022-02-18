@@ -34,7 +34,7 @@ abstract contract INftBase is IERC721, IERC721Receiver, ERC721Enumerable {
   }
 
   function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-    require(_exists(_tokenId), "ERC721Metadata: URI query for nonexistent token");
+    require(_exists(_tokenId), "NftBase: URI query for nonexistent token");
     string memory hash = _getContentHash(_tokenId);    
     return string(abi.encodePacked(baseURI, hash));
   }
