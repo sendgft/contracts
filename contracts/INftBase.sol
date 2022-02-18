@@ -11,6 +11,11 @@ abstract contract INftBase is IERC721, IERC721Receiver, ERC721Enumerable {
   uint public lastId;
   string public baseURI;
 
+  modifier isOwner (uint _id) {
+    require(_msgSender() == ownerOf(_id), "NftBase: must be owner");
+    _;
+  }
+
   // IERC721Receiver
 
   function onERC721Received(

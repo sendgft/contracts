@@ -64,14 +64,12 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     cardMarket = ICardMarket(_cardMarket);
   }
 
-  function claim(uint _tokenId) public override nonReentrant {
-    require(_msgSender() == ownerOf(_tokenId), "must be owner");
-
+  function claim(uint _tokenId) public override isOwner(_tokenId) nonReentrant {
     Gift storage gift = gifts[_tokenId];
     GiftAsset[] storage assets = giftAssets[_tokenId];
 
     // check and flip flag
-    require(gift.claimed == 0, "already claimed");
+    require(gift.claimed == 0, "Gifter: already claimed");
     gift.claimed = block.number;
 
     // assets
@@ -93,13 +91,11 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     emit Claimed(_tokenId);
   }
 
-  function openAndClaim(uint _tokenId, string calldata _contentHash) external override {
-    require(_msgSender() == ownerOf(_tokenId), "must be owner");
-
+  function openAndClaim(uint _tokenId, string calldata _contentHash) external override isOwner(_tokenId) {
     Gift storage g = gifts[_tokenId];
 
     // check and flip flag
-    require(!g.opened, "already opened");
+    require(!g.opened, "Gifter: already opened");
     g.opened = true;
 
     g.contentHash = _contentHash;
@@ -162,5 +158,9 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // event
     emit Created(lastId, _message);
+  }
+
+  function setBaseURI(string calldata _baseURI) external override isAdmin {
+    _setBaseURI(_baseURI);
   }
 }

@@ -17,11 +17,6 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   mapping(uint => Card) public cards;
   mapping(string => uint) public cardByCid;
 
-  modifier isOwner (uint _id) {
-    require(msg.sender == cards[_id].owner, "CardMarket: must be owner");
-    _;
-  }
-
   // Initializable
 
   /// @custom:oz-upgrades-unsafe-allow constructor

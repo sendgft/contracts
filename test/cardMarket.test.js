@@ -83,11 +83,11 @@ describe('Card market', () => {
     })
 
     it('but not by non-owner', async () => {
-      await cardMarket.setCardEnabled(1, false, { from: accounts[2] }).should.be.rejectedWith('CardMarket: must be owner')
+      await cardMarket.setCardEnabled(1, false, { from: accounts[2] }).should.be.rejectedWith('NftBase: must be owner')
     })
 
     it('but not if invalid', async () => {
-      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('CardMarket: must be owner')
+      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('NftBase: must be owner')
     })
 
     it('if valid card', async () => {

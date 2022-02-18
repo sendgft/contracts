@@ -3,7 +3,7 @@ import { EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from 
 import { deployGifter } from '../deploy/modules/gifter'
 import { deployCardMarket } from '../deploy/modules/cardMarket'
 import { getSigners, getContractAt } from '../deploy/utils'
-import { events } from '../'
+import { events } from '..'
 
 const DummyToken = artifacts.require("DummyToken")
 const DummyNFT = artifacts.require("DummyNFT")
@@ -38,7 +38,7 @@ describe('Gifter', () => {
     receiver2 = accounts[6]
 
     // add a card design
-    await cardMarket.addCard("test", ADDRESS_ZERO, 0)
+    await cardMarket.addCard("test", token1.address, 0)
   })
 
   beforeEach(async () => {
@@ -49,13 +49,12 @@ describe('Gifter', () => {
     await evmSnapshot.restore()
   })
 
-  describe('card market', () => {
-    
-  })
-
   it('returns version', async () => {
     await gifter.getVersion().should.eventually.eq('1')
-    await cardMarket.getVersion().should.eventually.eq('1')
+  })
+
+  it('returns card market', async () => {
+    await gifter.cardMarket().should.eventually.eq(cardMarket.address)
   })
 
   it('returns admin', async () => {
@@ -64,19 +63,19 @@ describe('Gifter', () => {
 
   describe('upgrades', () => {
     it('cannot be done by randoms', async () => {
-      await gifter.upgradeTo(ADDRESS_ZERO, { from: accounts[1] }).should.be.rejectedWith('must be admin')
+      await gifter.upgradeTo(ADDRESS_ZERO, { from: accounts[1] }).should.be.rejectedWith('ProxyImpl: must be admin')
     })
 
     it('cannot upgrade to null address', async () => {
-      await gifter.upgradeTo(ADDRESS_ZERO).should.be.rejectedWith('null implementation')
+      await gifter.upgradeTo(ADDRESS_ZERO).should.be.rejectedWith('ProxyImpl: null implementation')
     })
 
     it('cannot upgrade to non-valid implementation', async () => {
-      await gifter.upgradeTo(nft1.address).should.be.rejectedWith('invalid implementation')
+      await gifter.upgradeTo(nft1.address).should.be.rejectedWith('ProxyImpl: invalid implementation')
     })
 
     it('can upgrade to same implementation', async () => {
-      await gifter.upgradeTo(impl.address).should.be.fulfilled
+      await gifter.upgradeTo(gifterDeployment.impl.address).should.be.fulfilled
       await gifter.getAdmin().should.eventually.eq(accounts[0])
     })
   })
@@ -85,7 +84,7 @@ describe('Gifter', () => {
     it('send eth', async () => {
       const tx1 = await gifter.create(
         receiver1,
-        stringToBytesHex('hash1'),
+        '0x01',
         'msg1',
         0,
         [],
@@ -95,7 +94,7 @@ describe('Gifter', () => {
 
       const tx2 = await gifter.create(
         receiver2,
-        stringToBytesHex('hash2'),
+        '0x01',
         'msg2',
         0,
         [],
@@ -107,7 +106,7 @@ describe('Gifter', () => {
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
       await gifter.giftsV1(id).should.eventually.matchObj({
         sender: sender1,
-        config: stringToBytesHex('hash1'),
+        config: '0x01',
         contentHash: '',
         created: tx1.receipt.blockNumber,
         claimed: 0,
@@ -122,7 +121,7 @@ describe('Gifter', () => {
       id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
       await gifter.giftsV1(id).should.eventually.matchObj({
         sender: sender1,
-        config: stringToBytesHex('hash2'),
+        config: '0x01',
         created: tx2.receipt.blockNumber,
         claimed: 0,
         opened: false,
@@ -146,7 +145,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         2,
         [token1.address, token2.address, nft1.address],
@@ -156,7 +155,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         1,
         [token2.address],
@@ -170,7 +169,7 @@ describe('Gifter', () => {
         sender: sender1,
         claimed: 0,
         opened: false,
-        config: stringToBytesHex('hash'),
+        config: '0x01',
         recipient: receiver1,
         ethAsWei: 45,
         numErc20s: 2,
@@ -194,7 +193,7 @@ describe('Gifter', () => {
         sender: sender1,
         claimed: 0,
         opened: false,
-        config: stringToBytesHex('hash'),
+        config: '0x01',
         recipient: receiver1,
         ethAsWei: 20,
         numErc20s: 1,
@@ -266,7 +265,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         2,
         [token1.address, token2.address, nft1.address],
@@ -280,7 +279,7 @@ describe('Gifter', () => {
         sender: sender1,
         claimed: 0,
         opened: false,
-        config: stringToBytesHex('hash'),
+        config: '0x01',
         recipient: receiver1,
         ethAsWei: 45,
         numErc20s: 2,
@@ -343,7 +342,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         2,
         [token1.address, token2.address, nft1.address],
@@ -357,7 +356,7 @@ describe('Gifter', () => {
         sender: sender1,
         claimed: 0,
         opened: false,
-        config: stringToBytesHex('hash'),
+        config: '0x01',
         recipient: receiver1,
         ethAsWei: 45,
         numErc20s: 2,
@@ -442,7 +441,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         2,
         [token1.address, token2.address],
@@ -459,7 +458,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         2,
         [token1.address, token2.address],
@@ -471,7 +470,7 @@ describe('Gifter', () => {
     it('send nft where id is invalid', async () => {
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         0,
         [nft1.address],
@@ -485,7 +484,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         0,
         [nft1.address],
@@ -501,7 +500,7 @@ describe('Gifter', () => {
     it('claim when not owner', async () => {
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         0,
         [],
@@ -511,7 +510,7 @@ describe('Gifter', () => {
 
       const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
 
-      await gifter.openAndClaim(gift, 'content1').should.be.rejectedWith('must be owner')
+      await gifter.openAndClaim(gift, 'content1').should.be.rejectedWith('NftBase: must be owner')
     })
 
     it('open and claim when already done so', async () => {
@@ -520,7 +519,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         1,
         [token1.address],
@@ -531,7 +530,7 @@ describe('Gifter', () => {
       const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
 
       await gifter.openAndClaim(gift, 'content1', { from: receiver1 })
-      await gifter.openAndClaim(gift, 'content1', { from: receiver1 }).should.be.rejectedWith('already opened')
+      await gifter.openAndClaim(gift, 'content1', { from: receiver1 }).should.be.rejectedWith('Gifter: already opened')
     })
 
     it('claim without openeing when already done so', async () => {
@@ -540,7 +539,7 @@ describe('Gifter', () => {
 
       await gifter.create(
         receiver1,
-        stringToBytesHex('hash'),
+        '0x01',
         'msg1',
         1,
         [token1.address],
@@ -551,7 +550,7 @@ describe('Gifter', () => {
       const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
 
       await gifter.claim(gift, { from: receiver1 })
-      await gifter.claim(gift, { from: receiver1 }).should.be.rejectedWith('already claimed')
+      await gifter.claim(gift, { from: receiver1 }).should.be.rejectedWith('Gifter: already claimed')
     })
   })
 
@@ -563,7 +562,7 @@ describe('Gifter', () => {
       createGift = async () => {
         await gifter.create(
           receiver1,
-          stringToBytesHex('hash'),
+          '0x01',
           'msg1',
           0,
           [],
