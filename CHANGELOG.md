@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/sendgft/contracts/compare/v1.14.2...v1.15.0) (2022-02-21)
+
+
+### Bug Fixes
+
+* more fixes ([edbbc7e](https://github.com/sendgft/contracts/commit/edbbc7e35ce30d262af7b631b84604911e0ecaf9))
+
 ## [1.14.2](https://github.com/sendgft/contracts/compare/v1.14.1...v1.14.2) (2022-02-11)
 
 
