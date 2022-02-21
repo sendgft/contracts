@@ -53,6 +53,9 @@ export const deployCardMarket = async (ctx = {}) => {
       })
     }
 
+    // get latest card id
+    const lastId = (await cardMarket.lastId()).toNumber()
+
     // add card if it hasn't already been added
     if (_.get(ctx, 'cids.card1MetadataCid')) {
       const cardId = (await cardMarket.cardByCid(ctx.cids.card1MetadataCid)).toNumber()
@@ -62,6 +65,18 @@ export const deployCardMarket = async (ctx = {}) => {
         })
       }
     }
+
+    // disable old cards
+    await parentTask.task(`Disable all old cards owned by admin (check 1 to ${lastId})`, async task => {
+      for (let i = 1; i <= lastId; i += 1) {
+        const { enabled } = await cardMarket.cards(i)
+        if (enabled) {
+          await task.task(`Disable card ${i}`, async subTask => {
+            await execMethod({ ctx, task: subTask }, cardMarket, 'setCardEnabled', [i, false])
+          })
+        }
+      }
+    })
 
     return {
       proxy,

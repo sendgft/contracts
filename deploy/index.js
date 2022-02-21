@@ -39,7 +39,7 @@ async function main() {
   if (deployConfig.isLocalDevnet) {
     defaultSigner = signers[5]
   } else {
-    defaultSigner = signers[6]
+    defaultSigner = signers[7]
   }
 
   console.log(`Deploying from: ${defaultSigner.address}`)
