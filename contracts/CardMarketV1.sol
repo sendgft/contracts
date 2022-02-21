@@ -68,7 +68,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     cards[_id].enabled = _enabled;
   }
 
-  function useCard(uint _id) payable external override {
+  function useCard(uint _id) payable public override {
     require(cards[_id].enabled, "CardMarket: card not enabled");
   }
 

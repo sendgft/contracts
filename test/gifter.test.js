@@ -104,7 +104,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      await gifter.giftsV1(id).should.eventually.matchObj({
+      await gifter.gifts(id).should.eventually.matchObj({
         sender: sender1,
         config: '0x01',
         contentHash: '',
@@ -119,7 +119,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver2).should.eventually.eq(1)
       id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
-      await gifter.giftsV1(id).should.eventually.matchObj({
+      await gifter.gifts(id).should.eventually.matchObj({
         sender: sender1,
         config: '0x01',
         created: tx2.receipt.blockNumber,
@@ -165,7 +165,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver1).should.eventually.eq(2)
       const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      await gifter.giftsV1(gift1).should.eventually.matchObj({
+      await gifter.gifts(gift1).should.eventually.matchObj({
         sender: sender1,
         claimed: 0,
         opened: false,
@@ -175,21 +175,21 @@ describe('Gifter', () => {
         numErc20s: 2,
         numNfts: 1,
       })
-      await gifter.giftsV1Assets(gift1, 0).should.eventually.matchObj({
+      await gifter.giftAssets(gift1, 0).should.eventually.matchObj({
         tokenContract: token1.address,
         value: 3,
       })
-      await gifter.giftsV1Assets(gift1, 1).should.eventually.matchObj({
+      await gifter.giftAssets(gift1, 1).should.eventually.matchObj({
         tokenContract: token2.address,
         value: 4,
       })
-      await gifter.giftsV1Assets(gift1, 2).should.eventually.matchObj({
+      await gifter.giftAssets(gift1, 2).should.eventually.matchObj({
         tokenContract: nft1.address,
         value: 1,
       })
 
       const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
-      await gifter.giftsV1(gift2).should.eventually.matchObj({
+      await gifter.gifts(gift2).should.eventually.matchObj({
         sender: sender1,
         claimed: 0,
         opened: false,
@@ -199,7 +199,7 @@ describe('Gifter', () => {
         numErc20s: 1,
         numNfts: 0,
       })
-      await gifter.giftsV1Assets(gift2, 0).should.eventually.matchObj({
+      await gifter.giftAssets(gift2, 0).should.eventually.matchObj({
         tokenContract: token2.address,
         value: 2,
       })
@@ -224,7 +224,7 @@ describe('Gifter', () => {
       expect(eventArgs).to.include({ tokenId: gift1.toString() })
 
       // check gifts
-      await gifter.giftsV1(gift1).should.eventually.matchObj({
+      await gifter.gifts(gift1).should.eventually.matchObj({
         sender: sender1,
         claimed: tx.receipt.blockNumber,
         opened: true,
@@ -233,7 +233,7 @@ describe('Gifter', () => {
         ethAsWei: 45,
         numErc20s: 2,
       })
-      await gifter.giftsV1(gift2).should.eventually.matchObj({
+      await gifter.gifts(gift2).should.eventually.matchObj({
         sender: sender1,
         claimed: 0,
         opened: false,
@@ -275,7 +275,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      await gifter.giftsV1(gift1).should.eventually.matchObj({
+      await gifter.gifts(gift1).should.eventually.matchObj({
         sender: sender1,
         claimed: 0,
         opened: false,
@@ -307,7 +307,7 @@ describe('Gifter', () => {
       expect(eventArgs).to.include({ tokenId: gift1.toString() })
 
       // check gifts
-      await gifter.giftsV1(gift1).should.eventually.matchObj({
+      await gifter.gifts(gift1).should.eventually.matchObj({
         sender: sender1,
         claimed: tx.receipt.blockNumber,
         opened: false,
@@ -352,7 +352,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      await gifter.giftsV1(gift1).should.eventually.matchObj({
+      await gifter.gifts(gift1).should.eventually.matchObj({
         sender: sender1,
         claimed: 0,
         opened: false,
@@ -386,7 +386,7 @@ describe('Gifter', () => {
       const gasCost2 = gasUsed.mul(gasPrice)
 
       // check gifts
-      await gifter.giftsV1(gift1).should.eventually.matchObj({
+      await gifter.gifts(gift1).should.eventually.matchObj({
         sender: sender1,
         claimed: tx.receipt.blockNumber,
         opened: true,
@@ -412,7 +412,7 @@ describe('Gifter', () => {
     it('emits event with message text when creating', async () => {
       const tx = await gifter.create(
         receiver1,
-        stringToBytesHex('hash1'),
+        '0x01',
         'The quick brown fox jumped over the lazy dog',
         0,
         [],
@@ -570,13 +570,13 @@ describe('Gifter', () => {
           { from: sender1, value: 100 }
         )
 
-        tokenId = (await gifter.lastGiftId()).toNumber()
+        tokenId = (await gifter.lastId()).toNumber()
       }
     })
 
     it('must be a valid id', async () => {
       await createGift()
-      await gifter.tokenURI(tokenId + 1).should.be.rejectedWith('ERC721Metadata: URI query for nonexistent token')
+      await gifter.tokenURI(tokenId + 1).should.be.rejectedWith('NftBase: URI query for nonexistent token')
     })
 
     describe('baseURI', async () => {

@@ -152,7 +152,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     // check and pay card design fee
     uint256 cardDesignId;
     assembly {
-      cardDesignId := mload(add(_config, 0x20) /* we skip first slot since that stores the length */)
+      cardDesignId := mload(_config)
     }
     cardMarket.useCard(cardDesignId);
 
