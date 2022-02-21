@@ -432,6 +432,20 @@ describe('Gifter', () => {
   })
 
   describe('failures', () => {
+    it('send when card design is disabled', async () => {
+      await cardMarket.setCardEnabled(1, false)
+
+      await gifter.create(
+        receiver1,
+        '0x01',
+        'msg1',
+        0,
+        [],
+        [],
+        { from: sender1 }
+      ).should.be.rejectedWith('card not enabled')
+    })
+
     it('send erc20 where gifter is not approved', async () => {
       await token1.mint(sender1, 10)
       await token2.mint(sender1, 10)
