@@ -6,7 +6,7 @@ import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 import { ADDRESS_ZERO } from '../../test/utils'
 
 export const deployCardMarket = async (ctx = {}) => {
-  const { artifacts, log = createLog(), deployedAddressesToSave, isLocalDevnet } = ctx
+  const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
 
   return await log.task(`Deploy Card market`, async parentTask => {
     let impl
@@ -54,11 +54,13 @@ export const deployCardMarket = async (ctx = {}) => {
     }
 
     // add card if it hasn't already been added
-    const cardId = (await cardMarket.cardByCid(ctx.cids.card1MetadataCid)).toNumber()
-    if (0 >= cardId) {
-      await parentTask.task(`Add card1 to card market`, async task => {
-        await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
-      })
+    if (_.get(ctx, 'cids.card1MetadataCid')) {
+      const cardId = (await cardMarket.cardByCid(ctx.cids.card1MetadataCid)).toNumber()
+      if (0 >= cardId) {
+        await parentTask.task(`Add card1 to card market`, async task => {
+          await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
+        })
+      }
     }
 
     return {

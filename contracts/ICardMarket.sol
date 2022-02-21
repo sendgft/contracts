@@ -14,6 +14,27 @@ abstract contract ICardMarket is INftBase {
   function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external virtual;
 
   /**
+   * @dev Set a card as enabled or disabled.
+   *
+   * @param _id The card id.
+   * @param _enabled true to enable, false to disable.
+   */
+  function setCardEnabled(uint _id, bool _enabled) external virtual;
+
+  /**
+   * Use given card for a gift.
+   *
+   * @param _id The card id.
+   */
+  function useCard(uint _id) payable external virtual;
+
+  /**
+   * Set base URI.
+   * @param _baseURI base URI.
+   */
+  function setBaseURI(string calldata _baseURI) external virtual;
+
+  /**
    * @dev Emitted when a new card gets added.
    * @param tokenId The card NFT token id.
    */
