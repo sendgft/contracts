@@ -22,6 +22,14 @@ abstract contract ICardMarket is INftBase {
   function setCardEnabled(uint _id, bool _enabled) external virtual;
 
   /**
+   * @dev Set a card as approved or disapproved.
+   *
+   * @param _id The card id.
+   * @param _approved true to approve, false to disapprove.
+   */
+  function setCardApproved(uint _id, bool _approved) external virtual;
+
+  /**
    * Get dex.
    */
   function dex() external view virtual returns (address);

@@ -14,6 +14,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
   struct Card {
     bool enabled;
+    bool approved;
     address owner;
     string contentHash;
     address feeToken;
@@ -64,6 +65,10 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     cards[_id].enabled = _enabled;
   }
 
+  function setCardApproved(uint _id, bool _approved) external override isAdmin {
+    cards[_id].approved = _approved;
+  }
+
   function setDex(address _dex) external override isAdmin {
     dex = _dex;
   }
@@ -103,6 +108,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     // save data
     cards[lastId] = Card(
       true,
+      false,
       sender, 
       _cid,
       _feeToken,
@@ -119,6 +125,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   function useCard(uint _id) payable public override {
     Card storage card = cards[_id];
 
+    require(card.approved, "CardMarket: card not approved");
     require(card.enabled, "CardMarket: card not enabled");
 
     IDex(dex).trade{value: msg.value}(
