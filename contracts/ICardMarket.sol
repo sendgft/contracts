@@ -8,7 +8,7 @@ abstract contract ICardMarket is INftBase {
    * @dev Add a new card.
    *
    * @param _cid The IPFS content hash.
-   * @param _feeToken The token to pay the fee in.
+   * @param _feeToken The fee token.
    * @param _feeAmount The amount to pay as fee.
    */
   function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external virtual;
@@ -20,6 +20,42 @@ abstract contract ICardMarket is INftBase {
    * @param _enabled true to enable, false to disable.
    */
   function setCardEnabled(uint _id, bool _enabled) external virtual;
+
+  /**
+   * Get dex.
+   */
+  function dex() external view virtual returns (address);
+
+  /**
+   * Set dex.
+   *
+   * @param _dex Dex to use.
+   */
+  function setDex(address _dex) external virtual;
+
+  /**
+   * Get card usage tax.
+   */
+  function tax() external view virtual returns (uint);
+
+  /**
+   * Set card usage tax.
+   *
+   * @param _tax Tax rate in basis points (100 = 1%).
+   */
+  function setTax(uint _tax) external virtual;
+
+  /**
+   * Get allowed fee tokens.
+   */
+  function allowedFeeTokens() external view virtual returns (address[] memory);
+
+  /**
+   * Set allowed fee tokens.
+   *
+   * @param _feeTokens Allowed fee tokens.
+   */
+  function setAllowedFeeTokens(address[] calldata _feeTokens) external virtual;
 
   /**
    * Use given card for a gift.
@@ -35,10 +71,60 @@ abstract contract ICardMarket is INftBase {
   function setBaseURI(string calldata _baseURI) external virtual;
 
   /**
+   * Get total accumulated withdrawable taxes.
+   *
+   * @param _feeToken The fee token.
+   */
+  function totalTaxes(address _feeToken) external view virtual returns (uint);
+
+  /**
+   * Withdrawable accumulated taxes.
+   *
+   * @param _feeToken the fee token.
+   */
+  function withdrawTaxes(address _feeToken) external virtual;
+
+  /**
+   * Get total accumulated withdrawable earnings for all wallets.
+   *
+   * @param _feeToken the fee token.
+   */
+  function totalEarnings(address _feeToken) external view virtual returns (uint);
+
+  /**
+   * Get accumulated withdrawable earnings for given wallet.
+   *
+   * @param _wallet Wallet to check for.
+   * @param _feeToken the fee token.
+   */
+  function earnings(address _wallet, address _feeToken) external view virtual returns (uint);
+
+  /**
+   * Withdraw caller's accumulated earnings.
+   *
+   * @param _feeToken the fee token.
+   */
+  function withdrawEarnings(address _feeToken) external virtual;
+
+  /**
    * @dev Emitted when a new card gets added.
    * @param tokenId The card NFT token id.
    */
-  event Added(
-    uint indexed tokenId
+  event AddCard(
+    uint tokenId
+  );  
+
+  /**
+   * @dev Emitted when a card gets used.
+   * @param tokenId The card NFT token id.
+   * @param feeToken The card fee token.
+   * @param feeAmount The card fee amount.
+   * @param earned The actual fee amount earned.
+   */
+  event UseCard(
+    uint tokenId,
+    address feeToken,
+    uint feeAmount,
+    uint earned
   );  
 }
