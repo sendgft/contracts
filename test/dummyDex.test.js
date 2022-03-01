@@ -110,7 +110,7 @@ describe('Dummy DEX', () => {
       await token2.mint(accounts[0], weiStr('100 coins'))
     })
 
-    it.only('token1 -> token2', async () => {
+    it('token1 -> token2', async () => {
       await token2.transfer(dex.address, weiStr('10 coins'))
       await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
       
@@ -120,6 +120,34 @@ describe('Dummy DEX', () => {
       await token2.balanceOf(dex.address).should.eventually.eq(weiStr('6 coins'))
       await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('98 coins'))
       await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('4 coins'))
+    })
+
+    it('token1 -> token2: excess output captured', async () => {
+      await token2.transfer(dex.address, weiStr('10 coins'))
+      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+
+      await token1.approve(dex.address, weiStr('2.5 coins'))
+      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2.5 coins'), accounts[0], accounts[1])
+
+      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('5 coins'))
+      await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('97.5 coins'))
+      await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('5 coins'))
+    })
+
+    it('input token not approved', async () => {
+      await token2.transfer(dex.address, weiStr('10 coins'))
+      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+
+      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2 coins'), accounts[0], accounts[1])
+        .should.be.rejectedWith('exceeds allowance')
+    })
+
+    it('input token not enough', async () => {
+      await token2.transfer(dex.address, weiStr('10 coins'))
+      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+
+      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('1 coins'), accounts[0], accounts[1])
+        .should.be.rejectedWith('not enough input')
     })
   })
 })
