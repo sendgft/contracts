@@ -1,22 +1,24 @@
-import { EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from './utils'
+import { BigVal } from 'bigval'
+import { weiStr, EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from './utils'
 import { deployCardMarket } from '../deploy/modules/cardMarket'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { events } from '..'
+import { deployDummyDex } from '../deploy/modules/dummy'
 
 const DummyToken = artifacts.require("DummyToken")
 
 describe('Dummy DEX', () => {
   const evmSnapshot = new EvmSnapshot()
   let accounts
-  let cardMarketDeployment
-  let cardMarket
+  let dex
   let token1
+  let token2
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    cardMarketDeployment = await deployCardMarket({ artifacts })
-    cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
-    token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
+    dex = await deployDummyDex({ artifacts })
+    token1 = await DummyToken.new('Wrapped ETH 1', 'WETH1', 18, 0)
+    token2 = await DummyToken.new('Wrapped ETH 2', 'WETH2', 18, 0)
   })
 
   beforeEach(async () => {
@@ -27,121 +29,97 @@ describe('Dummy DEX', () => {
     await evmSnapshot.restore()
   })
 
-  it('returns version', async () => {
-    await cardMarket.getVersion().should.eventually.eq('1')
-  })
-
-  it('returns admin', async () => {
-    await cardMarket.getAdmin().should.eventually.eq(accounts[0])
-  })
-
-  describe('upgrades', () => {
-    it('cannot be done by randoms', async () => {
-      await cardMarket.upgradeTo(ADDRESS_ZERO, { from: accounts[1] }).should.be.rejectedWith('ProxyImpl: must be admin')
+  describe('set price', async () => {
+    it ('must correlate', async () => {
+      await dex.setPrice(
+        token1.address, 
+        token2.address, 
+        weiStr('2 coins'),
+        weiStr('1 coins')
+      ).should.be.rejectedWith('must correlate')
     })
 
-    it('cannot upgrade to null address', async () => {
-      await cardMarket.upgradeTo(ADDRESS_ZERO).should.be.rejectedWith('ProxyImpl: null implementation')
+    it('set for token <-> token', async () => {
+      const p1 = weiStr('2 coins')
+      const p2 = weiStr('0.5 coins')
+
+      await dex.setPrice(token1.address, token2.address, p1, p2)
+
+      const pp1 = await dex.prices(token1.address, token2.address)
+      expect(new BigVal(pp1).toString()).to.eq(p1)      
+
+      const pp2 = await dex.prices(token2.address, token1.address)
+      expect(new BigVal(pp2).toString()).to.eq(p2)
     })
 
-    it('cannot upgrade to non-valid implementation', async () => {
-      await cardMarket.upgradeTo(token1.address).should.be.rejectedWith('ProxyImpl: invalid implementation')
-    })
+    it('set for native <-> token', async () => {
+      const p1 = weiStr('2 coins')
+      const p2 = weiStr('0.5 coins')
 
-    it('can upgrade to same implementation', async () => {
-      await cardMarket.upgradeTo(cardMarketDeployment.impl.address).should.be.fulfilled
-      await cardMarket.getAdmin().should.eventually.eq(accounts[0])
-    })
-  })
+      await dex.setPrice(ADDRESS_ZERO, token2.address, p1, p2)
 
-  describe('new card can be added', () => {
-    it('but not by anyone', async () => {
-      await cardMarket.addCard('test', ADDRESS_ZERO, 0, { from: accounts[1] }).should.be.rejectedWith('ProxyImpl: must be admin')
-    })
+      const pp1 = await dex.prices(ADDRESS_ZERO, token2.address)
+      expect(new BigVal(pp1).toString()).to.eq(p1)
 
-    it('by an admin', async () => {
-      await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
-      await cardMarket.totalSupply().should.eventually.eq(1)
-      await cardMarket.cards(1).should.eventually.matchObj({
-        enabled: true,
-        owner: accounts[0],
-        contentHash: 'test',
-        feeToken: token1.address,
-        feeAmount: 2, 
-      })
-    })
-
-    it('but not if already added', async () => {
-      await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
-      await cardMarket.addCard('test', token1.address, 3).should.be.rejectedWith('CardMarket: already added')
+      const pp2 = await dex.prices(token2.address, ADDRESS_ZERO)
+      expect(new BigVal(pp2).toString()).to.eq(p2)
     })
   })
 
-  describe('card can be enabled and disabled', () => {
+  describe('check amounts', async () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)      
+      // 1 token1 = 2 token2
+      await dex.setPrice(
+        token1.address, 
+        token2.address, 
+        weiStr('2 coins'),
+        weiStr('0.5 coins')
+      )
     })
 
-    it('but not by non-owner', async () => {
-      await cardMarket.setCardEnabled(1, false, { from: accounts[2] }).should.be.rejectedWith('NftBase: must be owner')
+    it('token2 -> token1', async () => {
+      const amt = await dex.calcInAmount(token1.address, weiStr('6 coins'), token2.address)
+      expect(new BigVal(amt).toString()).to.eq(weiStr('12 coins'))
     })
 
-    it('but not if invalid', async () => {
-      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('NftBase: must be owner')
-    })
-
-    it('if valid card', async () => {
-      await cardMarket.cards(1).should.eventually.matchObj({ enabled: true })
-      await cardMarket.setCardEnabled(1, false)
-      await cardMarket.cards(1).should.eventually.matchObj({ enabled: false })
-      await cardMarket.setCardEnabled(1, true)
-      await cardMarket.cards(1).should.eventually.matchObj({ enabled: true })
-    })
-  })
-
-  describe('card can be used', () => {
-    beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)
-    })
-
-    it('by default', async () => {
-      await cardMarket.useCard(1)
-    })
-
-    it('unless disabled', async () => {
-      await cardMarket.setCardEnabled(1, false)
-      await cardMarket.useCard(1).should.be.rejectedWith('CardMarket: card not enabled')
-      await cardMarket.setCardEnabled(1, true)
-      await cardMarket.useCard(1).should.be.fulfilled
+    it('token1 -> token2', async () => {
+      const amt = await dex.calcInAmount(token2.address, weiStr('6 coins'), token1.address)
+      expect(new BigVal(amt).toString()).to.eq(weiStr('3 coins'))
     })
   })
 
-  describe('token URI', () => {
+  describe('trade', async () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)
+      // 1 token1 = 2 token2
+      await dex.setPrice(
+        token1.address,
+        token2.address,
+        weiStr('2 coins'),
+        weiStr('0.5 coins')
+      )
+
+      // 1 native token = 0.5 token2
+      await dex.setPrice(
+        ADDRESS_ZERO,
+        token2.address,
+        weiStr('0.5 coins'),
+        weiStr('2 coins')
+      )
+
+      await token1.mint(accounts[0], weiStr('100 coins'))
+      await token2.mint(accounts[0], weiStr('100 coins'))
     })
 
-    it('must be a valid id', async () => {
-      await cardMarket.tokenURI(2).should.be.rejectedWith('NftBase: URI query for nonexistent token')
-    })
+    it.only('token1 -> token2', async () => {
+      await token2.transfer(dex.address, weiStr('10 coins'))
+      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+      
+      await token1.approve(dex.address, weiStr('2 coins'))
+      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2 coins'), accounts[0], accounts[1])
 
-    describe('baseURI', async () => {
-      it('returns with empty base URI', async () => {
-        await cardMarket.tokenURI(1).should.eventually.eq('test')
-      })
-
-      it('base URI can be set, but not just by anyone', async () => {
-        await cardMarket.setBaseURI('https://google.com', { from: accounts[2] }).should.be.rejectedWith('ProxyImpl: must be admin')
-      })
-
-      it('base URI can be set by admin', async () => {
-        await cardMarket.setBaseURI('https://google.com').should.be.fulfilled
-      })
-
-      it('returns with non-empty base URI', async () => {
-        await cardMarket.setBaseURI('https://smoke.some/')
-        await cardMarket.tokenURI(1).should.eventually.eq('https://smoke.some/test')
-      })
+      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('6 coins'))
+      await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('98 coins'))
+      await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('4 coins'))
     })
   })
 })

@@ -11,7 +11,7 @@ contract DummyDex is IDex {
   // IDex
 
   function calcInAmount(address _outToken, uint _outAmount, address _inToken) public view returns (uint) {
-    return prices[_outToken][_inToken] * _outAmount;
+    return prices[_outToken][_inToken] * _outAmount / 10**18;
   }
 
   function trade(address _outToken, uint _outAmount, address _inToken, uint _inAmount, address _inWallet, address _outWallet) external payable {
@@ -19,15 +19,17 @@ contract DummyDex is IDex {
 
     require(requiredInAmount <= _inAmount, "DummyDex: not enough input to trade");
 
+    uint actualOutputAmount = calcInAmount(_inToken, _inAmount, _outToken);
+
     if (_inToken != address(0)) {
       IERC20 input = IERC20(_inToken);
-      require(input.transferFrom(_inWallet, address(this), requiredInAmount), "DummyDex: input transfer failed");
+      require(input.transferFrom(_inWallet, address(this), _inAmount), "DummyDex: input transfer failed");
     } else {
-      require(msg.value >= requiredInAmount, "DummyDex: input transfer insufficient");
+      require(msg.value >= _inAmount, "DummyDex: input transfer insufficient");
     }
 
     IERC20 output = IERC20(_outToken);
-    require(output.transfer(_outWallet, _outAmount), "DummyDex: output transfer failed");
+    require(output.transfer(_outWallet, actualOutputAmount), "DummyDex: output transfer failed");
   }
 
   // DummyDex
@@ -41,7 +43,7 @@ contract DummyDex is IDex {
    * @param _token2By1Price Token 2 / Token 1.
    */
   function setPrice(address _token1, address _token2, uint _token1By2Price, uint _token2By1Price) external {
-    uint const = 1 * 10^18;
+    uint const = 10**18;
     require((_token1By2Price * _token2By1Price) / const == const, "DummyDex: prices must correlate");
     prices[_token1][_token2] = _token1By2Price;
     prices[_token2][_token1] = _token2By1Price;

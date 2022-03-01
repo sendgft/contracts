@@ -1,3 +1,4 @@
+import { BigVal } from 'bigval'
 import { EthHdWallet } from 'eth-hd-wallet'
 import _ from 'lodash'
 import chai from 'chai'
@@ -9,6 +10,11 @@ import { TEST_MNEMONIC } from '../../utils/constants'
 export { expect } from 'chai'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+
+export const weiStr = str => {
+  const val = str.split(' ')
+  return new BigVal(val[0], val[1]).toMinScale().toString()
+}
 
 chai.use((_chai, utils) => {
   const sanitizeResultVal = (result, val) => {

@@ -57,7 +57,7 @@ export const deployDummyTokens = async (ctx = {}) => {
 }
 
 export const deployDummyDex = async (ctx = {}) => {
-  const { artifacts, log = createLog(), isLocalDevnet, deployedAddressesToSave } = ctx
+  const { artifacts, log = createLog(), isLocalDevnet, deployedAddressesToSave = {} } = ctx
 
   let dex
 
