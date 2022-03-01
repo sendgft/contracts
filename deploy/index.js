@@ -8,7 +8,7 @@ import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, ver
 import { deployGifter } from './modules/gifter'
 import { deployCardMarket } from './modules/cardMarket'
 import { deployMulticall } from './modules/multicall'
-import { deployDummyTokens } from './modules/dummyTokens'
+import { deployDummyTokens, deployDummyDex } from './modules/dummy'
 import { deployIpfsAssets } from './modules/ipfs'
 
 const deployConfig = require('../deployConfig.json')
@@ -82,24 +82,28 @@ async function main() {
     await deployMulticall(ctx)
   }
 
+  // fee tokens
+  let tokens = []
+  if (deployConfig.deployDummyContracts) {
+    tokens = await deployDummyTokens(ctx)
+  }
+
+  // dex 
+  const dex = await deployDummyDex(ctx)
+
   // card market
-  const cardMarket = await deployCardMarket(ctx)
+  const cardMarket = await deployCardMarket(ctx, { dex, tokens })
 
   // gifter
-  const gifter = await deployGifter(ctx, { cardMarketAddress: cardMarket.proxy.address })
-
-  // dummy tokens 
-  if (deployConfig.deployDummyTokens) {
-    await deployDummyTokens(ctx)
-  }
+  const gifter = await deployGifter(ctx, { cardMarket: cardMarket.proxy })
 
   // save deployed addresses
   if (!ctx.isLocalDevnet) {
-    await log.task('Update deployedAddresses.json', async task => {
+    await log.task('Update deployedAddresses.json', async () => {
       fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(deployedAddresses, null, 2), 'utf-8')
     })
   }
-
+  
   // for rinkeby let's verify contract on etherscan
   if (network.name === 'rinkeby') {
     await log.task('Verify contracts on Etherscan', async task => {

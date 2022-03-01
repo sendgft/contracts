@@ -31,7 +31,7 @@ async function main() {
 
   const releaseInfo = {
     network: argv.network,
-    deployDummyTokens: (['localhost', 'rinkeby'].includes(argv.network)),
+    deployDummyContracts: (['localhost', 'rinkeby'].includes(argv.network)),
     ipfs: {
       api,
       gateway,

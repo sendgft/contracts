@@ -55,3 +55,23 @@ export const deployDummyTokens = async (ctx = {}) => {
 
   return tokens
 }
+
+export const deployDummyDex = async (ctx = {}) => {
+  const { artifacts, log = createLog(), isLocalDevnet, deployedAddressesToSave } = ctx
+
+  let dex
+
+  await log.task(`Deploy Dummy DEX`, async task => {
+    dex = await deployContract({ artifacts }, 'DummyDex', [])
+
+    await task.log(`Deployed at ${dex.address}`)
+
+    if (isLocalDevnet) {
+      assertSameAddress(dex.address, LOCAL_DEVNET_ADDRESSES.dex, 'Dex')
+    }
+
+    deployedAddressesToSave.dex = dex.address
+  })
+
+  return dex
+}

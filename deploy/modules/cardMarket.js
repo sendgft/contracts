@@ -4,8 +4,9 @@ import delay from 'delay'
 import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
 import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 import { ADDRESS_ZERO } from '../../test/utils'
+import { BigVal } from 'bigval'
 
-export const deployCardMarket = async (ctx = {}) => {
+export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
   const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
 
   return await log.task(`Deploy Card market`, async parentTask => {
@@ -45,10 +46,26 @@ export const deployCardMarket = async (ctx = {}) => {
 
     const cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', proxy.address)
 
+    // set tax
+    await parentTask.task(`Set tax: 10%`, async task => {
+      await execMethod({ ctx, task }, cardMarket, 'setTax', [1000])
+    })
+
+    // set Dex
+    await parentTask.task(`Set dex: ${dex.address}`, async task => {
+      await execMethod({ ctx, task }, cardMarket, 'setDex', [dex.address])
+    })
+
+    // set allowed fee tokens
+    const feeTokens = tokens.map(t => t.address)
+    await parentTask.task(`Set allowed fee tokens: ${feeTokens.join(', ')}`, async task => {
+      await execMethod({ ctx, task }, cardMarket, 'setAllowedFeeTokens', [feeTokens])
+    })
+
     // set baseURI
     const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
     if (baseURI) {
-      await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
+      await parentTask.task(`Set default base URI: ${baseURI}`, async task => {
         await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
       })
     }
@@ -61,7 +78,11 @@ export const deployCardMarket = async (ctx = {}) => {
       const cardId = (await cardMarket.cardByCid(ctx.cids.card1MetadataCid)).toNumber()
       if (0 >= cardId) {
         await parentTask.task(`Add card1 to card market`, async task => {
-          await execMethod({ ctx, task }, cardMarket, 'addCard', [ctx.cids.card1MetadataCid, ADDRESS_ZERO, "0"])
+          await execMethod({ ctx, task }, cardMarket, 'addCard', [
+            ctx.cids.card1MetadataCid, 
+            tokens[0].address, 
+            new BigVal(1, 'coins').toMinScale().toString()
+          ])
         })
       }
 

@@ -5,8 +5,7 @@ import "./IDex.sol";
 import "./IERC20.sol";
 
 contract DummyDex is IDex {
-
-  // token1/token2
+  // price = token1/token2: token1 => token2 => price
   mapping(address => mapping(address => uint)) public prices;
 
   // IDex
@@ -34,7 +33,7 @@ contract DummyDex is IDex {
   // DummyDex
 
   /**
-   * @dev Set the price of  the input token amount to output token amount.
+   * @dev Set the price of the input token amount to output token amount.
    *
    * @param _token1 Token 1.
    * @param _token2 Token 2.
