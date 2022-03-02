@@ -2910,10 +2910,10 @@ bignumber.js@^7.2.1:
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-7.2.1.tgz#80c048759d826800807c4bfd521e50edbba57a5f"
   integrity sha512-S4XzBk5sMB+Rcb/LNcpzXr57VRTxgAvaAEDAl1AwRx27j00hT84O6OkteE7u8UB3NuaaygCRrEpqox4uDOrbdQ==
 
-bigval@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/bigval/-/bigval-1.4.0.tgz#9a23582176d2e8577bdc1a23790421af8ceff111"
-  integrity sha512-PJ9oxIntfiJsCg510RscYq4p+cH44QKdDanPnX6cAjKipDR/aNzF/rV6g+Ro05Y3lTYJdLcCYqxzQU/qcSNBFQ==
+bigval@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/bigval/-/bigval-1.5.0.tgz#6a6843a04710c68849b577e6e86d56fa0a460bbc"
+  integrity sha512-+ajW5IY2zxg8p54U1ApkavANNPl9MyNoLi4y0/4aNfDrJw5Vkqs34s/LmcrQlXZe5cYXW16EpFRjh0MAsDwyzw==
   dependencies:
     decimal.js "^10.2.1"
 

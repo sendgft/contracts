@@ -1,4 +1,4 @@
-import { BigVal } from 'bigval'
+import { toMinStr } from 'bigval'
 import { EthHdWallet } from 'eth-hd-wallet'
 import _ from 'lodash'
 import chai from 'chai'
@@ -11,10 +11,7 @@ export { expect } from 'chai'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
-export const weiStr = str => {
-  const val = str.split(' ')
-  return new BigVal(val[0], val[1]).toMinScale().toString()
-}
+export const weiStr = toMinStr
 
 chai.use((_chai, utils) => {
   const sanitizeResultVal = (result, val) => {
@@ -99,7 +96,7 @@ chai.use(chaiAsPromised)
 
 chai.should()
 
-export const getBalance = w => hre.ethers.provider.getBalance(w)
+export const balanceOf = w => hre.ethers.provider.getBalance(w)
 
 export const hdWallet = EthHdWallet.fromMnemonic(TEST_MNEMONIC)
 hdWallet.generateAddresses(10)

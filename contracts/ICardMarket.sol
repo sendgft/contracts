@@ -69,8 +69,9 @@ abstract contract ICardMarket is INftBase {
    * Use given card for a gift.
    *
    * @param _id The card id.
+   * @param _feePayer The wallet that will pay the fee.
    */
-  function useCard(uint _id) payable external virtual;
+  function useCard(uint _id, address _feePayer) payable external virtual;
 
   /**
    * Set base URI.

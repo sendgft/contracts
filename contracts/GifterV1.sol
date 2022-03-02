@@ -113,6 +113,8 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     address[] calldata _erc20AndNftContracts, 
     uint[] calldata _amountsAndIds
   ) payable external override {
+    address sender = _msgSender();
+
     // new gift id
     lastId += 1;
 
@@ -135,7 +137,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // save data
     gifts[lastId] = Gift(
-      _msgSender(), 
+      sender, 
       block.number,
       0, 
       false,
@@ -154,7 +156,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     assembly {
       cardDesignId := mload(_config)
     }
-    cardMarket.useCard{value: msg.value}(cardDesignId);
+    cardMarket.useCard{value: msg.value}(cardDesignId, sender);
 
     // event
     emit Created(lastId, _message);

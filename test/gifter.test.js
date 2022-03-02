@@ -1,5 +1,5 @@
 import EthVal from 'ethval'
-import { EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from './utils'
+import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
 import { deployGifter } from '../deploy/modules/gifter'
 import { deployCardMarket } from '../deploy/modules/cardMarket'
 import { getSigners, getContractAt } from '../deploy/utils'
@@ -207,11 +207,11 @@ describe('Gifter', () => {
       // check token balances
       await token1.balanceOf(gifter.address).should.eventually.eq(3)
       await token2.balanceOf(gifter.address).should.eventually.eq(6)
-      await getBalance(gifter.address).should.eventually.eq(65)
+      await balanceOf(gifter.address).should.eventually.eq(65)
       await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
-      const preBal = new EthVal(await getBalance(receiver1))
+      const preBal = new EthVal(await balanceOf(receiver1))
 
       // claim
       const tx = await gifter.openAndClaim(gift1, 'content1', { from: receiver1 })
@@ -245,11 +245,11 @@ describe('Gifter', () => {
       // check balances
       await token1.balanceOf(gifter.address).should.eventually.eq(0)
       await token2.balanceOf(gifter.address).should.eventually.eq(2)
-      await getBalance(gifter.address).should.eventually.eq(20)
+      await balanceOf(gifter.address).should.eventually.eq(20)
       await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
-      const postBal = new EthVal(await getBalance(receiver1))
+      const postBal = new EthVal(await balanceOf(receiver1))
       expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
     })
 
@@ -290,11 +290,11 @@ describe('Gifter', () => {
       // check token balances
       await token1.balanceOf(gifter.address).should.eventually.eq(3)
       await token2.balanceOf(gifter.address).should.eventually.eq(4)
-      await getBalance(gifter.address).should.eventually.eq(45)
+      await balanceOf(gifter.address).should.eventually.eq(45)
       await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
-      const preBal = new EthVal(await getBalance(receiver1))
+      const preBal = new EthVal(await balanceOf(receiver1))
 
       // claim
       const tx = await gifter.claim(gift1, { from: receiver1 })
@@ -322,11 +322,11 @@ describe('Gifter', () => {
       // check balances
       await token1.balanceOf(gifter.address).should.eventually.eq(0)
       await token2.balanceOf(gifter.address).should.eventually.eq(0)
-      await getBalance(gifter.address).should.eventually.eq(0)
+      await balanceOf(gifter.address).should.eventually.eq(0)
       await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
-      const postBal = new EthVal(await getBalance(receiver1))
+      const postBal = new EthVal(await balanceOf(receiver1))
       expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
     })
 
@@ -367,11 +367,11 @@ describe('Gifter', () => {
       // check token balances
       await token1.balanceOf(gifter.address).should.eventually.eq(3)
       await token2.balanceOf(gifter.address).should.eventually.eq(4)
-      await getBalance(gifter.address).should.eventually.eq(45)
+      await balanceOf(gifter.address).should.eventually.eq(45)
       await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
-      const preBal = new EthVal(await getBalance(receiver1))
+      const preBal = new EthVal(await balanceOf(receiver1))
 
       // claim
       const tx = await gifter.claim(gift1, { from: receiver1 })
@@ -401,11 +401,11 @@ describe('Gifter', () => {
       // check balances
       await token1.balanceOf(gifter.address).should.eventually.eq(0)
       await token2.balanceOf(gifter.address).should.eventually.eq(0)
-      await getBalance(gifter.address).should.eventually.eq(0)
+      await balanceOf(gifter.address).should.eventually.eq(0)
       await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
-      const postBal = new EthVal(await getBalance(receiver1))
+      const postBal = new EthVal(await balanceOf(receiver1))
       expect(postBal.sub(preBal.sub(gasCost1).sub(gasCost2)).toNumber()).to.eq(45)
     })
 

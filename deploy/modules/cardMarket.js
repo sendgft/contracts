@@ -83,6 +83,11 @@ export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
             tokens[0].address, 
             new BigVal(1, 'coins').toMinScale().toString()
           ])
+
+          await execMethod({ ctx, task }, cardMarket, 'setCardApproved', [
+            (await cardMarket.lastId()).toNumber(),
+            true
+          ])
         })
       }
 

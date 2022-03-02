@@ -1,5 +1,5 @@
 import { BigVal } from 'bigval'
-import { weiStr, EvmSnapshot, expect, extractEventArgs, getBalance, ADDRESS_ZERO } from './utils'
+import { weiStr, EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
 import { deployCardMarket } from '../deploy/modules/cardMarket'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { events } from '..'
@@ -108,46 +108,67 @@ describe('Dummy DEX', () => {
 
       await token1.mint(accounts[0], weiStr('100 coins'))
       await token2.mint(accounts[0], weiStr('100 coins'))
-    })
 
-    it('token1 -> token2', async () => {
       await token2.transfer(dex.address, weiStr('10 coins'))
       await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
-      
-      await token1.approve(dex.address, weiStr('2 coins'))
-      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2 coins'), accounts[0], accounts[1])
-
-      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('6 coins'))
-      await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('98 coins'))
-      await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('4 coins'))
     })
 
-    it('token1 -> token2: excess output captured', async () => {
-      await token2.transfer(dex.address, weiStr('10 coins'))
-      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+    describe('token <-> token', () => {
+      it('token1 -> token2', async () => {
+        await token1.approve(dex.address, weiStr('2 coins'))
+        await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2 coins'), accounts[0], accounts[1])
 
-      await token1.approve(dex.address, weiStr('2.5 coins'))
-      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2.5 coins'), accounts[0], accounts[1])
+        await token2.balanceOf(dex.address).should.eventually.eq(weiStr('6 coins'))
+        await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('98 coins'))
+        await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('4 coins'))
+      })
 
-      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('5 coins'))
-      await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('97.5 coins'))
-      await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('5 coins'))
+      it('token1 -> token2: excess output captured', async () => {
+        await token1.approve(dex.address, weiStr('2.5 coins'))
+        await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2.5 coins'), accounts[0], accounts[1])
+
+        await token2.balanceOf(dex.address).should.eventually.eq(weiStr('5 coins'))
+        await token1.balanceOf(accounts[0]).should.eventually.eq(weiStr('97.5 coins'))
+        await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('5 coins'))
+      })
+
+      it('input token not approved', async () => {
+        await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2 coins'), accounts[0], accounts[1])
+          .should.be.rejectedWith('exceeds allowance')
+      })
+
+      it('input token not enough', async () => {
+        await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('1 coins'), accounts[0], accounts[1])
+          .should.be.rejectedWith('not enough input')
+      })
     })
 
-    it('input token not approved', async () => {
-      await token2.transfer(dex.address, weiStr('10 coins'))
-      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+    describe('native <-> token', () => {
+      it('native -> token2', async () => {
+        await dex.trade(token2.address, weiStr('4 coins'), ADDRESS_ZERO, weiStr('8 coins'), accounts[0], accounts[1], {
+          value: weiStr('8 coins')
+        })
 
-      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('2 coins'), accounts[0], accounts[1])
-        .should.be.rejectedWith('exceeds allowance')
-    })
+        await token2.balanceOf(dex.address).should.eventually.eq(weiStr('6 coins'))
+        await balanceOf(dex.address).should.eventually.eq(weiStr('8 coins'))
+        await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('4 coins'))
+      })
 
-    it('input token not enough', async () => {
-      await token2.transfer(dex.address, weiStr('10 coins'))
-      await token2.balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+      it('native -> token2: excess output captured', async () => {
+        await dex.trade(token2.address, weiStr('4 coins'), ADDRESS_ZERO, weiStr('10 coins'), accounts[0], accounts[1], {
+          value: weiStr('10 coins')
+        })
 
-      await dex.trade(token2.address, weiStr('4 coins'), token1.address, weiStr('1 coins'), accounts[0], accounts[1])
-        .should.be.rejectedWith('not enough input')
+        await token2.balanceOf(dex.address).should.eventually.eq(weiStr('5 coins'))
+        await balanceOf(dex.address).should.eventually.eq(weiStr('10 coins'))
+        await token2.balanceOf(accounts[1]).should.eventually.eq(weiStr('5 coins'))
+      })
+
+      it('input native token not enough', async () => {
+        await dex.trade(token2.address, weiStr('4 coins'), ADDRESS_ZERO, weiStr('8 coins'), accounts[0], accounts[1], {
+          value: weiStr('7 coins')
+        }).should.be.rejectedWith('input insufficient')
+      })
     })
   })
 })

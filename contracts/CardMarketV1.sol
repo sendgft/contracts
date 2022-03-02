@@ -122,7 +122,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     emit AddCard(lastId);
   }
 
-  function useCard(uint _id) payable public override {
+  function useCard(uint _id, address _feePayer) payable public override {
     Card storage card = cards[_id];
 
     require(card.approved, "CardMarket: card not approved");
@@ -133,7 +133,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
       card.feeAmount, 
       address(0), 
       msg.value, 
-      address(dex), 
+      _feePayer, 
       address(this)
     );
 
