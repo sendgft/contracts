@@ -122,24 +122,20 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     emit AddCard(lastId);
   }
 
-  function useCard(uint _id, address _feePayer, address _feeToken) payable public override {
+  function useCard(uint _id) payable public override {
     Card storage card = cards[_id];
 
     require(card.approved, "CardMarket: card not approved");
     require(card.enabled, "CardMarket: card not enabled");
 
-    if (card.feeToken != _feeToken) {
-      IDex(dex).trade{value: msg.value}(
-        card.feeToken, 
-        card.feeAmount, 
-        address(0), 
-        msg.value, 
-        _feePayer, 
-        address(this)
-      );
-    } else {
-      IERC20(_feeToken).transferFrom(_feePayer, address(this), card.feeAmount);
-    }
+    IDex(dex).trade{value: msg.value}(
+      card.feeToken, 
+      card.feeAmount, 
+      address(0), 
+      msg.value, 
+      address(this), 
+      address(this)
+    );
 
     uint earned = ((10000 - tax) / 10000) * card.feeAmount;
     earnings[card.owner][card.feeToken] = earnings[card.owner][card.feeToken].add(earned);

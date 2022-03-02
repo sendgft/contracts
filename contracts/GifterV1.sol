@@ -156,7 +156,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     assembly {
       cardDesignId := mload(_config)
     }
-    cardMarket.useCard{value: msg.value}(cardDesignId, sender, address(0));
+    cardMarket.useCard{value: msg.value}(cardDesignId);
 
     // event
     emit Created(lastId, _message);
