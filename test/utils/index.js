@@ -11,8 +11,6 @@ export { expect } from 'chai'
 
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
-export const weiStr = toMinStr
-
 chai.use((_chai, utils) => {
   const sanitizeResultVal = (result, val) => {
     // if bignumber

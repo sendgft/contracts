@@ -5,11 +5,14 @@ import fs from 'fs'
 import delay from 'delay'
 
 import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance } from './utils'
-import { deployGifter } from './modules/gifter'
-import { deployCardMarket } from './modules/cardMarket'
-import { deployMulticall } from './modules/multicall'
-import { deployDummyTokens, deployDummyDex } from './modules/dummy'
-import { deployIpfsAssets } from './modules/ipfs'
+import { 
+  deployGifter, 
+  deployCardMarket, 
+  deployMulticall, 
+  deployDummyTokens, 
+  deployDummyDex,
+  deployIpfsAssets,
+} from './modules'
 
 const deployConfig = require('../deployConfig.json')
 
@@ -89,7 +92,7 @@ async function main() {
   }
 
   // dex 
-  const dex = await deployDummyDex(ctx)
+  const dex = await deployDummyDex(ctx, { tokens })
 
   // card market
   const cardMarket = await deployCardMarket(ctx, { dex, tokens })

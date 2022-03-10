@@ -1,11 +1,9 @@
 import EthVal from 'ethval'
 import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
-import { deployGifter } from '../deploy/modules/gifter'
-import { deployCardMarket } from '../deploy/modules/cardMarket'
+import { deployGifter, deployCardMarket } from '../deploy/modules'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { events } from '..'
 
-const DummyToken = artifacts.require("DummyToken")
 const DummyNFT = artifacts.require("DummyNFT")
 
 const stringToBytesHex = s => hre.ethers.utils.hexlify(hre.ethers.utils.toUtf8Bytes(s))
@@ -26,19 +24,25 @@ describe('Gifter', () => {
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    cardMarketDeployment = await deployCardMarket({ artifacts })
+    tokens = await deployDummyTokens({ artifacts })
+    token1 = tokens[0]
+    token2 = tokens[1]
+    dex = await deployDummyDex({ artifacts }, { tokens })
+    cardMarketDeployment = await deployCardMarket({ artifacts }, { dex, tokens })
     cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
-    gifterDeployment = await deployGifter({ artifacts }, { cardMarketAddress: cardMarket.address })
+    gifterDeployment = await deployGifter({ artifacts }, { cardMarket })
     gifter = await getContractAt({ artifacts }, 'GifterV1', gifterDeployment.proxy.address)
-    nft1 = await DummyNFT.new()
-    token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
-    token2 = await DummyToken.new('Wrapped AVAX', 'WAVAX', 18, 0)
+    nft = await DummyNFT.new()
     sender1 = accounts[2]
     receiver1 = accounts[5]
     receiver2 = accounts[6]
 
-    // add a card design
-    await cardMarket.addCard("test", token1.address, 0)
+    // set price for testing
+    await dex.setPrice(ADDRESS_ZERO, token1.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
+
+    // add card designs
+    await cardMarket.addCard("test1", token1.address, 0)
+    await cardMarket.addCard("test2", token2.address, 10)
   })
 
   beforeEach(async () => {

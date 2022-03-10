@@ -125,14 +125,14 @@ abstract contract ICardMarket is INftBase {
   /**
    * @dev Emitted when a card gets used.
    * @param tokenId The card NFT token id.
-   * @param feeToken The card fee token.
-   * @param feeAmount The card fee amount.
-   * @param earned The actual fee amount earned.
+   * @param fee The total fee.
+   * @param earned The actual fee earned by owner.
+   * @param tax The actual tax taken from the fee.
    */
   event UseCard(
     uint tokenId,
-    address feeToken,
-    uint feeAmount,
-    uint earned
+    uint fee,
+    uint earned,
+    uint tax
   );  
 }

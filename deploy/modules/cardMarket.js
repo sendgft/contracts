@@ -4,7 +4,7 @@ import delay from 'delay'
 import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
 import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 import { ADDRESS_ZERO } from '../../test/utils'
-import { BigVal } from 'bigval'
+import { toMinStr } from 'bigval'
 
 export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
   const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
@@ -81,7 +81,7 @@ export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
           await execMethod({ ctx, task }, cardMarket, 'addCard', [
             ctx.cids.card1MetadataCid, 
             tokens[0].address, 
-            new BigVal(1, 'coins').toMinScale().toString()
+            toMinStr('10 coins')
           ])
 
           await execMethod({ ctx, task }, cardMarket, 'setCardApproved', [

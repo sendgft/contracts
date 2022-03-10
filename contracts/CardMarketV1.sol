@@ -93,7 +93,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     }
   }
 
-  function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external override isAdmin {
+  function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external override {
     require(feeTokenAllowed[_feeToken], "CardMarket: unsupported fee token");
 
     // new id
@@ -132,24 +132,24 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
       card.feeToken, 
       card.feeAmount, 
       address(0), 
-      msg.value, 
       address(this), 
       address(this)
     );
 
-    uint earned = ((10000 - tax) / 10000) * card.feeAmount;
+    uint earned = (10000 - tax) * card.feeAmount / 10000;
     earnings[card.owner][card.feeToken] = earnings[card.owner][card.feeToken].add(earned);
     totalEarnings[card.feeToken] = totalEarnings[card.feeToken].add(earned);
-    totalTaxes[card.feeToken] = totalTaxes[card.feeToken].add(card.feeAmount.sub(earned));
+    uint thisTax = card.feeAmount.sub(earned);
+    totalTaxes[card.feeToken] = totalTaxes[card.feeToken].add(thisTax);
 
-    emit UseCard(_id, card.feeToken, card.feeAmount, earned);
+    emit UseCard(_id, card.feeAmount, earned, thisTax);
   }
 
   function withdrawTaxes(address _feeToken) external override isAdmin {
     uint amt = totalTaxes[_feeToken];
     if (amt > 0) {
       totalTaxes[_feeToken] = 0;
-      require(IERC20(_feeToken).transfer(_msgSender(), amt), "CardMarket: taxes withdrawal failed");
+      require(IERC20(_feeToken).transfer(_msgSender(), amt), "CardMarket: tax withdrawal failed");
     }
   }
 

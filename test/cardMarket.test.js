@@ -1,6 +1,7 @@
-import { EvmSnapshot, ADDRESS_ZERO } from './utils'
-import { deployCardMarket } from '../deploy/modules/cardMarket'
+import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs } from './utils'
+import { deployCardMarket, deployDummyTokens, deployDummyDex } from '../deploy/modules'
 import { getSigners, getContractAt } from '../deploy/utils'
+import { BigVal, toMinStr } from 'bigval'
 import { events } from '..'
 
 const DummyToken = artifacts.require("DummyToken")
@@ -10,13 +11,22 @@ describe('Card market', () => {
   let accounts
   let cardMarketDeployment
   let cardMarket
+  let dex
+  let tokens
   let token1
+  let randomToken
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    cardMarketDeployment = await deployCardMarket({ artifacts })
+    tokens = await deployDummyTokens({ artifacts })
+    token1 = tokens[0]
+    dex = await deployDummyDex({ artifacts }, { tokens })
+    cardMarketDeployment = await deployCardMarket({ artifacts }, { dex, tokens })
     cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
-    token1 = await DummyToken.new('Wrapped ETH', 'WETH', 18, 0)
+    randomToken = await DummyToken.new('test', 'test', 18, 0)
+
+    // set price for testing
+    await dex.setPrice(ADDRESS_ZERO, token1.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
   })
 
   beforeEach(async () => {
@@ -54,65 +64,207 @@ describe('Card market', () => {
     })
   })
 
-  describe('new card can be added', () => {
-    it('but not by anyone', async () => {
-      await cardMarket.addCard('test', ADDRESS_ZERO, 0, { from: accounts[1] }).should.be.rejectedWith('ProxyImpl: must be admin')
+  describe('allowed fee tokens', () => {
+    it('can be set', async () => {
+      await cardMarket.allowedFeeTokens().should.eventually.eq(tokens.map(t => t.address))
+      await cardMarket.setAllowedFeeTokens([ tokens[1].address ])
+      await cardMarket.allowedFeeTokens().should.eventually.eq([ tokens[1].address ])
+      await cardMarket.setAllowedFeeTokens([tokens[2].address])
+      await cardMarket.allowedFeeTokens().should.eventually.eq([tokens[2].address])
     })
+  })
 
-    it('by an admin', async () => {
+  describe('tax', () => {
+    it('can be set', async () => {
+      await cardMarket.tax().should.eventually.eq('1000')
+      await cardMarket.setTax('1')
+      await cardMarket.tax().should.eventually.eq('1')
+    })
+  })
+
+  describe('new card can be added', () => {
+    it('enabled but not yet approved', async () => {
       await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
       await cardMarket.totalSupply().should.eventually.eq(1)
       await cardMarket.cards(1).should.eventually.matchObj({
         enabled: true,
+        approved: false,
         owner: accounts[0],
         contentHash: 'test',
         feeToken: token1.address,
-        feeAmount: 2, 
+        feeAmount: 2,
       })
+    })
+
+    it('not if using disallowed fee token', async () => {
+      await cardMarket.addCard('test', randomToken.address, 2).should.be.rejectedWith('unsupported fee token')
     })
 
     it('but not if already added', async () => {
       await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
       await cardMarket.addCard('test', token1.address, 3).should.be.rejectedWith('CardMarket: already added')
     })
+
+    it('and event gets emitted', async () => {
+      const tx = await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
+
+      const eventArgs = extractEventArgs(tx, events.AddCard)
+      expect(eventArgs).to.include({ tokenId: (await cardMarket.lastId()).toString() })
+    })
   })
 
   describe('card can be enabled and disabled', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)      
+      await cardMarket.addCard('test', token1.address, 2, { from: accounts[1] })      
     })
 
     it('but not by non-owner', async () => {
-      await cardMarket.setCardEnabled(1, false, { from: accounts[2] }).should.be.rejectedWith('NftBase: must be owner')
+      await cardMarket.setCardEnabled(1, false).should.be.rejectedWith('NftBase: must be owner')
     })
 
     it('but not if invalid', async () => {
-      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('NftBase: must be owner')
+      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('nonexistent')
     })
 
     it('if valid card', async () => {
       await cardMarket.cards(1).should.eventually.matchObj({ enabled: true })
-      await cardMarket.setCardEnabled(1, false)
+      await cardMarket.setCardEnabled(1, false, { from: accounts[1] })
       await cardMarket.cards(1).should.eventually.matchObj({ enabled: false })
-      await cardMarket.setCardEnabled(1, true)
+      await cardMarket.setCardEnabled(1, true, { from: accounts[1] })
       await cardMarket.cards(1).should.eventually.matchObj({ enabled: true })
+    })
+  })
+
+  describe('card can be approved and disapproved', () => {
+    beforeEach(async () => {
+      await cardMarket.addCard('test', token1.address, 2)
+    })
+
+    it('but not by anyone', async () => {
+      await cardMarket.setCardApproved(1, false, { from: accounts[1] }).should.be.rejectedWith('must be admin')
+    })
+
+    it('works', async () => {
+      await cardMarket.cards(1).should.eventually.matchObj({ approved: false })
+      await cardMarket.setCardApproved(1, true)
+      await cardMarket.cards(1).should.eventually.matchObj({ approved: true })
+      await cardMarket.setCardApproved(1, false)
+      await cardMarket.cards(1).should.eventually.matchObj({ approved: false })
     })
   })
 
   describe('card can be used', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)
+      await cardMarket.addCard('test', token1.address, toMinStr('4 coins'), { from: accounts[1] })
+      await cardMarket.setCardEnabled(1, true, { from: accounts[1] })
+      await cardMarket.setCardApproved(1, true)
+
+      await cardMarket.addCard('test2', token1.address, toMinStr('10 coins'), { from: accounts[2] })
+      await cardMarket.setCardEnabled(2, true, { from: accounts[2] })
+      await cardMarket.setCardApproved(2, true)
     })
 
-    it('by default', async () => {
-      await cardMarket.useCard(1)
+    it('unless disapproved', async () => {
+      await cardMarket.setCardApproved(1, false)
+      await cardMarket.useCard(1).should.be.rejectedWith('not approved')
     })
 
     it('unless disabled', async () => {
-      await cardMarket.setCardEnabled(1, false)
-      await cardMarket.useCard(1).should.be.rejectedWith('CardMarket: card not enabled')
-      await cardMarket.setCardEnabled(1, true)
-      await cardMarket.useCard(1).should.be.fulfilled
+      await cardMarket.setCardEnabled(1, false, { from: accounts[1] })
+      await cardMarket.useCard(1).should.be.rejectedWith('not enabled')
+    })
+
+    describe('and fee gets paid', () => {
+      it('unless not enough provided', async () => {
+        // price: native/token1 = 2, thus for a fee of 4 token1, we need to send 2 native
+        await cardMarket.useCard(1, { value: toMinStr('1.9 coins') }).should.be.rejectedWith('input insufficient')
+      })
+
+      it('if enough provided', async () => {
+        await cardMarket.useCard(1, { value: toMinStr('2 coins') }).should.be.fulfilled
+      })
+
+      it('and event getes emitted', async () => {
+        const tx = await cardMarket.useCard(1, { value: toMinStr('2 coins') }).should.be.fulfilled
+
+        const eventArgs = extractEventArgs(tx, events.UseCard)
+        expect(eventArgs).to.include({ 
+          tokenId: '1',
+          fee: toMinStr('4 coins'),
+          earned: toMinStr('3.6 coins'),
+          // tax: toMinStr('0.4 coins'),
+        })
+      })
+
+      it('and tax and earnings get calculated', async () => {
+        await cardMarket.tax().should.eventually.eq('1000') // 10%
+        await cardMarket.totalTaxes(token1.address).should.eventually.eq('0')
+        await cardMarket.totalEarnings(token1.address).should.eventually.eq('0')
+        await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq('0')
+        await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq('0')
+
+        await cardMarket.useCard(1, { value: toMinStr('2 coins') })
+        await cardMarket.useCard(2, { value: toMinStr('5 coins') })
+
+        await cardMarket.totalTaxes(token1.address).should.eventually.eq(toMinStr('1.4 coins'))
+        await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('12.6 coins'))
+        await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('3.6 coins'))
+        await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq(toMinStr('9 coins'))
+      })
+
+      it('and tax can be withdrawn', async () => {
+        await cardMarket.totalTaxes(token1.address).should.eventually.eq('0')
+
+        await cardMarket.useCard(1, { value: toMinStr('2 coins') })
+
+        const preBal = BigVal.from(await token1.balanceOf(accounts[0]))
+
+        await cardMarket.totalTaxes(token1.address).should.eventually.eq(toMinStr('0.4 coins'))
+        await cardMarket.withdrawTaxes(token1.address)
+        await cardMarket.totalTaxes(token1.address).should.eventually.eq('0')
+
+        const postBal = BigVal.from(await token1.balanceOf(accounts[0]))
+        postBal.sub(preBal).toMinScale().toString().should.eql(toMinStr('0.4 coins'))
+
+        await cardMarket.useCard(2, { value: toMinStr('5 coins') })
+
+        await cardMarket.totalTaxes(token1.address).should.eventually.eq(toMinStr('1 coins'))
+      })
+
+      it('and earnings can be withdrawn', async () => {
+        await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('0'))
+        await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('0'))
+        await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq(toMinStr('0'))
+
+        await cardMarket.useCard(1, { value: toMinStr('2 coins') })
+        await cardMarket.useCard(2, { value: toMinStr('5 coins') })
+
+        await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('12.6 coins'))
+        await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('3.6 coins'))
+        await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq(toMinStr('9 coins'))
+
+        const preBal1 = BigVal.from(await token1.balanceOf(accounts[1]))
+
+        await cardMarket.withdrawEarnings(token1.address, { from: accounts[1] })
+
+        await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('9 coins'))
+        await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('0'))
+        await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq(toMinStr('9 coins'))
+
+        const postBal1 = BigVal.from(await token1.balanceOf(accounts[1]))
+        postBal1.sub(preBal1).toMinScale().toString().should.eql(toMinStr('3.6 coins'))
+
+        const preBal2 = BigVal.from(await token1.balanceOf(accounts[2]))
+
+        await cardMarket.withdrawEarnings(token1.address, { from: accounts[2] })
+
+        await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('0'))
+        await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('0'))
+        await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq(toMinStr('0'))
+
+        const postBal2 = BigVal.from(await token1.balanceOf(accounts[2]))
+        postBal2.sub(preBal2).toMinScale().toString().should.eql(toMinStr('9 coins'))
+      })
     })
   })
 
