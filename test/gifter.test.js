@@ -1,20 +1,19 @@
-import EthVal from 'ethval'
+import { BigVal, toMinStr } from 'bigval'
 import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
-import { deployGifter, deployCardMarket } from '../deploy/modules'
+import { deployGifter, deployCardMarket, deployDummyDex, deployDummyTokens } from '../deploy/modules'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { events } from '..'
 
 const DummyNFT = artifacts.require("DummyNFT")
 
-const stringToBytesHex = s => hre.ethers.utils.hexlify(hre.ethers.utils.toUtf8Bytes(s))
-
 describe('Gifter', () => {
   const evmSnapshot = new EvmSnapshot()
   let accounts
-  let gifterDeployment
-  let gifter
+  let dex
   let cardMarketDeployment
   let cardMarket
+  let gifterDeployment
+  let gifter
   let nft1
   let token1
   let token2
@@ -24,7 +23,7 @@ describe('Gifter', () => {
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    tokens = await deployDummyTokens({ artifacts })
+    const tokens = await deployDummyTokens({ artifacts })
     token1 = tokens[0]
     token2 = tokens[1]
     dex = await deployDummyDex({ artifacts }, { tokens })
@@ -32,7 +31,7 @@ describe('Gifter', () => {
     cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
     gifterDeployment = await deployGifter({ artifacts }, { cardMarket })
     gifter = await getContractAt({ artifacts }, 'GifterV1', gifterDeployment.proxy.address)
-    nft = await DummyNFT.new()
+    nft1 = await DummyNFT.new()
     sender1 = accounts[2]
     receiver1 = accounts[5]
     receiver2 = accounts[6]
@@ -42,7 +41,9 @@ describe('Gifter', () => {
 
     // add card designs
     await cardMarket.addCard("test1", token1.address, 0)
+    await cardMarket.setCardApproved(1, true)
     await cardMarket.addCard("test2", token2.address, 10)
+    await cardMarket.setCardApproved(2, true)
   })
 
   beforeEach(async () => {
@@ -137,7 +138,7 @@ describe('Gifter', () => {
       })
     })
 
-    it('send eth and erc20 and NFTs, and open and claim', async () => {
+    it.only('send eth and erc20 and NFTs, and open and claim', async () => {
       await token1.mint(sender1, 10)
       await token2.mint(sender1, 10)
 
@@ -215,12 +216,12 @@ describe('Gifter', () => {
       await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
-      const preBal = new EthVal(await balanceOf(receiver1))
+      const preBal = BigVal.from(await balanceOf(receiver1))
 
       // claim
       const tx = await gifter.openAndClaim(gift1, 'content1', { from: receiver1 })
-      const gasPrice = new EthVal(tx.receipt.effectiveGasPrice)
-      const gasUsed = new EthVal(tx.receipt.cumulativeGasUsed)
+      const gasPrice = BigVal.from(tx.receipt.effectiveGasPrice)
+      const gasUsed = BigVal.from(tx.receipt.cumulativeGasUsed)
       const gasCost = gasUsed.mul(gasPrice)
 
       // check event
@@ -253,7 +254,7 @@ describe('Gifter', () => {
       await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
-      const postBal = new EthVal(await balanceOf(receiver1))
+      const postBal = BigVal.from(await balanceOf(receiver1))
       expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
     })
 
@@ -298,12 +299,12 @@ describe('Gifter', () => {
       await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
-      const preBal = new EthVal(await balanceOf(receiver1))
+      const preBal = BigVal.from(await balanceOf(receiver1))
 
       // claim
       const tx = await gifter.claim(gift1, { from: receiver1 })
-      const gasPrice = new EthVal(tx.receipt.effectiveGasPrice)
-      const gasUsed = new EthVal(tx.receipt.cumulativeGasUsed)
+      const gasPrice = BigVal.from(tx.receipt.effectiveGasPrice)
+      const gasUsed = BigVal.from(tx.receipt.cumulativeGasUsed)
       const gasCost = gasUsed.mul(gasPrice)
 
       // check event
@@ -330,7 +331,7 @@ describe('Gifter', () => {
       await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
-      const postBal = new EthVal(await balanceOf(receiver1))
+      const postBal = BigVal.from(await balanceOf(receiver1))
       expect(postBal.sub(preBal.sub(gasCost)).toNumber()).to.eq(45)
     })
 
@@ -375,18 +376,18 @@ describe('Gifter', () => {
       await nft1.ownerOf(1).should.eventually.eq(gifter.address)
       await token1.balanceOf(receiver1).should.eventually.eq(0)
       await token2.balanceOf(receiver1).should.eventually.eq(0)
-      const preBal = new EthVal(await balanceOf(receiver1))
+      const preBal = BigVal.from(await balanceOf(receiver1))
 
       // claim
       const tx = await gifter.claim(gift1, { from: receiver1 })
-      let gasPrice = new EthVal(tx.receipt.effectiveGasPrice)
-      let gasUsed = new EthVal(tx.receipt.cumulativeGasUsed)
+      let gasPrice = BigVal.from(tx.receipt.effectiveGasPrice)
+      let gasUsed = BigVal.from(tx.receipt.cumulativeGasUsed)
       const gasCost1 = gasUsed.mul(gasPrice)
 
       // open and claim
       const tx2 = await gifter.openAndClaim(gift1, 'hash1', { from: receiver1 })
-      gasPrice = new EthVal(tx2.receipt.effectiveGasPrice)
-      gasUsed = new EthVal(tx2.receipt.cumulativeGasUsed)
+      gasPrice = BigVal.from(tx2.receipt.effectiveGasPrice)
+      gasUsed = BigVal.from(tx2.receipt.cumulativeGasUsed)
       const gasCost2 = gasUsed.mul(gasPrice)
 
       // check gifts
@@ -409,7 +410,7 @@ describe('Gifter', () => {
       await nft1.ownerOf(1).should.eventually.eq(receiver1)
       await token1.balanceOf(receiver1).should.eventually.eq(3)
       await token2.balanceOf(receiver1).should.eventually.eq(4)
-      const postBal = new EthVal(await balanceOf(receiver1))
+      const postBal = BigVal.from(await balanceOf(receiver1))
       expect(postBal.sub(preBal.sub(gasCost1).sub(gasCost2)).toNumber()).to.eq(45)
     })
 
