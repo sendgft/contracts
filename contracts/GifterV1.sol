@@ -88,44 +88,46 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     }
   }
 
-  function create(GiftParams memory _params) payable external override {
+  function create(GiftParams calldata _params) payable external override {
     address sender = _msgSender();
 
     // new gift id
     lastId += 1;
 
+    // save data
+    GiftData storage g = gifts[lastId];
+    g.sender = sender;
+    g.created = block.number;
+    g.contentHash = defaultContentHash;
+    g.params.recipient = _params.recipient;
+    g.params.message = _params.message;
+    g.params.weiValue = _params.weiValue;
+    g.params.fee = _params.fee;
+
     // erc20
     for (uint i = 0; i < _params.erc20.length; i += 1) {
-      GiftAsset memory asset = _params.erc20[i];
+      GiftAsset calldata asset = _params.erc20[i];
       require(IERC20(asset.tokenContract).transferFrom(_msgSender(), address(this), asset.value), "ERC20 transfer failed");
+      g.params.erc20.push(asset);
     }
 
     // nft
     for (uint i = 0; i < _params.nft.length; i += 1) {
-      GiftAsset memory asset = _params.nft[i];
+      GiftAsset calldata asset = _params.nft[i];
       IERC721(asset.tokenContract).safeTransferFrom(_msgSender(), address(this), asset.value);
+      g.params.nft.push(asset);
     }
-
-    // save data
-    gifts[lastId] = GiftData(
-      _params,
-      sender, 
-      block.number,
-      0, 
-      false,
-      defaultContentHash
-    );
 
     // mint NFT
     _safeMint(_params.recipient, lastId);
 
     // check and pay card design fee
-    // uint256 cardDesignId;
-    // bytes memory config = _params.config;
-    // assembly {
-    //   cardDesignId := mload(config)
-    // }
-    // cardMarket.useCard{value: msg.value.sub(_params.weiValue)}(cardDesignId);
+    uint256 cardDesignId;
+    bytes memory config = g.params.config;
+    assembly {
+      cardDesignId := mload(config)
+    }
+    cardMarket.useCard{value: msg.value.sub(_params.weiValue)}(cardDesignId);
 
     // event
     emit Created(lastId, _params.message);
