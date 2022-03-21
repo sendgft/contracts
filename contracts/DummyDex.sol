@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
+
 import "./IDex.sol";
 import "./IERC20.sol";
 
@@ -16,6 +18,8 @@ contract DummyDex is IDex {
 
   function trade(address _outToken, uint _outAmount, address _inToken, address _inWallet, address _outWallet) external payable {
     uint requiredInputAmount = calcInAmount(_outToken, _outAmount, _inToken);
+
+    console.log("%s needs %s, got %s", _outAmount, requiredInputAmount, msg.value);
 
     if (_inToken != address(0)) {
       IERC20 input = IERC20(_inToken);

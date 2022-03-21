@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./IERC20.sol";
@@ -119,9 +118,6 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
     require(card.approved, "CardMarket: card not approved");
     require(card.enabled, "CardMarket: card not enabled");
-
-    console.log("fee token for %s is %s", _id, fee.tokenContract);
-    console.log("trade %s to %s", msg.value, fee.value);
 
     IDex(dex).trade{value: msg.value}(
       fee.tokenContract, 

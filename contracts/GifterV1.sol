@@ -126,8 +126,9 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     uint256 cardDesignId;
     bytes memory config = g.params.config;
     assembly {
-      cardDesignId := mload(config)
+      cardDesignId := mload(add(config, 0x20))
     }
+
     cardMarket.useCard{value: msg.value.sub(_params.weiValue)}(cardDesignId);
 
     // event

@@ -3,8 +3,11 @@ import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from '
 import { deployGifter, deployCardMarket, deployDummyDex, deployDummyTokens } from '../deploy/modules'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { events } from '..'
+import { hexZeroPad } from 'ethers/lib/utils'
 
 const DummyNFT = artifacts.require("DummyNFT")
+
+const createConfig = designId => hexZeroPad(`0x${designId.toString(16)}`, 32)
 
 const expectGiftDataToMatch = (ret, exp) => {
   expect(ret).to.matchObj({
@@ -66,8 +69,8 @@ describe('Gifter', () => {
     receiver1 = accounts[5]
     receiver2 = accounts[6]
 
-    // set price for testing
-    await dex.setPrice(ADDRESS_ZERO, token1.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
+    // set price for testing: 1 ETH = 2 TOKENS
+    await dex.setPrice(ADDRESS_ZERO, token2.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
 
     // add card designs
     await cardMarket.addCard({ 
@@ -133,7 +136,7 @@ describe('Gifter', () => {
       const tx1 = await gifter.create(
         {
           recipient: receiver1,
-          config: '0x01',
+          config: createConfig(1),
           message: 'msg1',
           weiValue: '100',
           fee: {
@@ -149,7 +152,7 @@ describe('Gifter', () => {
       const tx2 = await gifter.create(
         {
           recipient: receiver2,
-          config: '0x01',
+          config: createConfig(1),
           message: 'msg2',
           weiValue: '200',
           fee: {
@@ -173,7 +176,7 @@ describe('Gifter', () => {
         contentHash: '',
         params: {
           recipient: receiver1,
-          config: '0x01',
+          config: createConfig(1),
           weiValue: '100',
           erc20: [],
           nft: [],
@@ -191,7 +194,7 @@ describe('Gifter', () => {
         contentHash: '',
         params: {
           recipient: receiver2,
-          config: '0x01',
+          config: createConfig(1),
           weiValue: '200',
           erc20: [],
           nft: [],
@@ -213,7 +216,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             message: 'msg1',
             weiValue: '45',
             fee: {
@@ -243,7 +246,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             message: 'msg1',
             weiValue: '20',
             fee: {
@@ -273,7 +276,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             weiValue: '45',
             erc20: [
               {
@@ -302,7 +305,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             weiValue: '20',
             erc20: [
               {
@@ -366,7 +369,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             weiValue: '45',
             erc20: [
               {
@@ -435,7 +438,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             weiValue: '45',
             erc20: [
               {
@@ -501,7 +504,7 @@ describe('Gifter', () => {
       const tx = await gifter.create(
         {
           recipient: receiver1,
-          config: '0x01',
+          config: createConfig(1),
           message: 'The quick brown fox jumped over the lazy dog',
           weiValue: '100',
           fee: {
@@ -533,7 +536,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: '0x02', // 2nd card requires a fee of 10 TOKEN1 (=20 ETH)
+            config: createConfig(2), // 2nd card requires a fee of 10 TOKEN1 (=20 ETH)
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: 100,
             fee: {
@@ -549,8 +552,28 @@ describe('Gifter', () => {
       }
     })
 
-    it('fails if not enough given', async () => {
-      await createGift()
+    it.only('fails if not enough given', async () => {
+      await createGift().should.be.rejectedWith('input insufficient')
+
+      await createGift({
+        weiValue: '0',
+      }, {
+        value: toMinStr('4.9 coins'), // 5 needed for fee
+      }).should.be.rejectedWith('input insufficient')
+    })
+
+    it('passes if enough given', async () => {
+      await token1.balanceOf(cardMarket.address).should.eventually.eq('0')
+      await balanceOf(dex.address).should.eventually.eq('0')
+
+      await createGift({
+        weiValue: '0',
+      }, {
+        value: toMinStr('20 coins'), // 20 ETH swap to 10 tokens
+      })
+
+      await token1.balanceOf(cardMarket.address).should.eventually.eq(toMinStr('10 coins'))
+      await balanceOf(dex.address).should.eventually.eq(toMinStr('20 coins'))
     })
   })
 
@@ -562,7 +585,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: '100',
             fee: {
@@ -697,7 +720,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: '0x01',
+            config: createConfig(1),
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: '100',
             fee: {
