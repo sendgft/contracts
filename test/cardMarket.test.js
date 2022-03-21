@@ -101,7 +101,10 @@ describe('Card market', () => {
 
   describe('new card can be added', () => {
     it('enabled but not yet approved', async () => {
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }).should.be.fulfilled
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      }).should.be.fulfilled
       await cardMarket.totalSupply().should.eventually.eq(1)
       expectCardDataToMatch(await cardMarket.cards(1), {
         enabled: true,
@@ -116,16 +119,29 @@ describe('Card market', () => {
     })
 
     it('not if using disallowed fee token', async () => {
-      await cardMarket.addCard('test', { tokenContract: randomToken.address, value: 2 }).should.be.rejectedWith('unsupported fee token')
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: randomToken.address, value: 2 }
+      }).should.be.rejectedWith('unsupported fee token')
     })
 
     it('but not if already added', async () => {
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }).should.be.fulfilled
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('CardMarket: already added')
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      }).should.be.fulfilled
+
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 3 }
+      }).should.be.rejectedWith('CardMarket: already added')
     })
 
     it('and event gets emitted', async () => {
-      const tx = await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }).should.be.fulfilled
+      const tx = await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      }).should.be.fulfilled
 
       const eventArgs = extractEventArgs(tx, events.AddCard)
       expect(eventArgs).to.include({ tokenId: (await cardMarket.lastId()).toString() })
@@ -134,7 +150,10 @@ describe('Card market', () => {
 
   describe('card can be enabled and disabled', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }, { from: accounts[1] })      
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      }, { from: accounts[1] })      
     })
 
     it('but not by non-owner', async () => {
@@ -156,7 +175,10 @@ describe('Card market', () => {
 
   describe('card can be approved and disapproved', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 })
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      })
     })
 
     it('but not by anyone', async () => {
@@ -174,11 +196,17 @@ describe('Card market', () => {
 
   describe('card can be used', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: toMinStr('4 coins') }, { from: accounts[1] })
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: toMinStr('4 coins') }
+      }, { from: accounts[1] })
       await cardMarket.setCardEnabled(1, true, { from: accounts[1] })
       await cardMarket.setCardApproved(1, true)
 
-      await cardMarket.addCard('test2', { tokenContract: token1.address, value: toMinStr('10 coins') }, { from: accounts[2] })
+      await cardMarket.addCard({
+        contentHash: 'test2',
+        fee: { tokenContract: token1.address, value: toMinStr('10 coins') }
+      }, { from: accounts[2] })
       await cardMarket.setCardEnabled(2, true, { from: accounts[2] })
       await cardMarket.setCardApproved(2, true)
     })
@@ -289,7 +317,10 @@ describe('Card market', () => {
 
   describe('token URI', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 })
+      await cardMarket.addCard({
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      })
     })
 
     it('must be a valid id', async () => {

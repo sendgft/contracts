@@ -14,13 +14,17 @@ abstract contract ICardMarket is INftBase {
     GiftLib.Asset fee;
   }
 
+  struct CardParams {
+    string contentHash;
+    GiftLib.Asset fee;
+  }
+
   /**
    * @dev Add a new card.
    *
-   * @param _cid The IPFS content hash.
-   * @param _fee The fee.
+   * @param _params Parameters.
    */
-  function addCard(string calldata _cid, GiftLib.Asset calldata _fee) external virtual;
+  function addCard(CardParams calldata _params) external virtual;
 
   /**
    * @dev Set a card as enabled or disabled.

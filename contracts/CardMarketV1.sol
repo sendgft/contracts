@@ -85,15 +85,15 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     }
   }
 
-  function addCard(string calldata _cid, GiftLib.Asset calldata _fee) external override {
-    require(feeTokenAllowed[_fee.tokenContract], "CardMarket: unsupported fee token");
+  function addCard(CardParams calldata _params) external override {
+    require(feeTokenAllowed[_params.fee.tokenContract], "CardMarket: unsupported fee token");
 
     // new id
     lastId += 1;
 
     // check that card hasn't already been added
-    require(cardByCid[_cid] == 0, "CardMarket: already added");
-    cardByCid[_cid] = lastId;
+    require(cardByCid[_params.contentHash] == 0, "CardMarket: already added");
+    cardByCid[_params.contentHash] = lastId;
 
     address sender = _msgSender();
 
@@ -102,8 +102,8 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
       true,
       false,
       sender, 
-      _cid,
-      _fee
+      _params.contentHash,
+      _params.fee
     );
 
     // mint NFT

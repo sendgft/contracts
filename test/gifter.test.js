@@ -70,9 +70,22 @@ describe('Gifter', () => {
     await dex.setPrice(ADDRESS_ZERO, token1.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
 
     // add card designs
-    await cardMarket.addCard("test1", token1.address, '0')
+    await cardMarket.addCard({ 
+      contentHash: "test1", 
+      fee: {
+        tokenContract: token1.address, 
+        value: '0',
+      }
+    })
     await cardMarket.setCardApproved(1, true)
-    await cardMarket.addCard("test2", token2.address, toMinStr('10 coins'))
+
+    await cardMarket.addCard({
+      contentHash: "test2",
+      fee: {
+        tokenContract: token2.address,
+        value: toMinStr('10 coins'),
+      }
+    })
     await cardMarket.setCardApproved(2, true)
   })
 
