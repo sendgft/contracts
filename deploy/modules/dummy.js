@@ -73,8 +73,7 @@ export const deployDummyDex = async (ctx = {}, { tokens = [] } = {}) => {
 
     deployedAddressesToSave.dex = dex.address
 
-    const [ token ] = tokens
-    if (token) {
+    for (let token of tokens) {
       const tokenName = await token.symbol()
 
       await parentTask.task(`Give it balance of 1,000,000,000 ${tokenName} `, async task => {

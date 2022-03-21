@@ -528,7 +528,7 @@ describe('Gifter', () => {
     })
   })
 
-  describe.only('paying card fee', () => {
+  describe('paying card fee', () => {
     let createGift
 
     beforeEach(async () => {
@@ -552,7 +552,7 @@ describe('Gifter', () => {
       }
     })
 
-    it.only('fails if not enough given', async () => {
+    it('fails if not enough given', async () => {
       await createGift().should.be.rejectedWith('input insufficient')
 
       await createGift({
@@ -563,8 +563,10 @@ describe('Gifter', () => {
     })
 
     it('passes if enough given', async () => {
-      await token1.balanceOf(cardMarket.address).should.eventually.eq('0')
+      const preBal = BigVal.from(await token2.balanceOf(dex.address))
+      await token2.balanceOf(cardMarket.address).should.eventually.eq('0')
       await balanceOf(dex.address).should.eventually.eq('0')
+      await balanceOf(gifter.address).should.eventually.eq('0')
 
       await createGift({
         weiValue: '0',
@@ -572,8 +574,30 @@ describe('Gifter', () => {
         value: toMinStr('20 coins'), // 20 ETH swap to 10 tokens
       })
 
-      await token1.balanceOf(cardMarket.address).should.eventually.eq(toMinStr('10 coins'))
+      const postBal = BigVal.from(await token2.balanceOf(dex.address))
+      expect(preBal.sub(postBal)).to.eq(toMinStr('10 coins'))
+      await token2.balanceOf(cardMarket.address).should.eventually.eq(toMinStr('10 coins'))
       await balanceOf(dex.address).should.eventually.eq(toMinStr('20 coins'))
+      await balanceOf(gifter.address).should.eventually.eq('0')
+    })
+
+    it('ensures eth for the gift is saved properly', async () => {
+      const preBal = BigVal.from(await token2.balanceOf(dex.address))
+      await token2.balanceOf(cardMarket.address).should.eventually.eq('0')
+      await balanceOf(dex.address).should.eventually.eq('0')
+      await balanceOf(gifter.address).should.eventually.eq('0')
+
+      await createGift({
+        weiValue: '100',
+      }, {
+        value: BigVal.fromStr('20 coins').toMinScale().add(100).toString(), // 20 ETH swap to 10 tokens
+      })
+
+      const postBal = BigVal.from(await token2.balanceOf(dex.address))
+      expect(preBal.sub(postBal)).to.eq(toMinStr('10 coins'))
+      await token2.balanceOf(cardMarket.address).should.eventually.eq(toMinStr('10 coins'))
+      await balanceOf(dex.address).should.eventually.eq(toMinStr('20 coins'))
+      await balanceOf(gifter.address).should.eventually.eq('100')
     })
   })
 
