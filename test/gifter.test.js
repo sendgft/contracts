@@ -6,6 +6,23 @@ import { events } from '..'
 
 const DummyNFT = artifacts.require("DummyNFT")
 
+const expectGiftDataToMatch = (ret, exp) => {
+  expect(ret).to.matchObj({
+    sender: exp.sender,
+    created: exp.createrd,
+    claimed: exp.claimed,
+    opened: exp.opened,
+    contentHash: exp.contentHash,
+  })
+  expect(ret.params).to.matchObj({
+    recipient: exp.params.recipient,
+    config: exp.params.config,
+    weiValue: exp.params.weiValue,
+  })
+  expect(ret.params.erc20).to.eq(exp.params.erc20)
+  expect(ret.params.nft).to.eq(exp.params.nft)
+}
+
 describe('Gifter', () => {
   const evmSnapshot = new EvmSnapshot()
   let accounts
@@ -122,38 +139,38 @@ describe('Gifter', () => {
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
       let ret = await gifter.gifts(id)
-      expect(ret).to.matchObj({
+      expectGiftDataToMatch(ret, {
         sender: sender1,
         created: tx1.receipt.blockNumber,
         claimed: 0,
         opened: false,
         contentHash: '',
+        params: {
+          recipient: receiver1,
+          config: '0x01',
+          weiValue: '100',
+          erc20: [],
+          nft: [],
+        }
       })
-      expect(ret.params).to.matchObj({
-        recipient: receiver1,
-        config: '0x01',
-        weiValue: '100',
-      })
-      expect(ret.params.erc20).to.eq([])
-      expect(ret.params.nft).to.eq([])
 
       await gifter.balanceOf(receiver2).should.eventually.eq(1)
       id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
       ret = await gifter.gifts(id)
-      expect(ret).to.matchObj({
+      expectGiftDataToMatch(ret, {
         sender: sender1,
-        created: tx2.receipt.blockNumber,
+        created: tx1.receipt.blockNumber,
         claimed: 0,
         opened: false,
         contentHash: '',
+        params: {
+          recipient: receiver2,
+          config: '0x01',
+          weiValue: '200',
+          erc20: [],
+          nft: [],
+        }
       })
-      expect(ret.params).to.matchObj({
-        recipient: receiver2,
-        config: '0x01',
-        weiValue: '200',
-      })
-      expect(ret.params.erc20).to.eq([])
-      expect(ret.params.nft).to.eq([])
     })
 
     it('send eth and erc20 and NFTs, and open and claim', async () => {
