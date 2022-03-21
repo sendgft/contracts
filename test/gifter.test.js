@@ -86,59 +86,77 @@ describe('Gifter', () => {
   })
 
   describe('successes', () => { 
-    it('send eth', async () => {
+    it.only('send eth', async () => {
       const tx1 = await gifter.create(
-        receiver1,
-        '0x01',
-        'msg1',
-        0,
-        [],
-        [],
+        {
+          recipient: receiver1,
+          config: '0x01',
+          message: 'msg1',
+          weiValue: '100',
+          fee: {
+            tokenContract: ADDRESS_ZERO,
+            value: '0',
+          },
+          erc20: [],
+          nft: [],
+        }, 
         { from: sender1, value: 100 }
       )
 
       const tx2 = await gifter.create(
-        receiver2,
-        '0x01',
-        'msg2',
-        0,
-        [],
-        [],
+        {
+          recipient: receiver2,
+          config: '0x01',
+          message: 'msg2',
+          weiValue: '200',
+          fee: {
+            tokenContract: ADDRESS_ZERO,
+            value: '0',
+          },
+          erc20: [],
+          nft: [],
+        }, 
         { from: sender1, value: 200 }
       )
 
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      await gifter.gifts(id).should.eventually.matchObj({
+      let ret = await gifter.gifts(id)
+      expect(ret).to.matchObj({
         sender: sender1,
-        config: '0x01',
-        contentHash: '',
         created: tx1.receipt.blockNumber,
         claimed: 0,
         opened: false,
-        recipient: receiver1,
-        ethAsWei: 100,
-        numErc20s: 0,
-        numNfts: 0,
+        contentHash: '',
       })
+      expect(ret.params).to.matchObj({
+        recipient: receiver1,
+        config: '0x01',
+        weiValue: '100',
+      })
+      expect(ret.params.erc20).to.eq([])
+      expect(ret.params.nft).to.eq([])
 
       await gifter.balanceOf(receiver2).should.eventually.eq(1)
       id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
-      await gifter.gifts(id).should.eventually.matchObj({
+      ret = await gifter.gifts(id)
+      expect(ret).to.matchObj({
         sender: sender1,
-        config: '0x01',
         created: tx2.receipt.blockNumber,
         claimed: 0,
         opened: false,
         contentHash: '',
-        recipient: receiver2,
-        ethAsWei: 200,
-        numErc20s: 0,
-        numNfts: 0,
       })
+      expect(ret.params).to.matchObj({
+        recipient: receiver2,
+        config: '0x01',
+        weiValue: '200',
+      })
+      expect(ret.params.erc20).to.eq([])
+      expect(ret.params.nft).to.eq([])
     })
 
-    it.only('send eth and erc20 and NFTs, and open and claim', async () => {
+    it('send eth and erc20 and NFTs, and open and claim', async () => {
       await token1.mint(sender1, 10)
       await token2.mint(sender1, 10)
 
