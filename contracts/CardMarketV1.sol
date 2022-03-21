@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./IERC20.sol";
@@ -11,15 +12,6 @@ import "./IERC20.sol";
 
 contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   using SafeMath for uint;
-
-  struct Card {
-    bool enabled;
-    bool approved;
-    address owner;
-    string contentHash;
-    address feeToken;
-    uint feeAmount;
-  }
 
   mapping(uint => Card) public cards;
   mapping(string => uint) public cardByCid;
@@ -93,8 +85,8 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     }
   }
 
-  function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external override {
-    require(feeTokenAllowed[_feeToken], "CardMarket: unsupported fee token");
+  function addCard(string calldata _cid, GiftLib.Asset calldata _fee) external override {
+    require(feeTokenAllowed[_fee.tokenContract], "CardMarket: unsupported fee token");
 
     // new id
     lastId += 1;
@@ -111,8 +103,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
       false,
       sender, 
       _cid,
-      _feeToken,
-      _feeAmount
+      _fee
     );
 
     // mint NFT
@@ -124,25 +115,29 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
   function useCard(uint _id) payable public override {
     Card storage card = cards[_id];
+    GiftLib.Asset storage fee = card.fee;
 
     require(card.approved, "CardMarket: card not approved");
     require(card.enabled, "CardMarket: card not enabled");
 
+    console.log("fee token for %s is %s", _id, fee.tokenContract);
+    console.log("trade %s to %s", msg.value, fee.value);
+
     IDex(dex).trade{value: msg.value}(
-      card.feeToken, 
-      card.feeAmount, 
+      fee.tokenContract, 
+      fee.value, 
       address(0), 
       address(this), 
       address(this)
     );
 
-    uint earned = (10000 - tax) * card.feeAmount / 10000;
-    earnings[card.owner][card.feeToken] = earnings[card.owner][card.feeToken].add(earned);
-    totalEarnings[card.feeToken] = totalEarnings[card.feeToken].add(earned);
-    uint thisTax = card.feeAmount.sub(earned);
-    totalTaxes[card.feeToken] = totalTaxes[card.feeToken].add(thisTax);
+    uint earned = (10000 - tax) * fee.value / 10000;
+    earnings[card.owner][fee.tokenContract] = earnings[card.owner][fee.tokenContract].add(earned);
+    totalEarnings[fee.tokenContract] = totalEarnings[fee.tokenContract].add(earned);
+    uint thisTax = fee.value.sub(earned);
+    totalTaxes[fee.tokenContract] = totalTaxes[fee.tokenContract].add(thisTax);
 
-    emit UseCard(_id, card.feeAmount, earned, thisTax);
+    emit UseCard(_id, fee.value, earned, thisTax);
   }
 
   function withdrawTaxes(address _feeToken) external override isAdmin {

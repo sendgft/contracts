@@ -2,16 +2,25 @@
 pragma solidity ^0.8.0;
 
 import "./INftBase.sol";
+import "./GiftLib.sol";
+
 
 abstract contract ICardMarket is INftBase {
+  struct Card {
+    bool enabled;
+    bool approved;
+    address owner;
+    string contentHash;
+    GiftLib.Asset fee;
+  }
+
   /**
    * @dev Add a new card.
    *
    * @param _cid The IPFS content hash.
-   * @param _feeToken The fee token.
-   * @param _feeAmount The amount to pay as fee.
+   * @param _fee The fee.
    */
-  function addCard(string calldata _cid, address _feeToken, uint _feeAmount) external virtual;
+  function addCard(string calldata _cid, GiftLib.Asset calldata _fee) external virtual;
 
   /**
    * @dev Set a card as enabled or disabled.

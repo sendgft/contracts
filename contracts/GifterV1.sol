@@ -56,13 +56,13 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // erc20
     for (uint i = 0; i < g.params.erc20.length; i += 1) {
-      GiftAsset storage asset = g.params.erc20[i];
+      GiftLib.Asset storage asset = g.params.erc20[i];
       require(IERC20(asset.tokenContract).transfer(_msgSender(), asset.value), "ERC20 transfer failed");
     }
 
     // nft
     for (uint i = 0; i < g.params.nft.length; i += 1) {
-      GiftAsset storage asset = g.params.nft[i];
+      GiftLib.Asset storage asset = g.params.nft[i];
       IERC721(asset.tokenContract).safeTransferFrom(address(this), _msgSender(), asset.value);
     } 
 
@@ -107,14 +107,14 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // erc20
     for (uint i = 0; i < _params.erc20.length; i += 1) {
-      GiftAsset calldata asset = _params.erc20[i];
+      GiftLib.Asset calldata asset = _params.erc20[i];
       require(IERC20(asset.tokenContract).transferFrom(_msgSender(), address(this), asset.value), "ERC20 transfer failed");
       g.params.erc20.push(asset);
     }
 
     // nft
     for (uint i = 0; i < _params.nft.length; i += 1) {
-      GiftAsset calldata asset = _params.nft[i];
+      GiftLib.Asset calldata asset = _params.nft[i];
       IERC721(asset.tokenContract).safeTransferFrom(_msgSender(), address(this), asset.value);
       g.params.nft.push(asset);
     }

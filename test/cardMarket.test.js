@@ -3,8 +3,25 @@ import { deployCardMarket, deployDummyTokens, deployDummyDex } from '../deploy/m
 import { getSigners, getContractAt } from '../deploy/utils'
 import { BigVal, toMinStr } from 'bigval'
 import { events } from '..'
+import { _ } from 'core-js'
 
 const DummyToken = artifacts.require("DummyToken")
+
+const expectCardDataToMatch = (ret, exp) => {
+  expect(ret).to.matchObj({
+    enabled: exp.enabled,
+    approved: exp.approved,
+    owner: exp.owner,
+    contentHash: exp.contentHash,
+  })
+  if (exp.fee) {
+    expect(ret.fee).to.matchObj({
+      tokenContract: exp.fee.tokenContract,
+      value: exp.fee.value,
+    })
+  }
+}
+
 
 describe('Card market', () => {
   const evmSnapshot = new EvmSnapshot()
@@ -84,29 +101,31 @@ describe('Card market', () => {
 
   describe('new card can be added', () => {
     it('enabled but not yet approved', async () => {
-      await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }).should.be.fulfilled
       await cardMarket.totalSupply().should.eventually.eq(1)
-      await cardMarket.cards(1).should.eventually.matchObj({
+      expectCardDataToMatch(await cardMarket.cards(1), {
         enabled: true,
         approved: false,
         owner: accounts[0],
         contentHash: 'test',
-        feeToken: token1.address,
-        feeAmount: 2,
+        fee: { 
+          tokenContract: token1.address, 
+          value: '2' 
+        }
       })
     })
 
     it('not if using disallowed fee token', async () => {
-      await cardMarket.addCard('test', randomToken.address, 2).should.be.rejectedWith('unsupported fee token')
+      await cardMarket.addCard('test', { tokenContract: randomToken.address, value: 2 }).should.be.rejectedWith('unsupported fee token')
     })
 
     it('but not if already added', async () => {
-      await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
-      await cardMarket.addCard('test', token1.address, 3).should.be.rejectedWith('CardMarket: already added')
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }).should.be.fulfilled
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('CardMarket: already added')
     })
 
     it('and event gets emitted', async () => {
-      const tx = await cardMarket.addCard('test', token1.address, 2).should.be.fulfilled
+      const tx = await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }).should.be.fulfilled
 
       const eventArgs = extractEventArgs(tx, events.AddCard)
       expect(eventArgs).to.include({ tokenId: (await cardMarket.lastId()).toString() })
@@ -115,7 +134,7 @@ describe('Card market', () => {
 
   describe('card can be enabled and disabled', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2, { from: accounts[1] })      
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 }, { from: accounts[1] })      
     })
 
     it('but not by non-owner', async () => {
@@ -137,7 +156,7 @@ describe('Card market', () => {
 
   describe('card can be approved and disapproved', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 })
     })
 
     it('but not by anyone', async () => {
@@ -155,11 +174,11 @@ describe('Card market', () => {
 
   describe('card can be used', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, toMinStr('4 coins'), { from: accounts[1] })
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: toMinStr('4 coins') }, { from: accounts[1] })
       await cardMarket.setCardEnabled(1, true, { from: accounts[1] })
       await cardMarket.setCardApproved(1, true)
 
-      await cardMarket.addCard('test2', token1.address, toMinStr('10 coins'), { from: accounts[2] })
+      await cardMarket.addCard('test2', { tokenContract: token1.address, value: toMinStr('10 coins') }, { from: accounts[2] })
       await cardMarket.setCardEnabled(2, true, { from: accounts[2] })
       await cardMarket.setCardApproved(2, true)
     })
@@ -270,7 +289,7 @@ describe('Card market', () => {
 
   describe('token URI', () => {
     beforeEach(async () => {
-      await cardMarket.addCard('test', token1.address, 2)
+      await cardMarket.addCard('test', { tokenContract: token1.address, value: 2 })
     })
 
     it('must be a valid id', async () => {

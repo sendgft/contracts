@@ -70,9 +70,9 @@ describe('Gifter', () => {
     await dex.setPrice(ADDRESS_ZERO, token1.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
 
     // add card designs
-    await cardMarket.addCard("test1", token1.address, 0)
+    await cardMarket.addCard("test1", token1.address, '0')
     await cardMarket.setCardApproved(1, true)
-    await cardMarket.addCard("test2", token2.address, 10)
+    await cardMarket.addCard("test2", token2.address, toMinStr('10 coins'))
     await cardMarket.setCardApproved(2, true)
   })
 
@@ -512,9 +512,37 @@ describe('Gifter', () => {
     })
   })
 
+  describe.only('paying card fee', () => {
+    let createGift
+
+    beforeEach(async () => {
+      createGift = async (props = {}, args = {}) => {
+        await gifter.create(
+          {
+            recipient: receiver1,
+            config: '0x02', // 2nd card requires a fee of 10 TOKEN1 (=20 ETH)
+            message: 'The quick brown fox jumped over the lazy dog',
+            weiValue: 100,
+            fee: {
+              tokenContract: ADDRESS_ZERO,
+              value: '0',
+            },
+            erc20: [],
+            nft: [],
+            ...props,
+          },
+          { from: sender1, value: 100, ...args }  
+        )
+      }
+    })
+
+    it('fails if not enough given', async () => {
+      await createGift()
+    })
+  })
+
   describe('failures', () => {
     let createGift
-    let tokenId
 
     beforeEach(async () => {
       createGift = async ({ erc20 = [], nft = [] } = {}) => {
@@ -533,8 +561,6 @@ describe('Gifter', () => {
           },
           { from: sender1, value: 100 }
         )
-
-        tokenId = (await gifter.lastId()).toNumber()
       }
     })
     it('send when card design is disabled', async () => {

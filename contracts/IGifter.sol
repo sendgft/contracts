@@ -2,21 +2,17 @@
 pragma solidity ^0.8.0;
 
 import "./INftBase.sol";
+import "./GiftLib.sol";
 
 abstract contract IGifter is INftBase {
-  struct GiftAsset {
-    address tokenContract;
-    uint value;
-  }
-
   struct GiftParams {
     address recipient;
     bytes config;
     string message;
     uint weiValue;
-    GiftAsset fee;
-    GiftAsset[] erc20;
-    GiftAsset[] nft;
+    GiftLib.Asset fee;
+    GiftLib.Asset[] erc20;
+    GiftLib.Asset[] nft;
   }
 
   struct GiftData {
