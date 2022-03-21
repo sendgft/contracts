@@ -2,28 +2,34 @@
 pragma solidity ^0.8.0;
 
 import "./INftBase.sol";
+import "./GiftLib.sol";
 
 abstract contract IGifter is INftBase {
+  struct GiftParams {
+    address recipient;
+    bytes config;
+    string message;
+    uint weiValue;
+    GiftLib.Asset fee;
+    GiftLib.Asset[] erc20;
+    GiftLib.Asset[] nft;
+  }
+
+  struct GiftData {
+    GiftParams params;
+    address sender;
+    uint created;
+    uint claimed;
+    bool opened; 
+    string contentHash;
+  }
+
   /**
-   * @dev Create a new gift to.
+   * @dev Create a new gift.
    *
-   * Any ETH sent to this function will also get sent as part of the gift.
-   *
-   * @param _recipient The recipient.
-   * @param _config The card configuration data.
-   * @param _message The card message.
-   * @param _numErc20s No. of ERC20/ERC777 token contract addresses.
-   * @param _erc20AndNftContracts ERC20/ERC777 token contract addresses followed by NFT contract addresses.
-   * @param _amountsAndIds ERC20/ERC777 token amounts followed by NFT ids.
+   * @param _params Gift params.
   */
-  function create(
-    address _recipient, 
-    bytes calldata _config,
-    string calldata _message,
-    uint _numErc20s,
-    address[] calldata _erc20AndNftContracts, 
-    uint[] calldata _amountsAndIds
-  ) payable external virtual;
+  function create(GiftParams calldata _params) payable external virtual;
 
   /**
    * @dev Claim the assets within the gift without opening it.

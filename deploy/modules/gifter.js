@@ -6,7 +6,7 @@ import got from 'got'
 import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
 import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
 
-export const deployGifter = async (ctx = {}, { cardMarketAddress }) => {
+export const deployGifter = async (ctx = {}, { cardMarket }) => {
   const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
 
   return await log.task(`Deploy Gifter`, async parentTask => {
@@ -39,8 +39,8 @@ export const deployGifter = async (ctx = {}, { cardMarketAddress }) => {
 
       const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
 
-      await parentTask.task(`Set: card market to: ${cardMarketAddress}`, async task => {
-        await execMethod({ ctx, task }, gifter, 'setCardMarket', [cardMarketAddress])
+      await parentTask.task(`Set card market: ${cardMarket.address}`, async task => {
+        await execMethod({ ctx, task }, gifter, 'setCardMarket', [cardMarket.address])
       })
     } else {
       await parentTask.task('Upgrade proxy contract', async task => {
@@ -57,11 +57,11 @@ export const deployGifter = async (ctx = {}, { cardMarketAddress }) => {
     const { defaultMetadataCid } = _.get(ctx, 'cids', {})
 
     if (defaultMetadataCid && baseURI) {
-      await parentTask.task(`Set: default content hash: ${defaultMetadataCid}`, async task => {
+      await parentTask.task(`Set default content hash: ${defaultMetadataCid}`, async task => {
         await execMethod({ ctx, task }, gifter, 'setDefaultContentHash', [defaultMetadataCid])
       })
 
-      await parentTask.task(`Set: default base URI: ${baseURI}`, async task => {
+      await parentTask.task(`Set default base URI: ${baseURI}`, async task => {
         await execMethod({ ctx, task }, gifter, 'setBaseURI', [baseURI])
       })
     }

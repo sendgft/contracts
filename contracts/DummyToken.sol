@@ -62,7 +62,7 @@ contract DummyToken is IERC20, Context {
       emit Approval(owner, spender, amount);
   }
 
-  function mint(address _recipient, uint _numTokensWei) public payable {
+  function mint(address _recipient, uint _numTokensWei) public {
       balances[_recipient] = balances[_recipient].add(_numTokensWei);
       totalSupply = totalSupply.add(_numTokensWei);
   }

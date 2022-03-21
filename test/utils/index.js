@@ -62,8 +62,8 @@ chai.use((_chai, utils) => {
     }
   })
 
-  utils.addMethod(_chai.Assertion.prototype, 'matchObj', function (val) {
-    let result = utils.flag(this, 'object')
+  const _matchObj = (src, val) => {
+    const result = utils.flag(src, 'object')
 
     if (result instanceof Object) {
       const newResult = {}
@@ -79,13 +79,17 @@ chai.use((_chai, utils) => {
         }
       })
 
-      return (utils.flag(this, 'negate'))
-        ? new _chai.Assertion(newResult).to.not.contain(newVal)
-        : new _chai.Assertion(newResult).to.contain(newVal)
-
+      return { newResult, newVal }
     } else {
       throw new Error('Not an object', result)
     }
+  }
+
+  utils.addMethod(_chai.Assertion.prototype, 'matchObj', function (val) {
+    const { newResult, newVal } = _matchObj(this, val) 
+    return (utils.flag(this, 'negate'))
+      ? new _chai.Assertion(newResult).to.not.contain(newVal)
+      : new _chai.Assertion(newResult).to.contain(newVal)
   })
 })
 
@@ -93,7 +97,7 @@ chai.use(chaiAsPromised)
 
 chai.should()
 
-export const getBalance = w => hre.ethers.provider.getBalance(w)
+export const balanceOf = w => hre.ethers.provider.getBalance(w)
 
 export const hdWallet = EthHdWallet.fromMnemonic(TEST_MNEMONIC)
 hdWallet.generateAddresses(10)

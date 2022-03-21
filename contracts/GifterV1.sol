@@ -4,34 +4,17 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ICardMarket.sol";
 import "./IProxyImplBase.sol";
 import "./IGifter.sol";
 
 contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
-  struct Gift {
-    address sender;
-    uint created;
-    uint claimed;
-    bool opened;
-    bytes config;
-    string contentHash;
-    uint ethAsWei;
-    uint numErc20s;
-    uint numNfts;
-  }
+  using SafeMath for uint;
 
-  struct GiftAsset {
-    address tokenContract;
-    uint value;
-  }
-
+  mapping(uint => GiftData) public gifts;
   string public defaultContentHash;
-
   ICardMarket public cardMarket;
-
-  mapping(uint => Gift) public gifts;
-  mapping(uint => GiftAsset[]) public giftAssets;
 
   // Initializable
 
@@ -65,34 +48,34 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   }
 
   function claim(uint _tokenId) public override isOwner(_tokenId) nonReentrant {
-    Gift storage gift = gifts[_tokenId];
-    GiftAsset[] storage assets = giftAssets[_tokenId];
+    GiftData storage g = gifts[_tokenId];
 
     // check and flip flag
-    require(gift.claimed == 0, "Gifter: already claimed");
-    gift.claimed = block.number;
+    require(g.claimed == 0, "Gifter: already claimed");
+    g.claimed = block.number;
 
-    // assets
-    for (uint i = 0; i < assets.length; i += 1) {
-      // nfts
-      if (i >= gift.numErc20s) {
-        IERC721(assets[i].tokenContract).safeTransferFrom(address(this), _msgSender(), assets[i].value);
-      } 
-      // erc20
-      else {
-        require(IERC20(assets[i].tokenContract).transfer(_msgSender(), assets[i].value), "ERC20 transfer failed");
-      }
+    // erc20
+    for (uint i = 0; i < g.params.erc20.length; i += 1) {
+      GiftLib.Asset storage asset = g.params.erc20[i];
+      require(IERC20(asset.tokenContract).transfer(_msgSender(), asset.value), "ERC20 transfer failed");
     }
 
-    if (gift.ethAsWei > 0) {
-       payable(_msgSender()).transfer(gift.ethAsWei);
+    // nft
+    for (uint i = 0; i < g.params.nft.length; i += 1) {
+      GiftLib.Asset storage asset = g.params.nft[i];
+      IERC721(asset.tokenContract).safeTransferFrom(address(this), _msgSender(), asset.value);
+    } 
+
+    // wei
+    if (g.params.weiValue > 0) {
+      payable(_msgSender()).transfer(g.params.weiValue);
     }
 
     emit Claimed(_tokenId);
   }
 
   function openAndClaim(uint _tokenId, string calldata _contentHash) external override isOwner(_tokenId) {
-    Gift storage g = gifts[_tokenId];
+    GiftData storage g = gifts[_tokenId];
 
     // check and flip flag
     require(!g.opened, "Gifter: already opened");
@@ -105,59 +88,51 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     }
   }
 
-  function create(
-    address _recipient,
-    bytes memory _config,
-    string calldata _message,
-    uint _numErc20s,
-    address[] calldata _erc20AndNftContracts, 
-    uint[] calldata _amountsAndIds
-  ) payable external override {
+  function create(GiftParams calldata _params) payable external override {
+    address sender = _msgSender();
+
     // new gift id
     lastId += 1;
 
-    // assets
-    for (uint i = 0; i < _erc20AndNftContracts.length; i += 1) {
-      // nfts
-      if (i >= _numErc20s) {
-        IERC721(_erc20AndNftContracts[i]).safeTransferFrom(_msgSender(), address(this), _amountsAndIds[i]);
-      }
-      // erc20
-      else {
-        require(IERC20(_erc20AndNftContracts[i]).transferFrom(_msgSender(), address(this), _amountsAndIds[i]), "ERC20 transfer failed");
-      }
+    // save data
+    GiftData storage g = gifts[lastId];
+    g.sender = sender;
+    g.created = block.number;
+    g.contentHash = defaultContentHash;
+    g.params.config = _params.config;
+    g.params.recipient = _params.recipient;
+    g.params.message = _params.message;
+    g.params.weiValue = _params.weiValue;
+    g.params.fee = _params.fee;
 
-      giftAssets[lastId].push(GiftAsset(
-        _erc20AndNftContracts[i],
-        _amountsAndIds[i]
-      ));
+    // erc20
+    for (uint i = 0; i < _params.erc20.length; i += 1) {
+      GiftLib.Asset calldata asset = _params.erc20[i];
+      require(IERC20(asset.tokenContract).transferFrom(_msgSender(), address(this), asset.value), "ERC20 transfer failed");
+      g.params.erc20.push(asset);
     }
 
-    // save data
-    gifts[lastId] = Gift(
-      _msgSender(), 
-      block.number,
-      0, 
-      false,
-      _config,
-      defaultContentHash,
-      msg.value, 
-      _numErc20s,
-      _erc20AndNftContracts.length - _numErc20s
-    );
+    // nft
+    for (uint i = 0; i < _params.nft.length; i += 1) {
+      GiftLib.Asset calldata asset = _params.nft[i];
+      IERC721(asset.tokenContract).safeTransferFrom(_msgSender(), address(this), asset.value);
+      g.params.nft.push(asset);
+    }
 
     // mint NFT
-    _safeMint(_recipient, lastId);
+    _safeMint(_params.recipient, lastId);
 
     // check and pay card design fee
     uint256 cardDesignId;
+    bytes memory config = g.params.config;
     assembly {
-      cardDesignId := mload(_config)
+      cardDesignId := mload(add(config, 0x20))
     }
-    cardMarket.useCard(cardDesignId);
+
+    cardMarket.useCard{value: msg.value.sub(_params.weiValue)}(cardDesignId);
 
     // event
-    emit Created(lastId, _message);
+    emit Created(lastId, _params.message);
   }
 
   function setBaseURI(string calldata _baseURI) external override isAdmin {
