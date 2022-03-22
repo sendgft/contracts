@@ -1,3 +1,10 @@
+# [1.16.0](https://github.com/sendgft/contracts/compare/v1.15.0...v1.16.0) (2022-03-22)
+
+
+### Features
+
+* New rinkeby deployment with new CardMarket and Dummy DEX. ([9517b05](https://github.com/sendgft/contracts/commit/9517b05b6555cad5f050bcc71654f6e4bca36d37))
+
 # [1.15.0](https://github.com/sendgft/contracts/compare/v1.14.2...v1.15.0) (2022-02-21)
 
 
