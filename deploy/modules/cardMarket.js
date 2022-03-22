@@ -79,9 +79,13 @@ export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
       if (0 >= cardId) {
         await parentTask.task(`Add card1 to card market`, async task => {
           await execMethod({ ctx, task }, cardMarket, 'addCard', [
-            ctx.cids.card1MetadataCid, 
-            tokens[0].address, 
-            toMinStr('10 coins')
+            {
+              contentHash: 'ctx.cids.card1MetadataCid',
+              fee: {
+                tokenContract: tokens[0].address,
+                value: toMinStr('10 coins'),
+              }
+            }
           ])
 
           await execMethod({ ctx, task }, cardMarket, 'setCardApproved', [

@@ -42,7 +42,7 @@ async function main() {
   if (deployConfig.isLocalDevnet) {
     defaultSigner = signers[5]
   } else {
-    defaultSigner = signers[7]
+    defaultSigner = signers[8]
   }
 
   console.log(`Deploying from: ${defaultSigner.address}`)
@@ -53,7 +53,7 @@ async function main() {
     await task.log(`Balance ${bal.toString()} ETH`)
 
     if (bal.lt(1)) {
-      await task.log(`Topping up balance ...`)
+      await task.log(`Topping up balance from ${signers[0].address} ...`)
 
       await fundAddress(defaultSigner.address, new BigVal(1, 'coins').sub(bal).toMinScale().toString())
 

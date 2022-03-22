@@ -71,7 +71,7 @@ export const deployDummyDex = async (ctx = {}, { tokens = [] } = {}) => {
       assertSameAddress(dex.address, LOCAL_DEVNET_ADDRESSES.dex, 'Dex')
     }
 
-    deployedAddressesToSave.dex = dex.address
+    deployedAddressesToSave.Dex = dex.address
 
     for (let token of tokens) {
       const tokenName = await token.symbol()

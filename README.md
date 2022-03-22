@@ -81,7 +81,7 @@ yarn test
 To run a single test:
 
 ```shell
-yarn test ./test/testName.js --network test
+yarn test ./test/testName.js
 ```
 
 ### Deployments
@@ -95,7 +95,7 @@ Set up the env vars:
 
 ```shell
 export MNEMONIC="..."
-export INFURA_KEY="..."
+export INFURA_ID="..."
 export PINATA_API_KEY="..."
 export PINATA_SECRET="..."
 ```
