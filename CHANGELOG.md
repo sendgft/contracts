@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/sendgft/contracts/compare/v1.16.0...v1.17.0) (2022-04-28)
+
+
+### Features
+
+* switch to typescript ([c21713b](https://github.com/sendgft/contracts/commit/c21713b6c6cfa92e4308b33bc38443591e9621f7))
+
 # [1.16.0](https://github.com/sendgft/contracts/compare/v1.15.0...v1.16.0) (2022-03-22)
 
 
