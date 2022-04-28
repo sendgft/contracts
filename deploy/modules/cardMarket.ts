@@ -92,10 +92,14 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
             }
           ])
 
-          await execMethod({ ctx, task }, cardMarket, 'setCardApproved', [
-            (await cardMarket.lastId()).toNumber(),
-            true
-          ])
+          const newCardId = (await cardMarket.lastId()).toNumber()
+
+          await task.task('Check card added correctly', async st => {
+            const uri = await cardMarket.tokenURI(newCardId)
+            console.log(uri)
+          })
+
+          await execMethod({ ctx, task }, cardMarket, 'setCardApproved', [ newCardId, true ])
         })
       }
 
