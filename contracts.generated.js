@@ -1,0 +1,16 @@
+module.exports = {
+"CardMarket": require("./artifacts/contracts/CardMarket.sol/CardMarket.json"),
+"CardMarketV1": require("./artifacts/contracts/CardMarketV1.sol/CardMarketV1.json"),
+"DummyDex": require("./artifacts/contracts/DummyDex.sol/DummyDex.json"),
+"DummyNFT": require("./artifacts/contracts/DummyNFT.sol/DummyNFT.json"),
+"DummyToken": require("./artifacts/contracts/DummyToken.sol/DummyToken.json"),
+"Gifter": require("./artifacts/contracts/Gifter.sol/Gifter.json"),
+"GifterV1": require("./artifacts/contracts/GifterV1.sol/GifterV1.json"),
+"GiftLib": require("./artifacts/contracts/GiftLib.sol/GiftLib.json"),
+"ICardMarket": require("./artifacts/contracts/ICardMarket.sol/ICardMarket.json"),
+"IDex": require("./artifacts/contracts/IDex.sol/IDex.json"),
+"IERC20": require("./artifacts/contracts/IERC20.sol/IERC20.json"),
+"IGifter": require("./artifacts/contracts/IGifter.sol/IGifter.json"),
+"INftBase": require("./artifacts/contracts/INftBase.sol/INftBase.json"),
+"IProxyImplBase": require("./artifacts/contracts/IProxyImplBase.sol/IProxyImplBase.json"),
+};

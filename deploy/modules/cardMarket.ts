@@ -1,25 +1,29 @@
+import { Contract } from '@ethersproject/contracts'
 import _ from 'lodash'
 import delay from 'delay'
 
-import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
-import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
-import { ADDRESS_ZERO } from '../../test/utils'
+import { createLog, deployContract, getContractAt, execMethod, assertSameAddress, Context } from '../utils'
 import { toMinStr } from 'bigval'
 
-export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
-  const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
+interface DeployCardMarketArgs {
+  dex: Contract,
+  tokens: Contract[],
+}
+
+export const deployCardMarket = async (ctx: Context = {} as Context, { dex, tokens }: DeployCardMarketArgs) => {
+  const { log = createLog(), deployedAddressesToSave = {}, expectedDeployedAddresses } = ctx
 
   return await log.task(`Deploy Card market`, async parentTask => {
-    let impl
-    const implConstructorArgs = []
+    let impl: Contract = {} as Contract
+    const implConstructorArgs: any[] = []
 
     await parentTask.task('Deploy implementation contract', async task => {
       impl = await deployContract(ctx, 'CardMarketV1', implConstructorArgs)
       await task.log(`Deployed at ${impl.address}`)
     })
 
-    let proxy
-    const proxyConstructorArgs = [
+    let proxy: Contract = {} as Contract
+    const proxyConstructorArgs: any[] = [
       impl.address, impl.contract.methods.initialize().encodeABI()
     ]
 
@@ -28,8 +32,8 @@ export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
         proxy = await deployContract(ctx, 'CardMarket', proxyConstructorArgs)
         await task.log(`Deployed at ${proxy.address}`)
 
-        if (isLocalDevnet) {
-          assertSameAddress(proxy.address, LOCAL_DEVNET_ADDRESSES.cardMarketProxy, 'cardMarketProxy')
+        if (expectedDeployedAddresses) {
+          assertSameAddress(proxy.address, expectedDeployedAddresses.cardMarketProxy, 'cardMarketProxy')
         }
       })
 
@@ -38,13 +42,13 @@ export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
       await delay(5000)
     } else {
       await parentTask.task('Upgrade proxy contract', async task => {
-        proxy = await getContractAt({ artifacts }, 'CardMarket', deployedAddressesToSave.CardMarket)
-        const instance = await getContractAt({ artifacts }, 'CardMarketV1', deployedAddressesToSave.CardMarket)
+        proxy = await getContractAt('CardMarket', deployedAddressesToSave.CardMarket)
+        const instance = await getContractAt('CardMarketV1', deployedAddressesToSave.CardMarket)
         await execMethod({ ctx, task }, instance, 'upgradeTo', [impl.address])
       })
     }
 
-    const cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', proxy.address)
+    const cardMarket = await getContractAt('CardMarketV1', proxy.address)
 
     // set tax
     await parentTask.task(`Set tax: 10%`, async task => {
@@ -71,7 +75,7 @@ export const deployCardMarket = async (ctx = {}, { dex, tokens }) => {
     }
 
     // get latest card id
-    const lastId = (await cardMarket.lastId()).toNumber()
+    const lastId: number = (await cardMarket.lastId()).toNumber()
 
     // add card if it hasn't already been added
     if (_.get(ctx, 'cids.card1MetadataCid')) {

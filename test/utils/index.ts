@@ -1,14 +1,17 @@
+// @ts-nocheck
 import { EthHdWallet } from 'eth-hd-wallet'
+import { ethers, network } from 'hardhat'
 import _ from 'lodash'
 import chai from 'chai'
 import { parseLog } from 'ethereum-event-logs'
 import chaiAsPromised from 'chai-as-promised'
 
-import { TEST_MNEMONIC } from '../../utils/constants'
-
 export { expect } from 'chai'
 
-export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
+import { ADDRESS_ZERO, TEST_MNEMONIC } from '../../src/constants'
+
+export { TEST_MNEMONIC, ADDRESS_ZERO }
+
 
 chai.use((_chai, utils) => {
   const sanitizeResultVal = (result, val) => {
@@ -81,7 +84,7 @@ chai.use((_chai, utils) => {
 
       return { newResult, newVal }
     } else {
-      throw new Error('Not an object', result)
+      throw new Error(`Not an object: ${result}`)
     }
   }
 
@@ -97,9 +100,9 @@ chai.use(chaiAsPromised)
 
 chai.should()
 
-export const balanceOf = w => hre.ethers.provider.getBalance(w)
+export const balanceOf = w => ethers.provider.getBalance(w)
 
-export const hdWallet = EthHdWallet.fromMnemonic(TEST_MNEMONIC)
+export const hdWallet = (EthHdWallet as any).fromMnemonic(TEST_MNEMONIC)
 hdWallet.generateAddresses(10)
 
 export const parseEvents = (result, e) => {
@@ -124,9 +127,11 @@ export const extractEventArgs = (result, eventAbi) => {
 }
 
 
-const callJsonRpcMethod = async (method, params = []) => hre.network.provider.send(method, params)
+const callJsonRpcMethod = async (method, params = []) => network.provider.send(method, params)
 
 export class EvmSnapshot {
+  _ids: any[]
+
   constructor() {
     this._ids = []
   }

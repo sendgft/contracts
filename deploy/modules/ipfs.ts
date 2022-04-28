@@ -1,7 +1,7 @@
 import path from 'path'
 import { getIpfsClient } from '@sendgft/ipfs-tools'
 
-import { createLog } from '../utils'
+import { Context, createLog } from '../utils'
 
 const ASSETS_PATH = path.join(__dirname, '..', '..', 'ipfs-assets')
 const GFT_OPENED_SVG = path.join(ASSETS_PATH, 'gft-opened.svg')
@@ -9,7 +9,7 @@ const GFT_UNOPENED_SVG = path.join(ASSETS_PATH, 'gft-unopened.svg')
 const CARD_1_HTML = path.join(ASSETS_PATH, 'card1.html')
 const CARD_1_THUMB_IMG = path.join(ASSETS_PATH, 'card1-thumbnail.png')
 
-export const deployIpfsAssets = async (ctx) => {
+export const deployIpfsAssets = async (ctx: Context = {} as Context): Promise<any> => {
   const { log = createLog(), deployConfig: { ipfs: { api, gateway } } } = ctx
 
   const ipfsClient = getIpfsClient(api)
@@ -38,7 +38,7 @@ export const deployIpfsAssets = async (ctx) => {
     return ret
   })
 
-  const gatewayUrl = cid => `${gateway}${cid}`
+  const gatewayUrl = (cid: string) => `${gateway}${cid}`
 
   const defaultMetadata = await log.task('Upload default metadata to IPFS', async task => {
     const ret = await ipfsClient.uploadJson({

@@ -1,9 +1,11 @@
-import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs } from './utils'
-import { deployCardMarket, deployDummyTokens, deployDummyDex } from '../deploy/modules'
-import { getSigners, getContractAt } from '../deploy/utils'
+// @ts-nocheck
 import { BigVal, toMinStr } from 'bigval'
-import { events } from '..'
-import { _ } from 'core-js'
+import { artifacts } from 'hardhat'
+
+import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect } from './utils'
+import { deployCardMarket, deployDummyTokens, deployDummyDex } from '../deploy/modules'
+import { getSigners, getContractAt, Context } from '../deploy/utils'
+import { events } from '../src'
 
 const DummyToken = artifacts.require("DummyToken")
 
@@ -35,11 +37,11 @@ describe('Card market', () => {
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    tokens = await deployDummyTokens({ artifacts })
+    tokens = await deployDummyTokens()
     token1 = tokens[0]
-    dex = await deployDummyDex({ artifacts }, { tokens })
-    cardMarketDeployment = await deployCardMarket({ artifacts }, { dex, tokens })
-    cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
+    dex = await deployDummyDex({}, { tokens })
+    cardMarketDeployment = await deployCardMarket({}, { dex, tokens })
+    cardMarket = await getContractAt('CardMarketV1', cardMarketDeployment.proxy.address)
     randomToken = await DummyToken.new('test', 'test', 18, 0)
 
     // set price for testing

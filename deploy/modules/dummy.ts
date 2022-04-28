@@ -1,26 +1,25 @@
-import _ from 'lodash'
+import { Contract } from '@ethersproject/contracts'
 import { toMinStr } from 'bigval'
 
-import { createLog, deployContract, assertSameAddress, execMethod, getContractAt } from '../utils'
-import { DEFAULT_WALLETS, LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
-import { ADDRESS_ZERO } from '../../test/utils'
+import { createLog, deployContract, assertSameAddress, execMethod, getContractAt, Context } from '../utils'
+import { ADDRESS_ZERO, DEFAULT_WALLETS } from '../../src/constants'
 
 
-export const deployDummyTokens = async (ctx = {}) => {
-  const { artifacts, log = createLog(), isLocalDevnet, deployedAddressesToSave = {}} = ctx
+export const deployDummyTokens = async (ctx: Context = {} as Context) => {
+  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {}} = ctx
 
-  const tokens = []
+  const tokens: Contract[] = []
 
   for (let i = 0; i < 3; i += 1) {
     const symbol = `GFT_TOKEN_${i + 1}`
 
-    let token
+    let token: Contract = {} as Contract
 
     await log.task(`Setup ERC-20: ${symbol}`, async parentTask => {
       if (!deployedAddressesToSave[symbol]) {
 
         await parentTask.task(`Deploy token contract`, async task => {
-          tokens.push(await deployContract({ artifacts }, 'DummyToken', [
+          tokens.push(await deployContract(ctx, 'DummyToken', [
             `GFT Dummy Token ${i + 1}`,
             symbol,
             18,
@@ -31,14 +30,14 @@ export const deployDummyTokens = async (ctx = {}) => {
 
           await task.log(`Deployed at ${token.address}`)
 
-          if (isLocalDevnet) {
-            assertSameAddress(token.address, LOCAL_DEVNET_ADDRESSES[symbol], symbol)
+          if (expectedDeployedAddresses) {
+            assertSameAddress(token.address, expectedDeployedAddresses[symbol], symbol)
           }
 
           deployedAddressesToSave[symbol] = token.address
         })
       } else {
-        token = await getContractAt({ artifacts }, 'DummyToken', deployedAddressesToSave[symbol])
+        token = await getContractAt('DummyToken', deployedAddressesToSave[symbol])
       }
 
       await parentTask.task(`Mint balances`, async task => {
@@ -57,18 +56,24 @@ export const deployDummyTokens = async (ctx = {}) => {
   return tokens
 }
 
-export const deployDummyDex = async (ctx = {}, { tokens = [] } = {}) => {
-  const { artifacts, log = createLog(), isLocalDevnet, deployedAddressesToSave = {} } = ctx
+interface DeployDummyDexParams {
+  tokens: any[]
+}
 
-  let dex
+export const deployDummyDex = async (ctx: Context = {} as Context, params?: DeployDummyDexParams) => {
+  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {} } = ctx
+
+  const { tokens = [] } = params || {}
+
+  let dex: Contract = {} as Contract
 
   await log.task(`Deploy Dummy DEX`, async parentTask => {
-    dex = await deployContract({ artifacts }, 'DummyDex', [])
+    dex = await deployContract(ctx, 'DummyDex', [])
 
     await parentTask.log(`Deployed at ${dex.address}`)
 
-    if (isLocalDevnet) {
-      assertSameAddress(dex.address, LOCAL_DEVNET_ADDRESSES.dex, 'Dex')
+    if (expectedDeployedAddresses) {
+      assertSameAddress(dex.address, expectedDeployedAddresses.dex, 'Dex')
     }
 
     deployedAddressesToSave.Dex = dex.address

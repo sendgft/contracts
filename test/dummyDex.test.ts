@@ -1,4 +1,6 @@
+// @ts-nocheck
 import { toMinStr, BigVal } from 'bigval'
+import { artifacts } from 'hardhat'
 import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
 import { getSigners, getContractAt } from '../deploy/utils'
 import { deployDummyDex } from '../deploy/modules'
@@ -14,7 +16,7 @@ describe('Dummy DEX', () => {
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    dex = await deployDummyDex({ artifacts })
+    dex = await deployDummyDex()
     token1 = await DummyToken.new('Wrapped ETH 1', 'WETH1', 18, 0)
     token2 = await DummyToken.new('Wrapped ETH 2', 'WETH2', 18, 0)
   })

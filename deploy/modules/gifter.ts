@@ -1,25 +1,34 @@
 import _ from 'lodash'
 import delay from 'delay'
-import { strict as assert } from 'assert'
-import got from 'got'
+import { Contract } from '@ethersproject/contracts'
 
-import { createLog, deployContract, getContractAt, execMethod, assertSameAddress } from '../utils'
-import { LOCAL_DEVNET_ADDRESSES } from '../../utils/constants'
+import { createLog, deployContract, getContractAt, execMethod, assertSameAddress, Context } from '../utils'
 
-export const deployGifter = async (ctx = {}, { cardMarket }) => {
-  const { artifacts, log = createLog(), deployedAddressesToSave = {}, isLocalDevnet } = ctx
+interface GifterDeployment {
+  proxy: Contract,
+  impl: Contract,
+  proxyConstructorArgs: any[],
+  implConstructorArgs: any[],
+}
+
+interface DeployGifterArgs {
+  cardMarket: Contract
+}
+
+export const deployGifter = async (ctx: Context = {} as Context, { cardMarket }: DeployGifterArgs): Promise<GifterDeployment> => {
+  const { log = createLog(), deployedAddressesToSave = {}, expectedDeployedAddresses } = ctx
 
   return await log.task(`Deploy Gifter`, async parentTask => {
-    let impl
-    const implConstructorArgs = []
+    let impl: Contract = {} as Contract
+    const implConstructorArgs: any[] = []
 
     await parentTask.task('Deploy implementation contract', async task => {
       impl = await deployContract(ctx, 'GifterV1', implConstructorArgs)
       await task.log(`Deployed at ${impl.address}`)
     })
 
-    let proxy
-    const proxyConstructorArgs = [
+    let proxy: Contract = {} as Contract
+    const proxyConstructorArgs: any[] = [
       impl.address, impl.contract.methods.initialize().encodeABI()
     ]
 
@@ -28,8 +37,8 @@ export const deployGifter = async (ctx = {}, { cardMarket }) => {
         proxy = await deployContract(ctx, 'Gifter', proxyConstructorArgs)
         await task.log(`Deployed at ${proxy.address}`)
 
-        if (isLocalDevnet) {
-          assertSameAddress(proxy.address, LOCAL_DEVNET_ADDRESSES.gifterProxy, 'gifterProxy')
+        if (expectedDeployedAddresses) {
+          assertSameAddress(proxy.address, expectedDeployedAddresses.gifterProxy, 'gifterProxy')
         }
       })
 
@@ -37,21 +46,21 @@ export const deployGifter = async (ctx = {}, { cardMarket }) => {
 
       await delay(5000)
 
-      const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
+      const gifter = await getContractAt('IGifter', proxy.address)
 
       await parentTask.task(`Set card market: ${cardMarket.address}`, async task => {
         await execMethod({ ctx, task }, gifter, 'setCardMarket', [cardMarket.address])
       })
     } else {
       await parentTask.task('Upgrade proxy contract', async task => {
-        proxy = await getContractAt({ artifacts }, 'Gifter', deployedAddressesToSave.Gifter)
+        proxy = await getContractAt('Gifter', deployedAddressesToSave.Gifter)
 
-        const instance = await getContractAt({ artifacts }, 'GifterV1', deployedAddressesToSave.Gifter)
+        const instance = await getContractAt('GifterV1', deployedAddressesToSave.Gifter)
         await execMethod({ ctx, task }, instance, 'upgradeTo', [impl.address])
       })
     }
 
-    const gifter = await getContractAt({ artifacts }, 'IGifter', proxy.address)
+    const gifter = await getContractAt('IGifter', proxy.address)
     
     const { gateway: baseURI } = _.get(ctx, 'deployConfig.ipfs', {})
     const { defaultMetadataCid } = _.get(ctx, 'cids', {})

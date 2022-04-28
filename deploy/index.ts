@@ -1,10 +1,11 @@
 import _ from 'lodash'
+import { ethers } from 'hardhat'
 import { BigVal } from 'bigval'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
 
-import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance } from './utils'
+import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance, Context } from './utils'
 import { 
   deployGifter, 
   deployCardMarket, 
@@ -13,6 +14,8 @@ import {
   deployDummyDex,
   deployIpfsAssets,
 } from './modules'
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
 
 const deployConfig = require('../deployConfig.json')
 
@@ -23,9 +26,9 @@ const deployedAddresses = require(deployedAddressesJsonFilePath)
 async function main() {
   const log = createLog(console.log.bind(console))
 
-  const network = getMatchingNetwork(await hre.ethers.provider.getNetwork())
+  const network = getMatchingNetwork(await ethers.provider.getNetwork())
 
-  console.log(`Network: ${network.name} (chainId: ${network.chainId})`)
+  console.log(`Network: ${network.name} (chainId: ${network.id})`)
 
   if (network.name === 'hardhat') {
     network.name = 'localhost'
@@ -37,10 +40,10 @@ async function main() {
 
   const signers = await getSigners()
 
-  let defaultSigner
+  let defaultSigner: SignerWithAddress
 
   if (deployConfig.isLocalDevnet) {
-    defaultSigner = signers[5]
+    defaultSigner = signers[0]
   } else {
     defaultSigner = signers[8]
   }
@@ -61,19 +64,18 @@ async function main() {
     }
   })
 
-  const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, { log })
+  const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, log)
 
   deployedAddresses[network.id] = deployedAddresses[network.id] || {}
 
-  const ctx = {
-    artifacts,
+  const ctx: Context = {
     signers,
     defaultSigner,
     log,
     network,
     getTxParams,
     deployConfig,
-    isLocalDevnet: !!deployConfig.isLocalDevnet,
+    expectedDeployedAddresses: deployConfig.isLocalDevnet ? LOCAL_DEVNET_ADDRESSES : undefined,
     deployedAddressesToSave: deployedAddresses[network.id],
   }
 
@@ -81,12 +83,12 @@ async function main() {
   await deployIpfsAssets(ctx)
 
   // do multicall
-  if (ctx.isLocalDevnet) {
+  if (deployConfig.isLocalDevnet) {
     await deployMulticall(ctx)
   }
 
   // fee tokens
-  let tokens = []
+  let tokens: any[] = []
   if (deployConfig.deployDummyContracts) {
     tokens = await deployDummyTokens(ctx)
   }
@@ -101,7 +103,7 @@ async function main() {
   const gifter = await deployGifter(ctx, { cardMarket: cardMarket.proxy })
 
   // save deployed addresses
-  if (!ctx.isLocalDevnet) {
+  if (!deployConfig.isLocalDevnet) {
     await log.task('Update deployedAddresses.json', async () => {
       fs.writeFileSync(deployedAddressesJsonFilePath, JSON.stringify(deployedAddresses, null, 2), 'utf-8')
     })

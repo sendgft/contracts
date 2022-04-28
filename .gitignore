@@ -19,6 +19,7 @@ ganache.log
 .0x*
 scTopics
 dapp*
-contracts.generated.js
+src/contracts.generated.js
+dist/
 deployConfig.json
 .env

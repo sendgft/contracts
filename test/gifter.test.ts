@@ -1,8 +1,11 @@
+// @ts-nocheck
 import { BigVal, toMinStr } from 'bigval'
+import { artifacts } from 'hardhat'
+
 import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
 import { deployGifter, deployCardMarket, deployDummyDex, deployDummyTokens } from '../deploy/modules'
-import { getSigners, getContractAt } from '../deploy/utils'
-import { events } from '..'
+import { getSigners, getContractAt, Context } from '../deploy/utils'
+import { events } from '../src'
 import { hexZeroPad } from 'ethers/lib/utils'
 
 const DummyNFT = artifacts.require("DummyNFT")
@@ -56,14 +59,14 @@ describe('Gifter', () => {
 
   before(async () => {
     accounts = (await getSigners()).map(a => a.address)
-    const tokens = await deployDummyTokens({ artifacts })
+    const tokens = await deployDummyTokens()
     token1 = tokens[0]
     token2 = tokens[1]
-    dex = await deployDummyDex({ artifacts }, { tokens })
-    cardMarketDeployment = await deployCardMarket({ artifacts }, { dex, tokens })
-    cardMarket = await getContractAt({ artifacts }, 'CardMarketV1', cardMarketDeployment.proxy.address)
-    gifterDeployment = await deployGifter({ artifacts }, { cardMarket })
-    gifter = await getContractAt({ artifacts }, 'GifterV1', gifterDeployment.proxy.address)
+    dex = await deployDummyDex({}, { tokens })
+    cardMarketDeployment = await deployCardMarket({}, { dex, tokens })
+    cardMarket = await getContractAt('CardMarketV1', cardMarketDeployment.proxy.address)
+    gifterDeployment = await deployGifter({}, { cardMarket })
+    gifter = await getContractAt('GifterV1', gifterDeployment.proxy.address)
     nft1 = await DummyNFT.new()
     sender1 = accounts[2]
     receiver1 = accounts[5]

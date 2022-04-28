@@ -1,15 +1,15 @@
-require('dotenv').config()
-require('@babel/register')
-require("core-js/stable")
-require("regenerator-runtime/runtime")
-require("@nomiclabs/hardhat-ethers")
-require("@nomiclabs/hardhat-truffle5")
-require("@nomiclabs/hardhat-etherscan")
-require('solidity-coverage')
+import DotEnv from 'dotenv'
+DotEnv.config() 
 
-const { TEST_MNEMONIC } = require('./utils/constants')
+import "@nomiclabs/hardhat-ethers"
+import "@nomiclabs/hardhat-truffle5"
+import "@nomiclabs/hardhat-etherscan"
+import 'solidity-coverage'
+import { HardhatUserConfig } from "hardhat/config"
 
-module.exports = {
+const { TEST_MNEMONIC } = require('./src/constants')
+
+const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.9",
     settings: {
@@ -63,3 +63,4 @@ module.exports = {
   },
 }
 
+export default config
