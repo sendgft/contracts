@@ -8,12 +8,10 @@
     "access": "public"
   },
   "files": [
-    "index.js",
-    "index.d.ts",
+    "dist/**",
     "contracts.generated.js",
     "artifacts/**",
     "contracts/**",
-    "utils/**",
     "deployedAddresses.json",
     "README.md",
     "LICENSE.md"
