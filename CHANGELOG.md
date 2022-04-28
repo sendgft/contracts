@@ -1,3 +1,10 @@
+## [1.17.1](https://github.com/sendgft/contracts/compare/v1.17.0...v1.17.1) (2022-04-28)
+
+
+### Bug Fixes
+
+* npm exports ([3cfab81](https://github.com/sendgft/contracts/commit/3cfab81c810bf5146e0474bf8b90466d9d062c32))
+
 # [1.17.0](https://github.com/sendgft/contracts/compare/v1.16.0...v1.17.0) (2022-04-28)
 
 
