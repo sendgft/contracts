@@ -12,9 +12,9 @@ import "./IGifter.sol";
 contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   using SafeMath for uint;
 
-  mapping(uint => GiftData) public gifts;
-  string public defaultContentHash;
-  ICardMarket public cardMarket;
+  mapping(uint => GiftData) public override gift;
+  string public override defaultContentHash;
+  ICardMarket public override cardMarket;
 
   // Initializable
 
@@ -34,7 +34,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   // INftBase
 
   function _getContentHash(uint256 _tokenId) internal view override returns (string memory) {
-    return gifts[_tokenId].contentHash;
+    return gift[_tokenId].contentHash;
   }
 
   // IGifter
@@ -48,7 +48,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   }
 
   function claim(uint _tokenId) public override isOwner(_tokenId) nonReentrant {
-    GiftData storage g = gifts[_tokenId];
+    GiftData storage g = gift[_tokenId];
 
     // check and flip flag
     require(g.claimed == 0, "Gifter: already claimed");
@@ -75,7 +75,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   }
 
   function openAndClaim(uint _tokenId, string calldata _contentHash) external override isOwner(_tokenId) {
-    GiftData storage g = gifts[_tokenId];
+    GiftData storage g = gift[_tokenId];
 
     // check and flip flag
     require(!g.opened, "Gifter: already opened");
@@ -95,7 +95,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     lastId += 1;
 
     // save data
-    GiftData storage g = gifts[lastId];
+    GiftData storage g = gift[lastId];
     g.sender = sender;
     g.created = block.number;
     g.contentHash = defaultContentHash;

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./INftBase.sol";
+import "./ICardMarket.sol";
 import "./GiftLib.sol";
 
 abstract contract IGifter is INftBase {
@@ -23,6 +24,21 @@ abstract contract IGifter is INftBase {
     bool opened; 
     string contentHash;
   }
+
+  /**
+   * @dev Get gift info.
+   *
+   * @param _id Gift id.
+   */
+  function gift(uint _id) view external virtual returns (
+    /* struct getter return values must be fully spelled out - https://github.com/ethereum/solidity/issues/11826 */
+    GiftParams memory params,
+    address sender,
+    uint created,
+    uint claimed,
+    bool opened,
+    string memory contentHash
+  );
 
   /**
    * @dev Create a new gift.
@@ -47,6 +63,11 @@ abstract contract IGifter is INftBase {
   function openAndClaim(uint _tokenId, string calldata _contentHash) external virtual;
 
   /**
+   * Get default decentralized content hash for cards.
+   */
+  function defaultContentHash() view external virtual returns (string calldata);
+
+  /**
    * Set default decentralized content hash for cards.
    *
    * The decentralied content hash is used to fetch the metadata representing an un-opened card.
@@ -54,6 +75,11 @@ abstract contract IGifter is INftBase {
    * @param _contentHash New default content hash.
    */
   function setDefaultContentHash(string calldata _contentHash) external virtual;
+
+  /**
+   * Get card market.
+   */
+  function cardMarket() view external virtual returns (ICardMarket);
 
   /**
    * Set card market.

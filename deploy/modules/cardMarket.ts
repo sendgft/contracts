@@ -79,7 +79,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
 
     // add card if it hasn't already been added
     if (_.get(ctx, 'cids.card1MetadataCid')) {
-      const cardId = (await cardMarket.cardByCid(ctx.cids.card1MetadataCid)).toNumber()
+      const cardId = (await cardMarket.cardIdByCid(ctx.cids.card1MetadataCid)).toNumber()
       if (0 >= cardId) {
         await parentTask.task(`Add card1 to card market`, async task => {
           await execMethod({ ctx, task }, cardMarket, 'addCard', [

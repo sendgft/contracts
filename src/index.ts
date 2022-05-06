@@ -1,13 +1,13 @@
 import { EventFragment } from "@ethersproject/abi"
 import { ContractInterface } from "@ethersproject/contracts"
 
-type ContractDeployedAddresses = Record<string, string>
-type ChainDeployedAddresses = Record<string, ContractDeployedAddresses>
-interface ContractJson {
+export type ContractDeployedAddresses = Record<string, string>
+export type ChainDeployedAddresses = Record<string, ContractDeployedAddresses>
+export interface ContractJson {
   abi: ContractInterface
 }
-type ContractJsons = Record<string, ContractJson>
-type EventAbis = Record<string, EventFragment>
+export type ContractJsons = Record<string, ContractJson>
+export type EventAbis = Record<string, EventFragment>
 
 let deployedAddresses: ChainDeployedAddresses = {} as ChainDeployedAddresses
 try {

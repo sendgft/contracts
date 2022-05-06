@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./INftBase.sol";
+import "./IDex.sol";
 import "./GiftLib.sol";
 
 
@@ -18,6 +19,27 @@ abstract contract ICardMarket is INftBase {
     string contentHash;
     GiftLib.Asset fee;
   }
+
+  /**
+   * @dev Get card info.
+   *
+   * @param _id Card id.
+   */
+  function card(uint _id) view external virtual returns (
+    /* struct getter return values must be fully spelled out - https://github.com/ethereum/solidity/issues/11826 */
+    bool enabled,
+    bool approved,
+    address owner,
+    string memory contentHash,
+    GiftLib.Asset memory fee
+  );
+
+  /**
+   * Get card id by CID.
+   * 
+   * @param _cid CID.
+   */
+  function cardIdByCid(string calldata _cid) view external virtual returns (uint);
 
   /**
    * @dev Add a new card.
@@ -45,7 +67,7 @@ abstract contract ICardMarket is INftBase {
   /**
    * Get dex.
    */
-  function dex() external view virtual returns (address);
+  function dex() external view virtual returns (IDex);
 
   /**
    * Set dex.
@@ -70,6 +92,13 @@ abstract contract ICardMarket is INftBase {
    * Get allowed fee tokens.
    */
   function allowedFeeTokens() external view virtual returns (address[] memory);
+
+  /**
+   * Get whether given token is allowed to be used as a fee token.
+   *
+   * @param _token The token.
+   */
+  function feeTokenAllowed(address _token) view external virtual returns (bool);
 
   /**
    * Set allowed fee tokens.

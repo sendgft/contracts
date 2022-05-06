@@ -12,13 +12,13 @@ import "./IERC20.sol";
 contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   using SafeMath for uint;
 
-  mapping(uint => Card) public cards;
-  mapping(string => uint) public cardByCid;
+  mapping(uint => Card) public override card;
+  mapping(string => uint) public override cardIdByCid;
 
-  address public override dex;
+  IDex public override dex;
 
   address[] private feeTokenList;
-  mapping(address => bool) public feeTokenAllowed;
+  mapping(address => bool) public override feeTokenAllowed;
 
   uint public override tax;
   // token => total
@@ -47,21 +47,21 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   // INftBase
 
   function _getContentHash(uint256 _tokenId) internal view override returns (string memory) {
-    return cards[_tokenId].contentHash;
+    return card[_tokenId].contentHash;
   }
 
   // ICardMarket
 
   function setCardEnabled(uint _id, bool _enabled) external override isOwner(_id) {
-    cards[_id].enabled = _enabled;
+    card[_id].enabled = _enabled;
   }
 
   function setCardApproved(uint _id, bool _approved) external override isAdmin {
-    cards[_id].approved = _approved;
+    card[_id].approved = _approved;
   }
 
   function setDex(address _dex) external override isAdmin {
-    dex = _dex;
+    dex = IDex(_dex);
   }
 
   function setTax(uint _tax) external override isAdmin {
@@ -91,13 +91,13 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     lastId += 1;
 
     // check that card hasn't already been added
-    require(cardByCid[_params.contentHash] == 0, "CardMarket: already added");
-    cardByCid[_params.contentHash] = lastId;
+    require(cardIdByCid[_params.contentHash] == 0, "CardMarket: already added");
+    cardIdByCid[_params.contentHash] = lastId;
 
     address sender = _msgSender();
 
     // save data
-    cards[lastId] = Card(
+    card[lastId] = Card(
       true,
       false,
       sender, 
@@ -113,13 +113,13 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   }
 
   function useCard(uint _id) payable public override {
-    Card storage card = cards[_id];
-    GiftLib.Asset storage fee = card.fee;
+    Card storage c = card[_id];
+    GiftLib.Asset storage fee = c.fee;
 
-    require(card.approved, "CardMarket: card not approved");
-    require(card.enabled, "CardMarket: card not enabled");
+    require(c.approved, "CardMarket: card not approved");
+    require(c.enabled, "CardMarket: card not enabled");
 
-    IDex(dex).trade{value: msg.value}(
+    dex.trade{value: msg.value}(
       fee.tokenContract, 
       fee.value, 
       address(0), 
@@ -128,7 +128,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     );
 
     uint earned = (10000 - tax) * fee.value / 10000;
-    earnings[card.owner][fee.tokenContract] = earnings[card.owner][fee.tokenContract].add(earned);
+    earnings[c.owner][fee.tokenContract] = earnings[c.owner][fee.tokenContract].add(earned);
     totalEarnings[fee.tokenContract] = totalEarnings[fee.tokenContract].add(earned);
     uint thisTax = fee.value.sub(earned);
     totalTaxes[fee.tokenContract] = totalTaxes[fee.tokenContract].add(thisTax);
