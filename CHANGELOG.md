@@ -1,3 +1,11 @@
+## [1.17.2](https://github.com/sendgft/contracts/compare/v1.17.1...v1.17.2) (2022-05-06)
+
+
+### Bug Fixes
+
+* ensure CID id string ([69b7c21](https://github.com/sendgft/contracts/commit/69b7c217e3683c4df6e391a2f2fd8cceae0b3ba8))
+* wasn't writing card metadata correctly to contract ([4807032](https://github.com/sendgft/contracts/commit/48070325eaef317c8e803abc6f223952828adcdf))
+
 ## [1.17.1](https://github.com/sendgft/contracts/compare/v1.17.0...v1.17.1) (2022-04-28)
 
 
