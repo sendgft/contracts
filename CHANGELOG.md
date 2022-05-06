@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/sendgft/contracts/compare/v1.17.2...v1.18.0) (2022-05-06)
+
+
+### Features
+
+* add missing methods to interfaces ([233d6be](https://github.com/sendgft/contracts/commit/233d6be6c6835b849809374deb0b57a30b52bfb0))
+
 ## [1.17.2](https://github.com/sendgft/contracts/compare/v1.17.1...v1.17.2) (2022-05-06)
 
 
