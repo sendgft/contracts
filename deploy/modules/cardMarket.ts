@@ -33,7 +33,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
         await task.log(`Deployed at ${proxy.address}`)
 
         if (expectedDeployedAddresses) {
-          assertSameAddress(proxy.address, expectedDeployedAddresses.cardMarketProxy, 'cardMarketProxy')
+          assertSameAddress(proxy.address, expectedDeployedAddresses.CardMarket, 'CardMarket')
         }
       })
 

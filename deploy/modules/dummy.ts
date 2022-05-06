@@ -73,7 +73,7 @@ export const deployDummyDex = async (ctx: Context = {} as Context, params?: Depl
     await parentTask.log(`Deployed at ${dex.address}`)
 
     if (expectedDeployedAddresses) {
-      assertSameAddress(dex.address, expectedDeployedAddresses.dex, 'Dex')
+      assertSameAddress(dex.address, expectedDeployedAddresses.Dex, 'Dex')
     }
 
     deployedAddressesToSave.Dex = dex.address

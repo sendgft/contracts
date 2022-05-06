@@ -20,7 +20,7 @@ export const deployMulticall = async (ctx: Context = {} as Context): Promise<Con
       await task.log(`Deployed at ${contract.address}`)
 
       if (expectedDeployedAddresses) {
-        assertSameAddress(contract.address, expectedDeployedAddresses.multicall, 'multicall')
+        assertSameAddress(contract.address, expectedDeployedAddresses.Multicall, 'Multicall')
       }
     })
 
