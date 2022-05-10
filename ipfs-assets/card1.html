@@ -3,11 +3,10 @@
   <head>
     <!-- HEAD_PLACEHOLDER -->
     <script type="text/javascript">
-      const gift = {/* GIFT_PLACEHOLDER */}
-
-      window.onload = () => {
+      const refresh = (gift) => {
         const spacer = '<p>&nbsp;</p>'
         let html = `<p>From: ${gift.sender}</p>`
+        html += `${spacer}<p>Date: ${gift.datetime}</p>`
         if (gift.message) {
           html += `${spacer}<p>${gift.message}</p>`
         }
@@ -15,8 +14,8 @@
         if (gift.native) {
           assetsHtml += `<p>${gift.native.symbol} ${gift.native.amount}</p>`
         }
-        if (gift.erc20s && gift.erc20s.length) {
-          for (let token of gift.erc20s) {
+        if (gift.erc20 && gift.erc20.length) {
+          for (let token of gift.erc20) {
             assetsHtml += `<p>${token.symbol} ${token.amount}</p>`
           }
         }
@@ -27,6 +26,18 @@
 
         document.getElementById("main").innerHTML = html
       }
+
+      window.addEventListener("message", (event) => {
+        const { host } = new URL(event.origin)
+        if (host.startsWith('localhost:') || host.startsWith('127.0.0.1:') || host === 'gft.xyz' || host.endsWith('.gft.xyz')) {
+          if (event.data.gift) {
+            console.log(event.data.gift)
+            refresh(event.data.gift)
+          }
+        } else {
+          throw new Error(`Bad origin: ${event.origin}`)
+        }
+      }, false);      
      </script>
     <style media="all">
       body {
