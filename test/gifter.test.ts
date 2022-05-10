@@ -170,7 +170,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-      let ret = await gifter.gifts(id)
+      let ret = await gifter.gift(id)
       expectGiftDataToMatch(ret, {
         sender: sender1,
         created: tx1.receipt.blockNumber,
@@ -188,7 +188,7 @@ describe('Gifter', () => {
 
       await gifter.balanceOf(receiver2).should.eventually.eq(1)
       id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
-      ret = await gifter.gifts(id)
+      ret = await gifter.gift(id)
       expectGiftDataToMatch(ret, {
         sender: sender1,
         created: tx2.receipt.blockNumber,
@@ -272,7 +272,7 @@ describe('Gifter', () => {
         await gifter.balanceOf(receiver1).should.eventually.eq(2)
 
         const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-        expectGiftDataToMatch(await gifter.gifts(gift1), {
+        expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
           opened: false,
@@ -301,7 +301,7 @@ describe('Gifter', () => {
         })
 
         const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
-        expectGiftDataToMatch(await gifter.gifts(gift2), {
+        expectGiftDataToMatch(await gifter.gift(gift2), {
           sender: sender1,
           claimed: 0,
           opened: false,
@@ -340,12 +340,12 @@ describe('Gifter', () => {
         expect(eventArgs).to.include({ tokenId: gift1.toString() })
 
         // check gifts
-        expectGiftDataToMatch(await gifter.gifts(gift1), {
+        expectGiftDataToMatch(await gifter.gift(gift1), {
           claimed: tx.receipt.blockNumber,
           opened: true,
           contentHash: 'content1',
         })
-        expectGiftDataToMatch(await gifter.gifts(gift2), {
+        expectGiftDataToMatch(await gifter.gift(gift2), {
           claimed: 0,
           opened: false,
         })
@@ -365,7 +365,7 @@ describe('Gifter', () => {
         await gifter.balanceOf(receiver1).should.eventually.eq(2)
 
         const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-        expectGiftDataToMatch(await gifter.gifts(gift1), {
+        expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
           opened: false,
@@ -413,7 +413,7 @@ describe('Gifter', () => {
         expect(eventArgs).to.include({ tokenId: gift1.toString() })
 
         // check gifts
-        await gifter.gifts(gift1).should.eventually.matchObj({
+        await gifter.gift(gift1).should.eventually.matchObj({
           claimed: tx.receipt.blockNumber,
           opened: false,
           contentHash: '',
@@ -434,7 +434,7 @@ describe('Gifter', () => {
         await gifter.balanceOf(receiver1).should.eventually.eq(2)
 
         const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
-        expectGiftDataToMatch(await gifter.gifts(gift1), {
+        expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
           opened: false,
@@ -484,7 +484,7 @@ describe('Gifter', () => {
         const gasCost2 = gasUsed.mul(gasPrice)
 
         // check gifts
-        await gifter.gifts(gift1).should.eventually.matchObj({
+        await gifter.gift(gift1).should.eventually.matchObj({
           claimed: tx.receipt.blockNumber,
           opened: true,
           contentHash: 'hash1',

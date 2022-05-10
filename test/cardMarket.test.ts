@@ -108,7 +108,7 @@ describe('Card market', () => {
         fee: { tokenContract: token1.address, value: 2 }
       }).should.be.fulfilled
       await cardMarket.totalSupply().should.eventually.eq(1)
-      expectCardDataToMatch(await cardMarket.cards(1), {
+      expectCardDataToMatch(await cardMarket.card(1), {
         enabled: true,
         approved: false,
         owner: accounts[0],
@@ -167,11 +167,11 @@ describe('Card market', () => {
     })
 
     it('if valid card', async () => {
-      await cardMarket.cards(1).should.eventually.matchObj({ enabled: true })
+      await cardMarket.card(1).should.eventually.matchObj({ enabled: true })
       await cardMarket.setCardEnabled(1, false, { from: accounts[1] })
-      await cardMarket.cards(1).should.eventually.matchObj({ enabled: false })
+      await cardMarket.card(1).should.eventually.matchObj({ enabled: false })
       await cardMarket.setCardEnabled(1, true, { from: accounts[1] })
-      await cardMarket.cards(1).should.eventually.matchObj({ enabled: true })
+      await cardMarket.card(1).should.eventually.matchObj({ enabled: true })
     })
   })
 
@@ -188,11 +188,11 @@ describe('Card market', () => {
     })
 
     it('works', async () => {
-      await cardMarket.cards(1).should.eventually.matchObj({ approved: false })
+      await cardMarket.card(1).should.eventually.matchObj({ approved: false })
       await cardMarket.setCardApproved(1, true)
-      await cardMarket.cards(1).should.eventually.matchObj({ approved: true })
+      await cardMarket.card(1).should.eventually.matchObj({ approved: true })
       await cardMarket.setCardApproved(1, false)
-      await cardMarket.cards(1).should.eventually.matchObj({ approved: false })
+      await cardMarket.card(1).should.eventually.matchObj({ approved: false })
     })
   })
 
