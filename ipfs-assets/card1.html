@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <!-- HEAD_PLACEHOLDER -->
     <script type="text/javascript">
-      const refresh = (gift) => {
+      const setGift = (gift) => {
         const spacer = '<p>&nbsp;</p>'
         let html = `<p>From: ${gift.sender}</p>`
         html += `${spacer}<p>Date: ${gift.datetime}</p>`
@@ -26,18 +25,6 @@
 
         document.getElementById("main").innerHTML = html
       }
-
-      window.addEventListener("message", (event) => {
-        const { host } = new URL(event.origin)
-        if (host.startsWith('localhost:') || host.startsWith('127.0.0.1:') || host === 'gft.xyz' || host.endsWith('.gft.xyz')) {
-          if (event.data.gift) {
-            console.log(event.data.gift)
-            refresh(event.data.gift)
-          }
-        } else {
-          throw new Error(`Bad origin: ${event.origin}`)
-        }
-      }, false);      
      </script>
     <style media="all">
       body {
@@ -58,6 +45,7 @@
     </style>
   </head>
   <body>
-    <main id="main"></main>
+    <main id="main">Loading...</main>
+    <script type="text/javascript" src="https://ipfs.gft.xyz/ipfs/QmQvuV3MbZy73bi7GYukfnBf5GupMz8unC4a49op8VHgvp/shared.js"></script>
   </body>
 </html>
