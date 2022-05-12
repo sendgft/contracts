@@ -101,7 +101,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     g.contentHash = defaultContentHash;
     g.params.config = _params.config;
     g.params.recipient = _params.recipient;
-    g.params.message = _params.message;
+    // g.params.message = _params.message; - message story is costly so we'll do it va event below
     g.params.weiValue = _params.weiValue;
     g.params.fee = _params.fee;
 
