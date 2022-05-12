@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/sendgft/contracts/compare/v1.18.0...v1.19.0) (2022-05-12)
+
+
+### Features
+
+* card can now be a folder of assets ([7eeb57d](https://github.com/sendgft/contracts/commit/7eeb57dd5afa72727630ed5932307d491ef290f8))
+
 # [1.18.0](https://github.com/sendgft/contracts/compare/v1.17.2...v1.18.0) (2022-05-06)
 
 
