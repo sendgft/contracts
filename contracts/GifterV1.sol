@@ -98,6 +98,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     GiftData storage g = gift[lastId];
     g.sender = sender;
     g.created = block.number;
+    g.timestamp = block.timestamp;
     g.contentHash = defaultContentHash;
     g.params.config = _params.config;
     g.params.recipient = _params.recipient;

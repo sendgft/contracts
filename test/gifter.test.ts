@@ -15,7 +15,7 @@ const createConfig = designId => hexZeroPad(`0x${designId.toString(16)}`, 32)
 const expectGiftDataToMatch = (ret, exp) => {
   expect(ret).to.matchObj({
     sender: exp.sender,
-    created: exp.createrd,
+    created: exp.created,
     claimed: exp.claimed,
     opened: exp.opened,
     contentHash: exp.contentHash,
@@ -171,6 +171,7 @@ describe('Gifter', () => {
       await gifter.balanceOf(receiver1).should.eventually.eq(1)
       let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
       let ret = await gifter.gift(id)
+      expect(ret.timestamp).not.to.eq(0)
       expectGiftDataToMatch(ret, {
         sender: sender1,
         created: tx1.receipt.blockNumber,

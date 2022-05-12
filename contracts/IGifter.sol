@@ -19,6 +19,7 @@ abstract contract IGifter is INftBase {
   struct GiftData {
     GiftParams params;
     address sender;
+    uint timestamp;
     uint created;
     uint claimed;
     bool opened; 
@@ -34,6 +35,7 @@ abstract contract IGifter is INftBase {
     /* struct getter return values must be fully spelled out - https://github.com/ethereum/solidity/issues/11826 */
     GiftParams memory params,
     address sender,
+    uint timestamp,
     uint created,
     uint claimed,
     bool opened,
