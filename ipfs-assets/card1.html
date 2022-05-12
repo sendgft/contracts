@@ -2,7 +2,7 @@
 <html>
   <head>
     <script type="text/javascript">
-      const setGift = (gift) => {
+      window.setGift = (gift) => {
         const spacer = '<p>&nbsp;</p>'
         let html = `<p>From: ${gift.sender}</p>`
         html += `${spacer}<p>Date: ${gift.datetime}</p>`
