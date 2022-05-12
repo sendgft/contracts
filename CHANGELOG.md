@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/sendgft/contracts/compare/v1.19.0...v1.20.0) (2022-05-12)
+
+
+### Features
+
+* add creation timestamp to gifts ([f1413e4](https://github.com/sendgft/contracts/commit/f1413e4be4a506ff6833502172fb0c31b1212743))
+
 # [1.19.0](https://github.com/sendgft/contracts/compare/v1.18.0...v1.19.0) (2022-05-12)
 
 
