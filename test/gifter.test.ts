@@ -810,6 +810,7 @@ describe('Gifter', () => {
 
       it('content hash can be set by admin', async () => {
         await gifter.setDefaultContentHash('foo').should.be.fulfilled
+        await gifter.defaultContentHash().should.eventually.eq('foo')
       })
 
       it('returns with non-empty base URI', async () => {

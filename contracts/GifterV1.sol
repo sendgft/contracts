@@ -12,8 +12,8 @@ import "./IGifter.sol";
 contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   using SafeMath for uint;
 
-  mapping(uint => GiftData) public override gift;
   string public override defaultContentHash;
+  mapping(uint => GiftData) public override gift;
   ICardMarket public override cardMarket;
 
   // Initializable
@@ -38,6 +38,10 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   }
 
   // IGifter
+
+  // function defaultContentHash() public view override returns (string memory) {
+  //   return defaultContentHashStr;
+  // }
 
   function setDefaultContentHash(string calldata _contentHash) external override isAdmin {
     defaultContentHash = _contentHash;

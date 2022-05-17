@@ -67,7 +67,7 @@ abstract contract IGifter is INftBase {
   /**
    * Get default decentralized content hash for cards.
    */
-  function defaultContentHash() view external virtual returns (string calldata);
+  function defaultContentHash() external view virtual returns (string memory);
 
   /**
    * Set default decentralized content hash for cards.

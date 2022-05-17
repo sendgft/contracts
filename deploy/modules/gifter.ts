@@ -1,3 +1,4 @@
+import { strict as assert } from 'node:assert'
 import _ from 'lodash'
 import delay from 'delay'
 import { Contract } from '@ethersproject/contracts'
@@ -69,9 +70,21 @@ export const deployGifter = async (ctx: Context = {} as Context, { cardMarket }:
       await parentTask.task(`Set default content hash: ${defaultMetadataCid}`, async task => {
         await execMethod({ ctx, task }, gifter, 'setDefaultContentHash', [defaultMetadataCid])
       })
+      
+      await parentTask.task('Check default content hash is correct', async () => {
+        const h = await gifter.defaultContentHash()
+        console.log(`Default content hash: ${h}`)
+        assert(!!h && h === defaultMetadataCid, 'Default content has not set')
+      })
 
       await parentTask.task(`Set default base URI: ${baseURI}`, async task => {
         await execMethod({ ctx, task }, gifter, 'setBaseURI', [baseURI])
+      })
+
+      await parentTask.task('Check base URI is correct', async () => {
+        const h = await gifter.baseURI()
+        console.log(`Base URI: ${h}`)
+        assert(!!h && h === baseURI, 'Base URI not set')
       })
     }
 

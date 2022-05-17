@@ -1,3 +1,4 @@
+import { strict as assert } from 'node:assert'
 import { Contract } from '@ethersproject/contracts'
 import _ from 'lodash'
 import delay from 'delay'
@@ -72,6 +73,12 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
       await parentTask.task(`Set default base URI: ${baseURI}`, async task => {
         await execMethod({ ctx, task }, cardMarket, 'setBaseURI', [baseURI])
       })
+
+      await parentTask.task(`Check base URI is set`, async task => {
+        const h = await cardMarket.baseURI()
+        console.log(`Base URI: ${h}`)
+        assert(!!h && h === baseURI, 'Base URI not set')
+      })
     }
 
     // get latest card id
@@ -99,6 +106,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
           await task.task('Check card added correctly', async st => {
             const { enabled, approved } = await cardMarket.card(newCardId)
             console.log(`Card enabled: ${enabled}, approved: ${approved}`)
+            assert(enabled && approved, 'Card not enabled and approved')
           })
         })
       }
