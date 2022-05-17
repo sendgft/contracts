@@ -48,7 +48,7 @@
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/exec": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
-    "@sendgft/ipfs-tools": "https://github.com/sendgft/ipfs-tools.git#6e6eec3f4c2ca8b240e3a3ce39e19308b5848fe7",
+    "@sendgft/ipfs-tools": "^1.2.0",
     "@types/lodash": "^4.14.182",
     "@types/mocha": "^9.1.1",
     "bigval": "^1.5.0",

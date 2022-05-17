@@ -12,7 +12,7 @@ import "./IGifter.sol";
 contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   using SafeMath for uint;
 
-  string private defaultContentHashStr;
+  string public override defaultContentHash;
   mapping(uint => GiftData) public override gift;
   ICardMarket public override cardMarket;
 
@@ -39,12 +39,12 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
   // IGifter
 
-  function defaultContentHash() public view override returns (string memory) {
-    return defaultContentHashStr;
+  function setDefaultContentHash(string calldata _contentHash) external override isAdmin {
+    defaultContentHash = _contentHash;
   }
 
-  function setDefaultContentHash(string calldata _contentHash) external override isAdmin {
-    defaultContentHashStr = _contentHash;
+  function setBaseURI(string calldata _baseURI) external override isAdmin {
+    _setBaseURI(_baseURI);
   }
 
   function setCardMarket(address _cardMarket) external override isAdmin {
@@ -103,7 +103,7 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     g.sender = sender;
     g.created = block.number;
     g.timestamp = block.timestamp;
-    g.contentHash = defaultContentHashStr;
+    g.contentHash = defaultContentHash;
     g.params.config = _params.config;
     g.params.recipient = _params.recipient;
     // g.params.message = _params.message; - message story is costly so we'll do it va event below
@@ -138,9 +138,5 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // event
     emit Created(lastId, _params.message);
-  }
-
-  function setBaseURI(string calldata _baseURI) external override isAdmin {
-    _setBaseURI(_baseURI);
   }
 }
