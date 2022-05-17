@@ -77,7 +77,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
       await parentTask.task(`Check base URI is set`, async task => {
         const h = await cardMarket.baseURI()
         console.log(`Base URI: ${h}`)
-        assert(!!h && h === baseURI, 'Base URI not set')
+        assert(!!h && h === baseURI, 'Base URI incorrect')
       })
     }
 
