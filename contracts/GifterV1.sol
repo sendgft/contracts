@@ -39,12 +39,12 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
   // IGifter
 
-  // function defaultContentHash() public view override returns (string memory) {
-  //   return defaultContentHashStr;
-  // }
-
   function setDefaultContentHash(string calldata _contentHash) external override isAdmin {
     defaultContentHash = _contentHash;
+  }
+
+  function setBaseURI(string calldata _baseURI) external override isAdmin {
+    _setBaseURI(_baseURI);
   }
 
   function setCardMarket(address _cardMarket) external override isAdmin {
@@ -138,9 +138,5 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
 
     // event
     emit Created(lastId, _params.message);
-  }
-
-  function setBaseURI(string calldata _baseURI) external override isAdmin {
-    _setBaseURI(_baseURI);
   }
 }

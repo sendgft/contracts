@@ -79,6 +79,12 @@ abstract contract IGifter is INftBase {
   function setDefaultContentHash(string calldata _contentHash) external virtual;
 
   /**
+   * Set base URI.
+   * @param _baseURI base URI.
+   */
+  function setBaseURI(string calldata _baseURI) external virtual;
+
+  /**
    * Get card market.
    */
   function cardMarket() view external virtual returns (ICardMarket);
@@ -89,12 +95,6 @@ abstract contract IGifter is INftBase {
    * @param _cardMarket card market address.
    */
   function setCardMarket(address _cardMarket) external virtual;
-
-  /**
-   * Set base URI.
-   * @param _baseURI base URI.
-   */
-  function setBaseURI(string calldata _baseURI) external virtual;
 
   /**
    * @dev Emitted when a new gift gets created.

@@ -2040,9 +2040,10 @@
     lodash "^4.17.4"
     read-pkg-up "^7.0.0"
 
-"@sendgft/ipfs-tools@https://github.com/sendgft/ipfs-tools.git#6e6eec3f4c2ca8b240e3a3ce39e19308b5848fe7":
-  version "1.0.0"
-  resolved "https://github.com/sendgft/ipfs-tools.git#6e6eec3f4c2ca8b240e3a3ce39e19308b5848fe7"
+"@sendgft/ipfs-tools@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@sendgft/ipfs-tools/-/ipfs-tools-1.2.0.tgz#012c3963ac55b86daf8bd0bf24dadce6495d0890"
+  integrity sha512-6gP9l3E1P20ZKOuESpqbKRi0gbtzh5QAKycgtq0GLsxSbOMM5gRii5QxU8ReMeMiPhIrmIgfSkHrwsTh2QsEXw==
   dependencies:
     "@pinata/sdk" "^1.1.23"
     chalk "4"

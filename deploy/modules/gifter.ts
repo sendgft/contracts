@@ -74,7 +74,7 @@ export const deployGifter = async (ctx: Context = {} as Context, { cardMarket }:
       await parentTask.task('Check default content hash is correct', async () => {
         const h = await gifter.defaultContentHash()
         console.log(`Default content hash: ${h}`)
-        assert(!!h && h === defaultMetadataCid, 'Default content has not set')
+        assert(h && h === defaultMetadataCid, 'Default content hash incorrect')
       })
 
       await parentTask.task(`Set default base URI: ${baseURI}`, async task => {
@@ -84,7 +84,7 @@ export const deployGifter = async (ctx: Context = {} as Context, { cardMarket }:
       await parentTask.task('Check base URI is correct', async () => {
         const h = await gifter.baseURI()
         console.log(`Base URI: ${h}`)
-        assert(!!h && h === baseURI, 'Base URI not set')
+        assert(h && h === baseURI, 'Base URI incorrect')
       })
     }
 
