@@ -15,6 +15,8 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
   string public override defaultContentHash;
   mapping(uint => GiftData) public override gift;
   ICardMarket public override cardMarket;
+  mapping (address => uint) public override totalSent;
+  mapping (address => mapping(uint => uint)) public override sent;
 
   // Initializable
 
@@ -135,6 +137,10 @@ contract GifterV1 is Initializable, ReentrancyGuard, IGifter, IProxyImplBase {
     }
 
     cardMarket.useCard{value: msg.value.sub(_params.weiValue)}(cardDesignId);
+
+    // update sender info
+    sent[sender][totalSent[sender]] = lastId;
+    totalSent[sender] += 1;
 
     // event
     emit Created(lastId, _params.message);

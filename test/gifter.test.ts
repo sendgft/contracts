@@ -530,6 +530,38 @@ describe('Gifter', () => {
         message: 'The quick brown fox jumped over the lazy dog'
       })
     })
+
+    it('updates sender info', async () => {
+      await gifter.totalSent(sender1).should.eventually.eq(0)
+
+      const _s1 = async () => {
+        return gifter.create(
+          {
+            recipient: receiver1,
+            config: createConfig(1),
+            message: 'The quick brown fox jumped over the lazy dog',
+            weiValue: '100',
+            fee: {
+              tokenContract: ADDRESS_ZERO,
+              value: '0',
+            },
+            erc20: [],
+            nft: [],
+          },
+          { from: sender1, value: 100 }
+        )
+      }
+
+      await _s1()
+      const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      await gifter.totalSent(sender1).should.eventually.eq(1)
+      await gifter.sent(sender1, 0).should.eventually.eq(gift1.toString())
+
+      await _s1()
+      const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
+      await gifter.totalSent(sender1).should.eventually.eq(2)
+      await gifter.sent(sender1, 1).should.eventually.eq(gift2.toString())
+    })
   })
 
   describe('paying card fee', () => {

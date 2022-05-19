@@ -43,6 +43,21 @@ abstract contract IGifter is INftBase {
   );
 
   /**
+   * Get total no. of GFTs sent by given sender.
+   *
+   * @param _sender The sender.
+   */
+  function totalSent(address _sender) view external virtual returns (uint);
+
+  /**
+   * Get GFT at given index sent by given sender.
+   *
+   * @param _sender The sender.
+   * @param _index 0-based index.
+   */
+  function sent(address _sender, uint _index) view external virtual returns (uint);
+
+  /**
    * @dev Create a new gift.
    *
    * @param _params Gift params.
