@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/sendgft/contracts/compare/v1.20.0...v1.21.0) (2022-05-19)
+
+
+### Features
+
+* record sender stats ([510c31f](https://github.com/sendgft/contracts/commit/510c31fa138910015e506ab6d671038ffa5a0253))
+
 # [1.20.0](https://github.com/sendgft/contracts/compare/v1.19.0...v1.20.0) (2022-05-12)
 
 
