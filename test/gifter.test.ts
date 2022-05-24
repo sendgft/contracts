@@ -77,22 +77,22 @@ describe('Gifter', () => {
 
     // add card designs
     await cardMarket.addCard({ 
+      owner: accounts[0],
       contentHash: "test1", 
       fee: {
         tokenContract: token1.address, 
         value: '0',
       }
     })
-    await cardMarket.setCardApproved(1, true)
 
     await cardMarket.addCard({
+      owner: accounts[0],
       contentHash: "test2",
       fee: {
         tokenContract: token2.address,
         value: toMinStr('10 coins'),
       }
     })
-    await cardMarket.setCardApproved(2, true)
   })
 
   beforeEach(async () => {
@@ -662,11 +662,6 @@ describe('Gifter', () => {
     it('send when card design is disabled', async () => {
       await cardMarket.setCardEnabled(1, false)
       await createGift().should.be.rejectedWith('card not enabled')
-    })
-
-    it('send when card design is no approved', async () => {
-      await cardMarket.setCardApproved(1, false)
-      await createGift().should.be.rejectedWith('card not approved')
     })
 
     it('send erc20 where gifter is not approved', async () => {

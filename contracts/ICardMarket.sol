@@ -7,17 +7,15 @@ import "./GiftLib.sol";
 
 
 abstract contract ICardMarket is INftBase {
-  struct Card {
-    bool enabled;
-    bool approved;
+  struct CardParams {
     address owner;
     string contentHash;
     GiftLib.Asset fee;
   }
 
-  struct CardParams {
-    string contentHash;
-    GiftLib.Asset fee;
+  struct Card {
+    CardParams params;
+    bool enabled;
   }
 
   /**
@@ -27,11 +25,8 @@ abstract contract ICardMarket is INftBase {
    */
   function card(uint _id) view external virtual returns (
     /* struct getter return values must be fully spelled out - https://github.com/ethereum/solidity/issues/11826 */
-    bool enabled,
-    bool approved,
-    address owner,
-    string memory contentHash,
-    GiftLib.Asset memory fee
+    CardParams memory params,
+    bool enabled
   );
 
   /**
@@ -55,14 +50,6 @@ abstract contract ICardMarket is INftBase {
    * @param _enabled true to enable, false to disable.
    */
   function setCardEnabled(uint _id, bool _enabled) external virtual;
-
-  /**
-   * @dev Set a card as approved or disapproved.
-   *
-   * @param _id The card id.
-   * @param _approved true to approve, false to disapprove.
-   */
-  function setCardApproved(uint _id, bool _approved) external virtual;
 
   /**
    * Get dex.

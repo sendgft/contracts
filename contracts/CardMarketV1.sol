@@ -47,17 +47,13 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   // INftBase
 
   function _getContentHash(uint256 _tokenId) internal view override returns (string memory) {
-    return card[_tokenId].contentHash;
+    return card[_tokenId].params.contentHash;
   }
 
   // ICardMarket
 
   function setCardEnabled(uint _id, bool _enabled) external override isOwner(_id) {
     card[_id].enabled = _enabled;
-  }
-
-  function setCardApproved(uint _id, bool _approved) external override isAdmin {
-    card[_id].approved = _approved;
   }
 
   function setDex(address _dex) external override isAdmin {
@@ -84,7 +80,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     }
   }
 
-  function addCard(CardParams calldata _params) external override {
+  function addCard(CardParams calldata _params) external override isAdmin {
     require(feeTokenAllowed[_params.fee.tokenContract], "CardMarket: unsupported fee token");
 
     // new id
@@ -94,19 +90,14 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     require(cardIdByCid[_params.contentHash] == 0, "CardMarket: already added");
     cardIdByCid[_params.contentHash] = lastId;
 
-    address sender = _msgSender();
-
     // save data
     card[lastId] = Card(
-      true,
-      false,
-      sender, 
-      _params.contentHash,
-      _params.fee
+      _params,
+      true
     );
 
     // mint NFT
-    _safeMint(sender, lastId);
+    _safeMint(_params.owner, lastId);
 
     // event
     emit AddCard(lastId);
@@ -114,9 +105,8 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
 
   function useCard(uint _id) payable public override {
     Card storage c = card[_id];
-    GiftLib.Asset storage fee = c.fee;
+    GiftLib.Asset storage fee = c.params.fee;
 
-    require(c.approved, "CardMarket: card not approved");
     require(c.enabled, "CardMarket: card not enabled");
 
     dex.trade{value: msg.value}(
@@ -128,7 +118,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     );
 
     uint earned = (10000 - tax) * fee.value / 10000;
-    earnings[c.owner][fee.tokenContract] = earnings[c.owner][fee.tokenContract].add(earned);
+    earnings[c.params.owner][fee.tokenContract] = earnings[c.params.owner][fee.tokenContract].add(earned);
     totalEarnings[fee.tokenContract] = totalEarnings[fee.tokenContract].add(earned);
     uint thisTax = fee.value.sub(earned);
     totalTaxes[fee.tokenContract] = totalTaxes[fee.tokenContract].add(thisTax);

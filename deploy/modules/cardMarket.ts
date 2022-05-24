@@ -12,7 +12,7 @@ interface DeployCardMarketArgs {
 }
 
 export const deployCardMarket = async (ctx: Context = {} as Context, { dex, tokens }: DeployCardMarketArgs) => {
-  const { log = createLog(), deployedAddressesToSave = {}, expectedDeployedAddresses } = ctx
+  const { log = createLog(), deployedAddressesToSave = {}, expectedDeployedAddresses, defaultSigner } = ctx
 
   return await log.task(`Deploy Card market`, async parentTask => {
     let impl: Contract = {} as Contract
@@ -91,6 +91,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
         await parentTask.task(`Add card1 to card market`, async task => {
           await execMethod({ ctx, task }, cardMarket, 'addCard', [
             {
+              owner: defaultSigner.address,
               contentHash: `${ctx.cids.card1MetadataCid}`,
               fee: {
                 tokenContract: tokens[0].address,
@@ -101,12 +102,10 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
 
           const newCardId = (await cardMarket.lastId()).toNumber()
 
-          await execMethod({ ctx, task }, cardMarket, 'setCardApproved', [ newCardId, true ])
-
           await task.task('Check card added correctly', async st => {
-            const { enabled, approved } = await cardMarket.card(newCardId)
-            console.log(`Card enabled: ${enabled}, approved: ${approved}`)
-            assert(enabled && approved, 'Card not enabled and approved')
+            const { enabled } = await cardMarket.card(newCardId)
+            console.log(`Card enabled: ${enabled}`)
+            assert(enabled, 'Card not enabled')
           })
         })
       }
