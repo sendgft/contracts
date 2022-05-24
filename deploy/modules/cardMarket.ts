@@ -81,9 +81,6 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
       })
     }
 
-    // get latest card id
-    const lastId: number = (await cardMarket.lastId()).toNumber()
-
     // add card if it hasn't already been added
     if (_.get(ctx, 'cids.card1MetadataCid')) {
       const cardId = (await cardMarket.cardIdByCid(ctx.cids.card1MetadataCid)).toNumber()
@@ -108,19 +105,25 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
             assert(enabled, 'Card not enabled')
           })
         })
-      }
 
-      // disable old cards
-      await parentTask.task(`Disable all old cards owned by admin (check 1 to ${lastId})`, async task => {
-        for (let i = 1; i <= lastId; i += 1) {
-          const { enabled } = await cardMarket.cards(i)
-          if (enabled) {
-            await task.task(`Disable card ${i}`, async subTask => {
-              await execMethod({ ctx, task: subTask }, cardMarket, 'setCardEnabled', [i, false])
-            })
+        const lastId = (await cardMarket.lastId()).toNumber()
+
+        // disable old cards
+        await parentTask.task(`Disable all old cards owned by admin (check 1 to ${lastId - 1})`, async task => {
+          for (let i = 1; i < lastId; i += 1) {
+            const { enabled, params } = await cardMarket.card(i)
+            if (enabled && params.owner === defaultSigner.address) {
+              await task.task(`Disable card ${i}`, async subTask => {
+                await execMethod({ ctx, task: subTask }, cardMarket, 'setCardEnabled', [i, false])
+              })
+            }
           }
-        }
-      })
+        })
+      } else {
+        await parentTask.task(`Ensure card ${cardId} is enabled`, async t => {
+          await execMethod({ ctx, task: t }, cardMarket, 'setCardEnabled', [cardId, true])
+        })
+      }
     }
 
     return {
