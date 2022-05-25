@@ -2,7 +2,7 @@
 import { BigVal, toMinStr } from 'bigval'
 import { artifacts } from 'hardhat'
 
-import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect } from './utils'
+import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect, signCardApproval } from './utils'
 import { deployCardMarket, deployDummyTokens, deployDummyDex } from '../deploy/modules'
 import { getSigners, getContractAt, Context } from '../deploy/utils'
 import { events } from '../src'
@@ -30,6 +30,7 @@ const expectCardDataToMatch = (ret, exp) => {
 
 describe('Card market', () => {
   const evmSnapshot = new EvmSnapshot()
+  let signers
   let accounts
   let cardMarketDeployment
   let cardMarket
@@ -39,7 +40,8 @@ describe('Card market', () => {
   let randomToken
 
   before(async () => {
-    accounts = (await getSigners()).map(a => a.address)
+    signers = await getSigners()
+    accounts = signers.map(a => a.address)
     tokens = await deployDummyTokens()
     token1 = tokens[0]
     dex = await deployDummyDex({}, { tokens })
@@ -106,11 +108,13 @@ describe('Card market', () => {
 
   describe('new card can be added', () => {
     it('enabled by default', async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
       await cardMarket.addCard({
         owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }).should.be.fulfilled
+      }, approvalSig).should.be.fulfilled
 
       await cardMarket.totalSupply().should.eventually.eq(1)
 
@@ -128,11 +132,13 @@ describe('Card market', () => {
     })
 
     it('and owner can be set', async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
       await cardMarket.addCard({
         owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }).should.be.fulfilled
+      }, approvalSig).should.be.fulfilled
 
       expectCardDataToMatch(await cardMarket.card(1), {
         params: {
@@ -142,42 +148,50 @@ describe('Card market', () => {
       })
     })
 
-    it('not if by non-admin', async () => {
-      await cardMarket.addCard({
-        owner: accounts[0],
-        contentHash: 'test',
-        fee: { tokenContract: randomToken.address, value: 2 }
-      }, { from: accounts[1] }).should.be.rejectedWith('must be admin')
-    })
+    it('not if admin approval is wrong', async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[1], 'test')
 
-    it('not if using disallowed fee token', async () => {
-      await cardMarket.addCard({
-        owner: accounts[0],
-        contentHash: 'test',
-        fee: { tokenContract: randomToken.address, value: 2 }
-      }).should.be.rejectedWith('unsupported fee token')
-    })
-
-    it('but not if already added', async () => {
       await cardMarket.addCard({
         owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }).should.be.fulfilled
+      }, approvalSig, { from: accounts[1] }).should.be.rejectedWith('must be approved by admin')
+    })
+
+    it('not if using disallowed fee token', async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
+      await cardMarket.addCard({
+        owner: accounts[0],
+        contentHash: 'test',
+        fee: { tokenContract: randomToken.address, value: 2 }
+      }, approvalSig).should.be.rejectedWith('unsupported fee token')
+    })
+
+    it('but not if already added', async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
+      await cardMarket.addCard({
+        owner: accounts[0],
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      }, approvalSig).should.be.fulfilled
 
       await cardMarket.addCard({
         owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 3 }
-      }).should.be.rejectedWith('CardMarket: already added')
+      }, approvalSig).should.be.rejectedWith('CardMarket: already added')
     })
 
     it('and event gets emitted', async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
       const tx = await cardMarket.addCard({
         owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }).should.be.fulfilled
+      }, approvalSig).should.be.fulfilled
 
       const eventArgs = extractEventArgs(tx, events.AddCard)
       expect(eventArgs).to.include({ tokenId: (await cardMarket.lastId()).toString() })
@@ -186,11 +200,13 @@ describe('Card market', () => {
 
   describe('card can be enabled and disabled', () => {
     beforeEach(async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
       await cardMarket.addCard({
         owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      })      
+      }, approvalSig)      
     })
 
     it('but not by non-owner', async () => {
@@ -212,17 +228,21 @@ describe('Card market', () => {
 
   describe('card can be used', () => {
     beforeEach(async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
       await cardMarket.addCard({
         owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: toMinStr('4 coins') }
-      })
+      }, approvalSig)
+
+      const approvalSig2 = await signCardApproval(cardMarket, signers[0], 'test2')
 
       await cardMarket.addCard({
         owner: accounts[2],
         contentHash: 'test2',
         fee: { tokenContract: token1.address, value: toMinStr('10 coins') }
-      })
+      }, approvalSig2)
     })
 
     it('unless disabled', async () => {
@@ -326,11 +346,13 @@ describe('Card market', () => {
 
   describe('token URI', () => {
     beforeEach(async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
       await cardMarket.addCard({
         owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      })
+      }, approvalSig)
     })
 
     it('must be a valid id', async () => {

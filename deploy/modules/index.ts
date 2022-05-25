@@ -1,4 +1,5 @@
 export * from './dummy'
+export * from './avax'
 export * from './ipfs'
 export * from './multicall'
 export * from './cardMarket'

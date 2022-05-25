@@ -13,6 +13,7 @@ import {
   deployDummyTokens, 
   deployDummyDex,
   deployIpfsAssets,
+  deployAvaxDex,
 } from './modules'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
@@ -89,12 +90,30 @@ async function main() {
 
   // fee tokens
   let tokens: any[] = []
-  if (deployConfig.deployDummyContracts) {
+  if (deployConfig.deployDummyTokens) {
     tokens = await deployDummyTokens(ctx)
   }
 
+  switch (network.name) {
+    case 'avax':
+      tokens = tokens.concat([
+        { address: '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e' }, // USDC
+        { address: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664' }, // USDC.e
+      ])
+      break
+    default:
+      // do nothing
+  }
+
   // dex 
-  const dex = await deployDummyDex(ctx, { tokens })
+  let dex
+  switch (network.name) {
+    case 'avax':
+      dex = await deployAvaxDex(ctx)
+      break
+      default:
+      dex = await deployDummyDex(ctx, { tokens })
+  }
 
   // card market
   const cardMarket = await deployCardMarket(ctx, { dex, tokens })

@@ -9,6 +9,7 @@ import chaiAsPromised from 'chai-as-promised'
 export { expect } from 'chai'
 
 import { ADDRESS_ZERO, TEST_MNEMONIC } from '../../src/constants'
+import { Contract, Signer } from 'ethers'
 
 export { TEST_MNEMONIC, ADDRESS_ZERO }
 
@@ -124,6 +125,11 @@ export const extractEventArgs = (result, eventAbi) => {
   }
 
   return args
+}
+
+export const signCardApproval = async (cardMarketContract: Contract, signer: Signer, cid: string) => {
+  const hash = await cardMarketContract.calculateSignatureHash(cid)
+  return await signer.signMessage(ethers.utils.arrayify(hash))
 }
 
 

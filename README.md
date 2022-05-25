@@ -100,11 +100,18 @@ export PINATA_API_KEY="..."
 export PINATA_SECRET="..."
 ```
 
-To deploy Rinkeby contracts:
+**Rinkeby**
 
 ```shell
 yarn setup-deploy-config:rinkeby
 yarn deploy:rinkeby
+```
+
+**Avalanche (mainnet)**
+
+```shell
+yarn setup-deploy-config:avax
+yarn deploy:avax
 ```
 
 **Publishing**

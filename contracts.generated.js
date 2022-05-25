@@ -1,4 +1,6 @@
 module.exports = {
+"AvalancheDex": require("./artifacts/contracts/AvalancheDex.sol/AvalancheDex.json"),
+"IJoeRouter": require("./artifacts/contracts/AvalancheDex.sol/IJoeRouter.json"),
 "CardMarket": require("./artifacts/contracts/CardMarket.sol/CardMarket.json"),
 "CardMarketV1": require("./artifacts/contracts/CardMarketV1.sol/CardMarketV1.json"),
 "DummyDex": require("./artifacts/contracts/DummyDex.sol/DummyDex.json"),
