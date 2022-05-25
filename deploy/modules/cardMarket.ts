@@ -1,3 +1,4 @@
+import { ethers } from 'hardhat'
 import { strict as assert } from 'node:assert'
 import { Contract } from '@ethersproject/contracts'
 import _ from 'lodash'
@@ -86,15 +87,24 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
       const cardId = (await cardMarket.cardIdByCid(ctx.cids.card1MetadataCid)).toNumber()
       if (0 >= cardId) {
         await parentTask.task(`Add card1 to card market`, async task => {
+          const sig = await task.task('Get admin approval signature', async t => {
+            const hash = await cardMarket.calculateSignatureHash(ctx.cids.card1MetadataCid)
+            await t.log(`Hash to sign: ${hash}`)
+            const sig = await defaultSigner.signMessage(ethers.utils.arrayify(hash))
+            await t.log(`Signature: ${sig}`)
+            return sig
+          })
+
           await execMethod({ ctx, task }, cardMarket, 'addCard', [
             {
               owner: defaultSigner.address,
-              contentHash: `${ctx.cids.card1MetadataCid}`,
+              contentHash: ctx.cids.card1MetadataCid,
               fee: {
                 tokenContract: tokens[0].address,
                 value: toMinStr('10 coins'),
               }
-            }
+            },
+            sig
           ])
 
           const newCardId = (await cardMarket.lastId()).toNumber()

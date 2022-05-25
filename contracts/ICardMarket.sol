@@ -39,9 +39,12 @@ abstract contract ICardMarket is INftBase {
   /**
    * @dev Add a new card.
    *
+   * The admin approval signature must be the `contentHash` signed by the admin's private key.
+   *
    * @param _params Parameters.
+   * @param _adminApproval Admin approval signature.
    */
-  function addCard(CardParams calldata _params) external virtual;
+  function addCard(CardParams calldata _params, bytes calldata _adminApproval) external virtual;
 
   /**
    * @dev Set a card as enabled or disabled.
@@ -50,6 +53,13 @@ abstract contract ICardMarket is INftBase {
    * @param _enabled true to enable, false to disable.
    */
   function setCardEnabled(uint _id, bool _enabled) external virtual;
+
+  /**
+   * Calcualte hash for admins to digitally sign.
+   * 
+   * @param contentHash CID hash.
+   */
+  function calculateSignatureHash(string calldata contentHash) external pure virtual returns (bytes32);
 
   /**
    * Get dex.

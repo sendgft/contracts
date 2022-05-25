@@ -19,14 +19,18 @@ async function main() {
   let api
   let gateway
 
-  if (argv.network === 'localhost') {
-    api = 'http://127.0.0.1:5001/api/v0'
-    gateway = 'http://127.0.0.1:5002/ipfs/'
-  } else if (argv.network === 'rinkeby') {
-    api = `pinata://${PINATA_API_KEY}:${PINATA_SECRET}`,
-    gateway = 'https://ipfs.gft.xyz/ipfs/'
-  } else {
-    throw new Error('Unsupported network')
+  switch (argv.network) {
+    case 'localhost':
+      api = 'http://127.0.0.1:5001/api/v0'
+      gateway = 'http://127.0.0.1:5002/ipfs/'
+      break
+    case 'rinkeby':
+    case 'avax':
+      api = `pinata://${PINATA_API_KEY}:${PINATA_SECRET}`,
+      gateway = 'https://ipfs.gft.xyz/ipfs/'
+      break
+    default:
+      throw new Error(`Unsupported network: ${argv.network}`)
   }
 
   const releaseInfo = {

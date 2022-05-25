@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./IERC20.sol";
 import "./IProxyImplBase.sol";
@@ -11,6 +12,7 @@ import "./IERC20.sol";
 
 contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
   using SafeMath for uint;
+  using ECDSA for bytes32;
 
   mapping(uint => Card) public override card;
   mapping(string => uint) public override cardIdByCid;
@@ -80,8 +82,16 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     }
   }
 
-  function addCard(CardParams calldata _params) external override isAdmin {
+  function calculateSignatureHash(string calldata contentHash) public pure override returns (bytes32) {
+    return keccak256(abi.encode(contentHash));
+  }
+
+  function addCard(CardParams calldata _params, bytes calldata _adminApproval) external override {
     require(feeTokenAllowed[_params.fee.tokenContract], "CardMarket: unsupported fee token");
+
+    // check approval
+    address approver = calculateSignatureHash(_params.contentHash).toEthSignedMessageHash().recover(_adminApproval);
+    require(_getAdmin() == approver, "CardMarket: must be approved by admin");
 
     // new id
     lastId += 1;

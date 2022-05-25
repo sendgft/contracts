@@ -2,7 +2,7 @@
 import { BigVal, toMinStr } from 'bigval'
 import { artifacts } from 'hardhat'
 
-import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO } from './utils'
+import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO, signCardApproval } from './utils'
 import { deployGifter, deployCardMarket, deployDummyDex, deployDummyTokens } from '../deploy/modules'
 import { getSigners, getContractAt, Context } from '../deploy/utils'
 import { events } from '../src'
@@ -44,6 +44,7 @@ const expectGiftDataToMatch = (ret, exp) => {
 
 describe('Gifter', () => {
   const evmSnapshot = new EvmSnapshot()
+  let signers
   let accounts
   let dex
   let cardMarketDeployment
@@ -58,7 +59,8 @@ describe('Gifter', () => {
   let receiver2
 
   before(async () => {
-    accounts = (await getSigners()).map(a => a.address)
+    signers = await getSigners()
+    accounts = signers.map(a => a.address)
     const tokens = await deployDummyTokens()
     token1 = tokens[0]
     token2 = tokens[1]
@@ -76,6 +78,7 @@ describe('Gifter', () => {
     await dex.setPrice(ADDRESS_ZERO, token2.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
 
     // add card designs
+    const approvalSig = await signCardApproval(cardMarket, signers[0], 'test1')
     await cardMarket.addCard({ 
       owner: accounts[0],
       contentHash: "test1", 
@@ -83,8 +86,9 @@ describe('Gifter', () => {
         tokenContract: token1.address, 
         value: '0',
       }
-    })
+    }, approvalSig)
 
+    const approvalSig2 = await signCardApproval(cardMarket, signers[0], 'test2')
     await cardMarket.addCard({
       owner: accounts[0],
       contentHash: "test2",
@@ -92,7 +96,7 @@ describe('Gifter', () => {
         tokenContract: token2.address,
         value: toMinStr('10 coins'),
       }
-    })
+    }, approvalSig2)
   })
 
   beforeEach(async () => {
