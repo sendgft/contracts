@@ -1,3 +1,5 @@
+## [1.22.2](https://github.com/sendgft/contracts/compare/v1.22.1...v1.22.2) (2022-05-25)
+
 ## [1.22.1](https://github.com/sendgft/contracts/compare/v1.22.0...v1.22.1) (2022-05-24)
 
 # [1.22.0](https://github.com/sendgft/contracts/compare/v1.21.1...v1.22.0) (2022-05-24)
