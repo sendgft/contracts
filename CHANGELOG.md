@@ -1,3 +1,10 @@
+## [1.22.3](https://github.com/sendgft/contracts/compare/v1.22.2...v1.22.3) (2022-05-25)
+
+
+### Bug Fixes
+
+* Dex contract key name for avax ([3ee41bd](https://github.com/sendgft/contracts/commit/3ee41bd21966f2d08f51b79cfc0a1cc242232dc1))
+
 ## [1.22.2](https://github.com/sendgft/contracts/compare/v1.22.1...v1.22.2) (2022-05-25)
 
 ## [1.22.1](https://github.com/sendgft/contracts/compare/v1.22.0...v1.22.1) (2022-05-24)
