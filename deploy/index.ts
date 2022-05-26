@@ -128,7 +128,7 @@ async function main() {
     })
   }
   
-  // for rinkeby let's verify contract on etherscan
+  // let's verify contract on etherscan
   if (network.name === 'rinkeby') {
     await log.task('Verify contracts on Etherscan', async task => {
       const secondsToWait = 60
