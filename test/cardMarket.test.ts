@@ -226,6 +226,39 @@ describe('Card market', () => {
     })
   })
 
+  describe('card fee can be changed', () => {
+    beforeEach(async () => {
+      const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
+
+      await cardMarket.addCard({
+        owner: accounts[1],
+        contentHash: 'test',
+        fee: { tokenContract: token1.address, value: 2 }
+      }, approvalSig)
+    })
+
+    it('but not by non-admin', async () => {
+      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }, { from: accounts[1] }).should.be.rejectedWith('must be admin')
+    })
+
+    it('but not if invalid', async () => {
+      await cardMarket.setCardFee(2, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('CardMarket: nonexistent token')
+    })
+
+    it('if valid card', async () => {
+      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }).should.be.fulfilled
+
+      expectCardDataToMatch(await cardMarket.card(1), {
+        params: {
+          fee: {
+            tokenContract: token1.address,
+            value: '3'
+          }
+        },
+      })
+    })
+  })
+
   describe('card can be used', () => {
     beforeEach(async () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')

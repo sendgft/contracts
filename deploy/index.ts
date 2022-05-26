@@ -18,6 +18,7 @@ import {
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
 
+const ERC20_ABI = require('../abi/ERC20.json')
 const deployConfig = require('../deployConfig.json')
 
 const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
@@ -97,8 +98,7 @@ async function main() {
   switch (network.name) {
     case 'avax':
       tokens = tokens.concat([
-        { address: '0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e' }, // USDC
-        { address: '0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664' }, // USDC.e
+        new ethers.Contract('0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', ERC20_ABI, defaultSigner) // USDC.e
       ])
       break
     default:

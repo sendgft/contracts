@@ -3,7 +3,7 @@
 const ethers = require('ethers')
 const { BigVal, toMinStr } = require('bigval')
 
-const ERC20_ABI = require('./ERC20.json')
+const ERC20_ABI = require('../abi/ERC20.json')
 const { contracts } = require('../')
 
 const mnemonic = process.env.MNEMONIC

@@ -47,6 +47,13 @@ abstract contract ICardMarket is INftBase {
   function addCard(CardParams calldata _params, bytes calldata _adminApproval) external virtual;
 
   /**
+   * @dev Set card fee.
+   *
+   * @param _fee Card fee.
+   */
+  function setCardFee(uint _id, GiftLib.Asset calldata _fee) external virtual;
+
+  /**
    * @dev Set a card as enabled or disabled.
    *
    * @param _id The card id.

@@ -82,6 +82,8 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
       })
     }
 
+    const decimals = await tokens[0].decimals()
+        
     // add card if it hasn't already been added
     if (_.get(ctx, 'cids.card1MetadataCid')) {
       const cardId = (await cardMarket.cardIdByCid(ctx.cids.card1MetadataCid)).toNumber()
@@ -101,7 +103,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
               contentHash: ctx.cids.card1MetadataCid,
               fee: {
                 tokenContract: tokens[0].address,
-                value: toMinStr('10 coins'),
+                value: toMinStr('10 coins', { decimals }),
               }
             },
             sig
@@ -130,8 +132,15 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
           }
         })
       } else {
-        await parentTask.task(`Ensure card ${cardId} is enabled`, async t => {
+        await parentTask.task(`Ensure card ${cardId} is enabled and the price is set`, async t => {
           await execMethod({ ctx, task: t }, cardMarket, 'setCardEnabled', [cardId, true])
+          await execMethod({ ctx, task: t }, cardMarket, 'setCardFee', [
+            cardId,
+            {
+              tokenContract: tokens[0].address,
+              value: toMinStr('10 coins', { decimals }),
+            }
+          ])
         })
       }
     }
