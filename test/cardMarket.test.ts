@@ -237,16 +237,16 @@ describe('Card market', () => {
       }, approvalSig)
     })
 
-    it('but not by non-admin', async () => {
-      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }, { from: accounts[1] }).should.be.rejectedWith('must be admin')
+    it('but not by non-owner', async () => {
+      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('must be owner')
     })
 
     it('but not if invalid', async () => {
-      await cardMarket.setCardFee(2, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('CardMarket: nonexistent token')
+      await cardMarket.setCardFee(2, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('nonexistent token')
     })
 
     it('if valid card', async () => {
-      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }).should.be.fulfilled
+      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }, { from: accounts[1] }).should.be.fulfilled
 
       expectCardDataToMatch(await cardMarket.card(1), {
         params: {

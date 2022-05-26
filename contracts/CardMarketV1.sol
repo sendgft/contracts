@@ -58,8 +58,7 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     card[_id].enabled = _enabled;
   }
 
-  function setCardFee(uint _id, GiftLib.Asset calldata _fee) external override isAdmin {
-    require(_exists(_id), "CardMarket: nonexistent token");
+  function setCardFee(uint _id, GiftLib.Asset calldata _fee) external override isOwner(_id) {
     card[_id].params.fee = _fee;
   }
 
