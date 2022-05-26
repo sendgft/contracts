@@ -7,25 +7,18 @@ import "./IDex.sol";
 import "./IERC20.sol";
 
 contract DummyDex is IDex {
-  // price = token1/token2: token1 => token2 => price
-  mapping(address => mapping(address => uint)) public prices;
+  // price = native token/token
+  mapping(address => uint) public prices;
 
   // IDex
 
-  function calcInAmount(address _outToken, uint _outAmount, address _inToken) public view returns (uint) {
-    return prices[_outToken][_inToken] * _outAmount / 10**18;
+  function calcInAmount(address _outToken, uint _outAmount) public view returns (uint) {
+    return _outAmount * 10**18 / prices[_outToken];
   }
 
-  function trade(address _outToken, uint _outAmount, address _inToken, address _inWallet, address _outWallet) external payable {
-    uint requiredInputAmount = calcInAmount(_outToken, _outAmount, _inToken);
-
-    if (_inToken != address(0)) {
-      IERC20 input = IERC20(_inToken);
-      require(input.transferFrom(_inWallet, address(this), requiredInputAmount), "DummyDex: input transfer failed");
-    } else {
-      require(msg.value >= requiredInputAmount, "DummyDex: input insufficient");
-    }
-
+  function trade(address _outToken, uint _outAmount, address _outWallet) external payable {
+    uint requiredInputAmount = calcInAmount(_outToken, _outAmount);
+    require(msg.value >= requiredInputAmount, "DummyDex: input insufficient");
     IERC20 output = IERC20(_outToken);
     require(output.transfer(_outWallet, _outAmount), "DummyDex: output transfer failed");
   }
@@ -33,18 +26,13 @@ contract DummyDex is IDex {
   // DummyDex
 
   /**
-   * @dev Set the price of the input token amount to output token amount.
+   * @dev Set the price of the token amount in the native token.
    *
-   * @param _token1 Token 1.
-   * @param _token2 Token 2.
-   * @param _token1By2Price Token 1 / Token 2.
-   * @param _token2By1Price Token 2 / Token 1.
+   * @param _token Token.
+   * @param _price No. of token per native token.
    */
-  function setPrice(address _token1, address _token2, uint _token1By2Price, uint _token2By1Price) external {
-    uint const = 10**18;
-    require((_token1By2Price * _token2By1Price) / const == const, "DummyDex: prices must correlate");
-    prices[_token1][_token2] = _token1By2Price;
-    prices[_token2][_token1] = _token2By1Price;
+  function setPrice(address _token, uint _price) external {
+    prices[_token] = _price;
   }
 }
 

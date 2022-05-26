@@ -3,22 +3,19 @@ pragma solidity ^0.8.0;
 
 interface IDex {
   /**
-   * @dev Calculate the minimum input token amount required to trade to the given output token amount.
+   * @dev Calculate the minimum native token amount required to trade to the given output token amount.
    *
    * @param _outToken The output token.
    * @param _outAmount The minimum required output amount.
-   * @param _inToken The input token.
    */
-  function calcInAmount(address _outToken, uint _outAmount, address _inToken) external view returns (uint);
+  function calcInAmount(address _outToken, uint _outAmount) external view returns (uint);
 
   /**
-   * @dev Trade the input token amount to output token amount.
+   * @dev Trade the received native token amount to the output token amount.
    *
    * @param _outToken The output token.
    * @param _outAmount The minimum required output amount.
-   * @param _inToken The input token.
-   * @param _inWallet The wallet to take input tokens from.
    * @param _outWallet The wallet to send output tokens to.
    */
-  function trade(address _outToken, uint _outAmount, address _inToken, address _inWallet, address _outWallet) external payable;
+  function trade(address _outToken, uint _outAmount, address _outWallet) external payable;
 }

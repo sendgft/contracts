@@ -75,7 +75,7 @@ describe('Gifter', () => {
     receiver2 = accounts[6]
 
     // set price for testing: 1 ETH = 2 TOKENS
-    await dex.setPrice(ADDRESS_ZERO, token2.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
+    await dex.setPrice(token2.address, toMinStr('2 coins'))
 
     // add card designs
     const approvalSig = await signCardApproval(cardMarket, signers[0], 'test1')

@@ -122,8 +122,6 @@ contract CardMarketV1 is Initializable, ICardMarket, IProxyImplBase {
     dex.trade{value: msg.value}(
       fee.tokenContract, 
       fee.value, 
-      address(0), 
-      address(this), 
       address(this)
     );
 

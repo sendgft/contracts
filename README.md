@@ -84,6 +84,18 @@ To run a single test:
 yarn test ./test/testName.js
 ```
 
+**Testing DEX integrations**
+
+To test the `AvaxDex.sol` integration with [TraderJoe](https://traderjoe.xyz):
+
+```
+yarn compile
+export MNEMONIC="..." 
+./scripts/testAvaxDex.js
+```
+
+_NOTE: `MNEMONIC` should be set to your account's mnemonic. Ensure it has enough AVAX to deploy and interact with the DEX contract_.
+
 ### Deployments
 
 We use the same wallet on every network to deploy from. Deployment always happens at the same wallet nonce so that our contract addresses are the same on every network.

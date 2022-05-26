@@ -87,7 +87,7 @@ export const deployDummyDex = async (ctx: Context = {} as Context, params?: Depl
         })
 
         await parentTask.task(`Set price: Native <-> ${tokenName} = 2000`, async task => {
-          await execMethod({ ctx, task }, dex, 'setPrice', [ADDRESS_ZERO, token.address, toMinStr('2000 coins'), toMinStr('0.0005 coins')])
+          await execMethod({ ctx, task }, dex, 'setPrice', [token.address, toMinStr('2000 coins')])
         })
       }
     })

@@ -50,7 +50,7 @@ describe('Card market', () => {
     randomToken = await DummyToken.new('test', 'test', 18, 0)
 
     // set price for testing
-    await dex.setPrice(ADDRESS_ZERO, token1.address, toMinStr('2 coins'), toMinStr('0.5 coins'))
+    await dex.setPrice(token1.address, toMinStr('2 coins'))
   })
 
   beforeEach(async () => {
