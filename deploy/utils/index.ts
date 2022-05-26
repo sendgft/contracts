@@ -115,10 +115,15 @@ export const buildGetTxParamsHandler = async (network: any, signer: SignerWithAd
     - do manual nonce tracking to avoid infura issues (https://ethereum.stackexchange.com/questions/44349/truffle-infura-on-mainnet-nonce-too-low-error)
     */
     let gwei: number
-    if ('mainnet' === network.name) {
-      gwei = await getLiveGasPrice(log)
-    } else {
-      gwei = 3
+    switch (network.name) {
+      case 'ethereum':
+        gwei = await getLiveGasPrice(log)
+        break
+      case 'avax':
+        gwei = 25
+        break
+      default:
+        gwei = 3
     }
 
     const address = await signer.getAddress()

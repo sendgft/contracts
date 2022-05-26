@@ -35,6 +35,14 @@ const config: HardhatUserConfig = {
         auto: true,
       },
     },
+    rinkeby: {
+      chainId: 4,
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+      timeout: 120000,
+    },
     avax: {
       chainId: 43114,
       url: `https://api.avax.network/ext/bc/C/rpc`,
@@ -43,14 +51,6 @@ const config: HardhatUserConfig = {
       },
       timeout: 120000,
     },
-    rinkeby: {
-      chainId: 4,
-      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_ID}`,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-      },
-      timeout: 120000,
-    }
   },
 
   etherscan: {
