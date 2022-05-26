@@ -1,3 +1,11 @@
+# [1.24.0](https://github.com/sendgft/contracts/compare/v1.23.0...v1.24.0) (2022-05-26)
+
+
+### Features
+
+* allow card fee to be changed by admin ([aa6cc89](https://github.com/sendgft/contracts/commit/aa6cc894fda11bb2e7f434c613a49f68d873cb81))
+* allow owner to change card price ([b664184](https://github.com/sendgft/contracts/commit/b664184ab92744cdc17c1e8e7586ab49c58a1d44))
+
 # [1.23.0](https://github.com/sendgft/contracts/compare/v1.22.3...v1.23.0) (2022-05-26)
 
 ## [1.22.3](https://github.com/sendgft/contracts/compare/v1.22.2...v1.22.3) (2022-05-25)
