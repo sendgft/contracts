@@ -1,4 +1,5 @@
 {
-  "name": "Cell's cat [gft.xyz]",
-  "description": "The kitty is excited to read the letter too!"
+  "name": "Cell's cat",
+  "description": "The kitty is excited to read the letter too!",
+  "dapp": "gft.xyz"
 }
