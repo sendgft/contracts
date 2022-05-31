@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/sendgft/contracts/compare/v1.24.0...v1.25.0) (2022-05-31)
+
+
+### Features
+
+* new card ([e18805b](https://github.com/sendgft/contracts/commit/e18805b75f8c7babc8980ba412e1451441263085))
+
 # [1.24.0](https://github.com/sendgft/contracts/compare/v1.23.0...v1.24.0) (2022-05-26)
 
 
