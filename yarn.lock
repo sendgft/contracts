@@ -2077,10 +2077,10 @@
     lodash "^4.17.4"
     read-pkg-up "^7.0.0"
 
-"@sendgft/ipfs-tools@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@sendgft/ipfs-tools/-/ipfs-tools-1.2.0.tgz#012c3963ac55b86daf8bd0bf24dadce6495d0890"
-  integrity sha512-6gP9l3E1P20ZKOuESpqbKRi0gbtzh5QAKycgtq0GLsxSbOMM5gRii5QxU8ReMeMiPhIrmIgfSkHrwsTh2QsEXw==
+"@sendgft/ipfs-tools@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@sendgft/ipfs-tools/-/ipfs-tools-1.3.0.tgz#5c58c54e25d4a7c141f7268fa68b5d258b3adaf9"
+  integrity sha512-WA9Gv+5onXLobfOZgKQc2k2cmp2E/BBC4qp42QafL4vPbQepl5hrNJ5KLjDsWOF0Vw2AotdBsgL7l8tiNSdwNw==
   dependencies:
     "@pinata/sdk" "^1.1.23"
     chalk "4"
