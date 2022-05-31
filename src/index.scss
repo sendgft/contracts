@@ -1,0 +1,134 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+}
+
+$bgColor: #B8B2EA;
+$contentTextColor: rgba(106, 66, 234, 1);
+$contentMetaTextColor: lighten($contentTextColor, 20%);
+$contentSpecialTextColor: darken($contentTextColor, 10%);
+
+@mixin coverPos {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#content {
+  height: 100vh;
+  width: 100vw;
+  background-color: $bgColor;
+  background-image: url("./images/bg.svg");
+  background-repeat: repeat;
+
+  & > div {
+    width: 80%;
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+}
+
+#canvas {
+  @include coverPos();
+}
+
+#logo {
+  height: 250px;
+  width: 250px;  
+  position: relative;
+
+  div {
+    @include coverPos();
+    background-repeat: none;
+    background-size: contain;
+
+    &.left {
+      background-image: url("./images/cat-left.svg");  
+      opacity: 0;
+    }
+
+    &.mid {
+      background-image: url("./images/cat.svg");  
+      opacity: 1;
+    }
+
+    &.right {
+      background-image: url("./images/cat-right.svg");
+      opacity: 0;    
+    }  
+  }
+}
+
+@mixin metaText {
+  color: #666;
+}
+
+@mixin highlightText {
+  font-weight: bolder;
+  color: $contentSpecialTextColor;
+}
+
+#details {
+  font-family: "Lucida Console", monospace;
+  background-color: white;
+  width: 100%;
+  padding: 1em 1em 0.5em;
+  color: $contentTextColor;
+  box-shadow: 6px 6px 0px 0px ;
+
+  p {
+    margin: 0 0 1em;
+  }
+
+  .msg {
+    font-size: 120%;
+  }
+
+  .meta {
+    font-size: 90%;
+    @include metaText();
+  }
+
+  .from, .to {
+    label {
+      display: block;
+      font-style: italic;
+    }
+    em {
+      word-break: break-all;
+    }
+  }
+
+  .assets {
+    margin-bottom: 1em;
+    border-bottom: 1px dashed #999;
+    padding-bottom: 1em;
+
+    label {
+      @include highlightText();
+      margin-right: 0.5em;
+    }
+  }
+
+  ul, li {
+    display: block;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
