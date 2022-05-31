@@ -1,0 +1,62 @@
+{
+  "name": "@sendgft/cells-cat",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Cell's GFT card.",
+  "author": "Ramesh Nair <ram@hiddentao.com>",
+  "homepage": "https://github.com/sendgft/card-template",
+  "license": "MIT",
+  "scripts": {
+    "prepare": "husky install",
+    "clean": "rm -rf public/card/*",
+    "build": "yarn clean && webpack",
+    "build-watch": "yarn clean && webpack --watch",
+    "serve": "reload --dir ./public --port 58080 --browser"
+  },
+  "keywords": [
+    "sendgft",
+    "gft"
+  ],
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^16.2.4",
+    "@commitlint/config-conventional": "^16.2.4",
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@sendgft/shared.js": "^1.3.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.7.1",
+    "html-webpack-plugin": "^5.5.0",
+    "html2canvas": "^1.4.1",
+    "husky": "^8.0.1",
+    "image-webpack-loader": "^8.1.0",
+    "mini-css-extract-plugin": "^2.6.0",
+    "postcss": "^8.4.14",
+    "postcss-loader": "^7.0.0",
+    "postcss-preset-env": "^7.6.0",
+    "reload": "^3.2.0",
+    "sass": "^1.52.1",
+    "sass-loader": "^13.0.0",
+    "svg-inline-loader": "^0.8.2",
+    "svg-url-loader": "^7.1.1",
+    "ts-loader": "^9.3.0",
+    "typescript": "^4.7.2",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-fix-style-only-entries": "^0.6.1",
+    "yargs": "^17.5.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
