@@ -19,14 +19,12 @@ export const deployDummyTokens = async (ctx: Context = {} as Context) => {
       if (!deployedAddressesToSave[symbol]) {
 
         await parentTask.task(`Deploy token contract`, async task => {
-          tokens.push(await deployContract(ctx, 'DummyToken', [
+          token = await deployContract(ctx, 'DummyToken', [
             `GFT Dummy Token ${i + 1}`,
             symbol,
             18,
             0,
-          ]))
-
-          token = tokens[tokens.length - 1]
+          ])
 
           await task.log(`Deployed at ${token.address}`)
 
@@ -50,6 +48,8 @@ export const deployDummyTokens = async (ctx: Context = {} as Context) => {
 
         await task.log(`Balances set.`)
       })
+
+      tokens.push(token)
     })
   }
 
