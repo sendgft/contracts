@@ -67,33 +67,29 @@ export const deployDummyDex = async (ctx: Context = {} as Context, params?: Depl
 
   let dex: Contract = {} as Contract
 
-  if (!deployedAddressesToSave.Dex) {
-    await log.task(`Deploy Dummy DEX`, async parentTask => {
-      dex = await deployContract(ctx, 'DummyDex', [])
+  await log.task(`Deploy Dummy DEX`, async parentTask => {
+    dex = await deployContract(ctx, 'DummyDex', [])
 
-      await parentTask.log(`Deployed at ${dex.address}`)
+    await parentTask.log(`Deployed at ${dex.address}`)
 
-      if (expectedDeployedAddresses) {
-        assertSameAddress(dex.address, expectedDeployedAddresses.Dex, 'Dex')
-      }
+    if (expectedDeployedAddresses) {
+      assertSameAddress(dex.address, expectedDeployedAddresses.Dex, 'Dex')
+    }
 
-      deployedAddressesToSave.Dex = dex.address
+    deployedAddressesToSave.Dex = dex.address
 
-      for (let token of tokens) {
-        const tokenName = await token.symbol()
+    for (let token of tokens) {
+      const tokenName = await token.symbol()
 
-        await parentTask.task(`Give it balance of 1,000,000,000 ${tokenName} `, async task => {
-          await execMethod({ ctx, task }, token, 'mint', [dex.address, toMinStr('1000000000 coins')])
-        })
+      await parentTask.task(`Give it balance of 1,000,000,000 ${tokenName} `, async task => {
+        await execMethod({ ctx, task }, token, 'mint', [dex.address, toMinStr('1000000000 coins')])
+      })
 
-        await parentTask.task(`Set price: Native <-> ${tokenName} = 2000`, async task => {
-          await execMethod({ ctx, task }, dex, 'setPrice', [token.address, toMinStr('2000 coins')])
-        })
-      }
-    })
-  } else {
-    dex = await getContractAt('IDex', deployedAddressesToSave.Dex)
-  }
+      await parentTask.task(`Set price: Native <-> ${tokenName} = 2000`, async task => {
+        await execMethod({ ctx, task }, dex, 'setPrice', [token.address, toMinStr('2000 coins')])
+      })
+    }
+  })
 
   return dex
 }
