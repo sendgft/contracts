@@ -103,7 +103,7 @@ export const deployCardMarket = async (ctx: Context = {} as Context, { dex, toke
               contentHash: ctx.cids.card1MetadataCid,
               fee: {
                 tokenContract: tokens[0].address,
-                value: toMinStr('10 coins', { decimals }),
+                value: toMinStr('5 coins', { decimals }),
               }
             },
             sig
