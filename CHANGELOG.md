@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/sendgft/contracts/compare/v1.27.0...v1.28.0) (2022-06-13)
+
+
+### Features
+
+* add IMaster interface ([8156e1f](https://github.com/sendgft/contracts/commit/8156e1fac0ab18449c07490e1aba23b8c52613b2))
+
 # [1.27.0](https://github.com/sendgft/contracts/compare/v1.26.0...v1.27.0) (2022-06-13)
 
 
