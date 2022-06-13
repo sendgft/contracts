@@ -19,6 +19,7 @@ module.exports = {
 "ICardMarket": require("./artifacts/contracts/ICardMarket.sol/ICardMarket.json"),
 "IDex": require("./artifacts/contracts/IDex.sol/IDex.json"),
 "IGifter": require("./artifacts/contracts/IGifter.sol/IGifter.json"),
+"IMaster": require("./artifacts/contracts/IMaster.sol/IMaster.json"),
 "ITokenQuery": require("./artifacts/contracts/ITokenQuery.sol/ITokenQuery.json"),
 "ITestFacet": require("./artifacts/contracts/test/ITestFacet.sol/ITestFacet.json"),
 "TestFacet1": require("./artifacts/contracts/test/TestFacet1.sol/TestFacet1.json"),

@@ -92,37 +92,3 @@ struct AppStorage {
   mapping(address => mapping(address => uint)) cardOwnerEarningsPerToken;
 }
 
-/*
-Unopened GFT:
-
-{
-  "name": "GFT",
-  "decimals": 0,
-  "description": "An unopened GFT card",
-  "image": URL of GFT unopened image
-}
-
-Opened GFT:
-
-{
-  "name": "GFT #<num>",
-  "decimals": 0,
-  "description": "An opened GFT card",
-  "image": URL of card design thumbnail,
-  "properties": {
-    "cardUrl": URL of card HTML
-  }
-}
-
-Card design:
-
-{
-  "name": "<card design name>",
-  "decimals": 0,
-  "description": "<card design descripton> [gft.xyz]",
-  "image": URL of card design thumbnail,
-  "properties": {
-    "templateUrl": URL of card design template HTMl
-  }
-}
-*/

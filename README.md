@@ -1,5 +1,10 @@
 [gft.xyz](https://gft.xyz) Smart contracts.
 
+These contracts use the [Diamond Standard](https://github.com/mudgen/diamond-1-hardhat) to allow for infinite 
+size and upgradeability. 
+
+**Note:** `IMaster.sol` specifies a convenience interface combines all the different diamond facet interfaces into one - we recommend using this.
+
 ## How to use
 
 Install the package:
@@ -22,7 +27,7 @@ const { contracts, addresses } = require('@sendgft/contracts')
 
 const contract = new ethers.Contract(
   addresses.Gifter.chains[4].address, // rinkeby
-  contracts.GifterV1.abi
+  contracts.IMaster.abi
 )
 ```
 

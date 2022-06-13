@@ -12,6 +12,10 @@ const CARD_1_ASSETS_FOLDER = path.join(CARD_1_FOLDER, 'public', 'card')
 const CARD_1_THUMBNAIL = path.join(CARD_1_FOLDER, 'assets', 'thumbnail.png')
 const CARD_1_META = require(path.join(CARD_1_FOLDER, 'assets', 'meta.json'))
 
+const DEFAULT_META_PROPERTIES = {
+  dapp: 'https://gft.xyz'
+}
+
 export const deployIpfsAssets = async (ctx: Context = {} as Context): Promise<any> => {
   const { log = createLog(), deployConfig: { ipfs: { api, gateway } } } = ctx
 
@@ -45,9 +49,13 @@ export const deployIpfsAssets = async (ctx: Context = {} as Context): Promise<an
 
   const defaultMetadata = await log.task('Upload default metadata to IPFS', async task => {
     const ret = await ipfsClient.uploadJson({
-      name: 'Unopened GFT card',
-      description: 'This is an unopened GFT card [gft.xyz]',
+      name: "GFT",
+      description: "An unopened GFT card",
+      decimals: 0,
       image: gatewayUrl(unopenedGftImg.path),
+      properties: {
+        ...DEFAULT_META_PROPERTIES,
+      }
     })
     await task.log(`CID: ${ret.cid}`)
     return ret
@@ -56,8 +64,12 @@ export const deployIpfsAssets = async (ctx: Context = {} as Context): Promise<an
   const card1Metadata = await log.task('Upload card1 metadata to IPFS', async task => {
     const ret = await ipfsClient.uploadJson({
       ...CARD_1_META,
+      decimals: 0,
       image: gatewayUrl(card1ThumbnailImg.path),
-      external_url: gatewayUrl(card1.path),
+      properties: {
+        ...DEFAULT_META_PROPERTIES,
+        templateUrl: gatewayUrl(card1.path),
+      }
     })
     await task.log(`CID: ${ret.cid}`)
     return ret
@@ -71,3 +83,44 @@ export const deployIpfsAssets = async (ctx: Context = {} as Context): Promise<an
 
   return ctx.cids
 }
+
+
+/*
+Unopened GFT:
+
+{
+  "name": "GFT",
+  "decimals": 0,
+  "description": "An unopened GFT card",
+  "image": URL of GFT unopened image,
+  "properties": {
+    "dapp": "https://gft.xyz",
+  }
+}
+
+Opened GFT:
+
+{
+  "name": "GFT #<num>",
+  "decimals": 0,
+  "description": "An opened GFT card",
+  "image": URL of card design thumbnail,
+  "properties": {
+    "dapp": "https://gft.xyz",
+    "cardUrl": URL of card HTML
+  }
+}
+
+Card design:
+
+{
+  "name": "<card design name>",
+  "decimals": 0,
+  "description": "<card design descripton>",
+  "image": URL of card design thumbnail,
+  "properties": {
+    "dapp": "https://gft.xyz",
+    "templateUrl": URL of card design template HTMl
+  }
+}
+*/
