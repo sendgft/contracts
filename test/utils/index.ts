@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { hexZeroPad } from 'ethers/lib/utils'
 import { EthHdWallet } from 'eth-hd-wallet'
 import { ethers, network } from 'hardhat'
 import _ from 'lodash'
@@ -154,3 +155,5 @@ export class EvmSnapshot {
     await callJsonRpcMethod('evm_revert', [this._ids.pop()])
   }
 }
+
+export const createConfig = designId => hexZeroPad(`0x${Number(designId).toString(16)}`, 32)

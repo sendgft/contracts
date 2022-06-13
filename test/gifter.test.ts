@@ -2,15 +2,16 @@
 import { BigVal, toMinStr } from 'bigval'
 import { artifacts } from 'hardhat'
 
-import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO, signCardApproval } from './utils'
+import { EvmSnapshot, expect, extractEventArgs, balanceOf, ADDRESS_ZERO, signCardApproval, createConfig } from './utils'
 import { deployGifter, deployCardMarket, deployDummyDex, deployDummyTokens } from '../deploy/modules'
 import { getSigners, getContractAt, Context } from '../deploy/utils'
+import { FacetCutAction, getSelectors } from '../deploy/utils/diamond'
 import { events } from '../src'
-import { hexZeroPad } from 'ethers/lib/utils'
+import { TokenType  } from '../src/constants'
 
 const DummyNFT = artifacts.require("DummyNFT")
-
-const createConfig = designId => hexZeroPad(`0x${designId.toString(16)}`, 32)
+const TestFacet1 = artifacts.require("TestFacet1")
+const TestFacet2 = artifacts.require("TestFacet2")
 
 const expectGiftDataToMatch = (ret, exp) => {
   expect(ret).to.matchObj({
@@ -47,16 +48,23 @@ describe('Gifter', () => {
   let signers
   let accounts
   let dex
-  let cardMarketDeployment
-  let cardMarket
   let gifterDeployment
   let gifter
+  let cutter
+  let cardMarket
+  let erc1155
+  let tokenQuery
+  let testFacet1
+  let testFacet2
   let nft1
   let token1
   let token2
   let sender1
   let receiver1
   let receiver2
+
+  let freeCardId
+  let paidCardId
 
   before(async () => {
     signers = await getSigners()
@@ -65,11 +73,15 @@ describe('Gifter', () => {
     token1 = tokens[0]
     token2 = tokens[1]
     dex = await deployDummyDex({}, { tokens })
-    cardMarketDeployment = await deployCardMarket({}, { dex, tokens })
-    cardMarket = await getContractAt('CardMarketV1', cardMarketDeployment.proxy.address)
-    gifterDeployment = await deployGifter({}, { cardMarket })
-    gifter = await getContractAt('GifterV1', gifterDeployment.proxy.address)
+    gifterDeployment = await deployGifter({ defaultSigner: signers[0] }, { dex, tokens })
+    gifter = await getContractAt('IGifter', gifterDeployment.diamond.address)
+    erc1155 = await getContractAt('ERC1155Facet', gifterDeployment.diamond.address)
+    cutter = await getContractAt('IDiamondCut', gifterDeployment.diamond.address)
+    cardMarket = await getContractAt('ICardMarket', gifterDeployment.diamond.address)
+    tokenQuery = await getContractAt('ITokenQuery', gifterDeployment.diamond.address)
     nft1 = await DummyNFT.new()
+    testFacet1 = await TestFacet1.new()
+    testFacet2 = await TestFacet2.new()
     sender1 = accounts[2]
     receiver1 = accounts[5]
     receiver2 = accounts[6]
@@ -79,24 +91,28 @@ describe('Gifter', () => {
 
     // add card designs
     const approvalSig = await signCardApproval(cardMarket, signers[0], 'test1')
-    await cardMarket.addCard({ 
-      owner: accounts[0],
+    let tx = await cardMarket.addCard({ 
       contentHash: "test1", 
       fee: {
         tokenContract: token1.address, 
         value: '0',
       }
-    }, approvalSig)
+    }, accounts[0], approvalSig)
+
+    freeCardId = extractEventArgs(tx, events.AddCard).id
+    console.log(`Free card id: ${freeCardId}`)
 
     const approvalSig2 = await signCardApproval(cardMarket, signers[0], 'test2')
-    await cardMarket.addCard({
-      owner: accounts[0],
+    tx = await cardMarket.addCard({
       contentHash: "test2",
       fee: {
         tokenContract: token2.address,
         value: toMinStr('10 coins'),
       }
-    }, approvalSig2)
+    }, accounts[0], approvalSig2)
+
+    paidCardId = extractEventArgs(tx, events.AddCard).id
+    console.log(`Paid card id: ${paidCardId}`)
   })
 
   beforeEach(async () => {
@@ -107,34 +123,43 @@ describe('Gifter', () => {
     await evmSnapshot.restore()
   })
 
-  it('returns version', async () => {
-    await gifter.getVersion().should.eventually.eq('1')
-  })
-
-  it('returns card market', async () => {
-    await gifter.cardMarket().should.eventually.eq(cardMarket.address)
-  })
-
-  it('returns admin', async () => {
-    await gifter.getAdmin().should.eventually.eq(accounts[0])
-  })
-
   describe('upgrades', () => {
     it('cannot be done by randoms', async () => {
-      await gifter.upgradeTo(ADDRESS_ZERO, { from: accounts[1] }).should.be.rejectedWith('ProxyImpl: must be admin')
+      await cutter.diamondCut([], ADDRESS_ZERO, [], { from: accounts[1] }).should.be.rejectedWith('Must be contract owner')
     })
 
-    it('cannot upgrade to null address', async () => {
-      await gifter.upgradeTo(ADDRESS_ZERO).should.be.rejectedWith('ProxyImpl: null implementation')
-    })
+    it('add and/or replace methods', async () => {
+      const testFacet = await getContractAt('ITestFacet', gifterDeployment.diamond.address)
 
-    it('cannot upgrade to non-valid implementation', async () => {
-      await gifter.upgradeTo(nft1.address).should.be.rejectedWith('ProxyImpl: invalid implementation')
-    })
+      // add
+      await cutter.diamondCut(
+        [
+          {
+            facetAddress: testFacet1.address,
+            action: FacetCutAction.AddOrReplace,
+            functionSelectors: getSelectors(testFacet1),
+          }
+        ], 
+        ADDRESS_ZERO, 
+        [], 
+      )
 
-    it('can upgrade to same implementation', async () => {
-      await gifter.upgradeTo(gifterDeployment.impl.address).should.be.fulfilled
-      await gifter.getAdmin().should.eventually.eq(accounts[0])
+      await testFacet.getTestUint().should.eventually.eq(123)
+
+      // replace
+      await cutter.diamondCut(
+        [
+          {
+            facetAddress: testFacet2.address,
+            action: FacetCutAction.AddOrReplace,
+            functionSelectors: getSelectors(testFacet2),
+          }
+        ],
+        ADDRESS_ZERO,
+        [],
+      )
+
+      await testFacet.getTestUint().should.eventually.eq(456)
     })
   })
 
@@ -143,7 +168,7 @@ describe('Gifter', () => {
       const tx1 = await gifter.create(
         {
           recipient: receiver1,
-          config: createConfig(1),
+          config: createConfig(freeCardId),
           message: 'msg1',
           weiValue: '100',
           fee: {
@@ -159,7 +184,7 @@ describe('Gifter', () => {
       const tx2 = await gifter.create(
         {
           recipient: receiver2,
-          config: createConfig(1),
+          config: createConfig(freeCardId),
           message: 'msg2',
           weiValue: '200',
           fee: {
@@ -172,8 +197,8 @@ describe('Gifter', () => {
         { from: sender1, value: 200 }
       )
 
-      await gifter.balanceOf(receiver1).should.eventually.eq(1)
-      let id = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(1)
+      let id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
       let ret = await gifter.gift(id)
       expect(ret.timestamp).not.to.eq(0)
       expectGiftDataToMatch(ret, {
@@ -184,15 +209,15 @@ describe('Gifter', () => {
         contentHash: '',
         params: {
           recipient: receiver1,
-          config: createConfig(1),
+          config: createConfig(freeCardId),
           weiValue: '100',
           erc20: [],
           nft: [],
         }
       })
 
-      await gifter.balanceOf(receiver2).should.eventually.eq(1)
-      id = await gifter.tokenOfOwnerByIndex(receiver2, 0)
+      await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver2).should.eventually.eq(1)
+      id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver2, 1)
       ret = await gifter.gift(id)
       expectGiftDataToMatch(ret, {
         sender: sender1,
@@ -202,7 +227,7 @@ describe('Gifter', () => {
         contentHash: '',
         params: {
           recipient: receiver2,
-          config: createConfig(1),
+          config: createConfig(freeCardId),
           weiValue: '200',
           erc20: [],
           nft: [],
@@ -224,7 +249,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             message: 'msg1',
             weiValue: '45',
             fee: {
@@ -254,7 +279,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             message: 'msg1',
             weiValue: '20',
             fee: {
@@ -274,9 +299,9 @@ describe('Gifter', () => {
       })
 
       it('and open and claim', async () => {
-        await gifter.balanceOf(receiver1).should.eventually.eq(2)
+        await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(2)
 
-        const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+        const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
         expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
@@ -284,7 +309,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             weiValue: '45',
             erc20: [
               {
@@ -305,7 +330,7 @@ describe('Gifter', () => {
           }
         })
 
-        const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
+        const gift2 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 2)
         expectGiftDataToMatch(await gifter.gift(gift2), {
           sender: sender1,
           claimed: 0,
@@ -313,7 +338,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             weiValue: '20',
             erc20: [
               {
@@ -342,7 +367,7 @@ describe('Gifter', () => {
 
         // check event
         const eventArgs = extractEventArgs(tx, events.Claimed)
-        expect(eventArgs).to.include({ tokenId: gift1.toString() })
+        expect(eventArgs).to.include({ id: gift1.toString() })
 
         // check gifts
         expectGiftDataToMatch(await gifter.gift(gift1), {
@@ -367,9 +392,9 @@ describe('Gifter', () => {
       })
 
       it('and claim without opening', async () => {
-        await gifter.balanceOf(receiver1).should.eventually.eq(2)
+        await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(2)
 
-        const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+        const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
         expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
@@ -377,7 +402,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             weiValue: '45',
             erc20: [
               {
@@ -415,7 +440,7 @@ describe('Gifter', () => {
 
         // check event
         const eventArgs = extractEventArgs(tx, events.Claimed)
-        expect(eventArgs).to.include({ tokenId: gift1.toString() })
+        expect(eventArgs).to.include({ id: gift1.toString() })
 
         // check gifts
         await gifter.gift(gift1).should.eventually.matchObj({
@@ -436,9 +461,9 @@ describe('Gifter', () => {
       })
 
       it('and claim without opening, then open and claim later', async () => {
-        await gifter.balanceOf(receiver1).should.eventually.eq(2)
+        await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(2)
 
-        const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+        const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
         expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
@@ -446,7 +471,7 @@ describe('Gifter', () => {
           contentHash: '',
           params: {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             weiValue: '45',
             erc20: [
               {
@@ -512,7 +537,7 @@ describe('Gifter', () => {
       const tx = await gifter.create(
         {
           recipient: receiver1,
-          config: createConfig(1),
+          config: createConfig(freeCardId),
           message: 'The quick brown fox jumped over the lazy dog',
           weiValue: '100',
           fee: {
@@ -525,12 +550,12 @@ describe('Gifter', () => {
         { from: sender1, value: 100 }
       )
 
-      const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
 
       // check event
       const eventArgs = extractEventArgs(tx, events.Created)
       expect(eventArgs).to.include({ 
-        tokenId: gift1.toString(),
+        id: gift1.toString(),
         message: 'The quick brown fox jumped over the lazy dog'
       })
     })
@@ -542,7 +567,7 @@ describe('Gifter', () => {
         return gifter.create(
           {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: '100',
             fee: {
@@ -557,12 +582,12 @@ describe('Gifter', () => {
       }
 
       await _s1()
-      const gift1 = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
       await gifter.totalSent(sender1).should.eventually.eq(1)
       await gifter.sent(sender1, 0).should.eventually.eq(gift1.toString())
 
       await _s1()
-      const gift2 = await gifter.tokenOfOwnerByIndex(receiver1, 1)
+      const gift2 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 2)
       await gifter.totalSent(sender1).should.eventually.eq(2)
       await gifter.sent(sender1, 1).should.eventually.eq(gift2.toString())
     })
@@ -576,7 +601,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: createConfig(2), // 2nd card requires a fee of 10 TOKEN1 (=20 ETH)
+            config: createConfig(paidCardId), // 2nd card requires a fee of 10 TOKEN1 (=20 ETH)
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: 100,
             fee: {
@@ -649,7 +674,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: '100',
             fee: {
@@ -734,15 +759,15 @@ describe('Gifter', () => {
     })
 
     it('claim invalid gift id', async () => {
-      await gifter.openAndClaim(2, 'content1').should.be.rejectedWith('nonexistent')
+      await gifter.openAndClaim(25666, 'content1').should.be.rejectedWith('Gifter: must be owner')
     })
 
     it('claim when not owner', async () => {
       await createGift()
 
-      const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      const id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
 
-      await gifter.openAndClaim(gift, 'content1').should.be.rejectedWith('NftBase: must be owner')
+      await gifter.openAndClaim(id, 'content1').should.be.rejectedWith('Gifter: must be owner')
     })
 
     it('open and claim when already done so', async () => {
@@ -751,10 +776,10 @@ describe('Gifter', () => {
 
       await createGift()
 
-      const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      const id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
 
-      await gifter.openAndClaim(gift, 'content1', { from: receiver1 })
-      await gifter.openAndClaim(gift, 'content1', { from: receiver1 }).should.be.rejectedWith('Gifter: already opened')
+      await gifter.openAndClaim(id, 'content1', { from: receiver1 })
+      await gifter.openAndClaim(id, 'content1', { from: receiver1 }).should.be.rejectedWith('Gifter: already opened')
     })
 
     it('claim without opening when already done so', async () => {
@@ -763,10 +788,14 @@ describe('Gifter', () => {
 
       await createGift()
 
-      const gift = await gifter.tokenOfOwnerByIndex(receiver1, 0)
+      const id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
 
-      await gifter.claim(gift, { from: receiver1 })
-      await gifter.claim(gift, { from: receiver1 }).should.be.rejectedWith('Gifter: already claimed')
+      await gifter.claim(id, { from: receiver1 })
+      await gifter.claim(id, { from: receiver1 }).should.be.rejectedWith('Gifter: already claimed')
+    })
+
+    it('claim without opening but id is invalid', async () => {
+      await gifter.claim(256666, { from: receiver1 }).should.be.rejectedWith('Gifter: must be owner')
     })
   })
 
@@ -779,7 +808,7 @@ describe('Gifter', () => {
         await gifter.create(
           {
             recipient: receiver1,
-            config: createConfig(1),
+            config: createConfig(freeCardId),
             message: 'The quick brown fox jumped over the lazy dog',
             weiValue: '100',
             fee: {
@@ -792,27 +821,28 @@ describe('Gifter', () => {
           { from: sender1, value: 100 }
         )
 
-        tokenId = (await gifter.lastId()).toNumber()
+        const totalGifts = await tokenQuery.totalTokensByType(TokenType.GIFT)
+        tokenId = (await tokenQuery.tokenByType(TokenType.GIFT, totalGifts)).toNumber()
       }
     })
 
     it('must be a valid id', async () => {
       await createGift()
-      await gifter.tokenURI(tokenId + 1).should.be.rejectedWith('NftBase: URI query for nonexistent token')
+      await erc1155.uri(tokenId + 1).should.be.rejectedWith('invalid token')
     })
 
     describe('baseURI', async () => {
       beforeEach(async () => {
-        await gifter.setDefaultContentHash('foo')
+        await gifter.setDefaultGiftContentHash('foo')
         await createGift()
       })
 
       it('returns with empty base URI', async () => {
-        await gifter.tokenURI(tokenId).should.eventually.eq('foo')
+        await erc1155.uri(tokenId).should.eventually.eq('foo')
       })
 
       it('base URI can be set, but not just by anyone', async () => {
-        await gifter.setBaseURI('https://google.com', { from: accounts[2] }).should.be.rejectedWith('must be admin')
+        await gifter.setBaseURI('https://google.com', { from: accounts[2] }).should.be.rejectedWith('Gifter: must be admin')
       })
 
       it('base URI can be set by admin', async () => {
@@ -821,7 +851,7 @@ describe('Gifter', () => {
 
       it('returns with non-empty base URI', async () => {
         await gifter.setBaseURI('https://smoke.some/')
-        await gifter.tokenURI(tokenId).should.eventually.eq('https://smoke.some/foo')
+        await erc1155.uri(tokenId).should.eventually.eq('https://smoke.some/foo')
       })
     })
 
@@ -832,35 +862,35 @@ describe('Gifter', () => {
 
       it('returns with empty content hash', async () => {
         await createGift()
-        await gifter.tokenURI(tokenId).should.eventually.eq('bar/')
+        await erc1155.uri(tokenId).should.eventually.eq('bar/')
       })
 
       it('content hash can be set, but not just by anyone', async () => {
-        await gifter.setDefaultContentHash('foo', { from: accounts[2] }).should.be.rejectedWith('must be admin')
+        await gifter.setDefaultGiftContentHash('foo', { from: accounts[2] }).should.be.rejectedWith('Gifter: must be admin')
       })
 
       it('content hash can be set by admin', async () => {
-        await gifter.setDefaultContentHash('foo').should.be.fulfilled
-        await gifter.defaultContentHash().should.eventually.eq('foo')
+        await gifter.setDefaultGiftContentHash('foo').should.be.fulfilled
+        await gifter.defaultGiftContentHash().should.eventually.eq('foo')
       })
 
       it('returns with non-empty base URI', async () => {
-        await gifter.setDefaultContentHash('foo')
+        await gifter.setDefaultGiftContentHash('foo')
         await createGift()
-        await gifter.tokenURI(tokenId).should.eventually.eq('bar/foo')
+        await erc1155.uri(tokenId).should.eventually.eq('bar/foo')
       })
     })
 
     describe('once claimed', async () => {
       beforeEach(async () => {
         await gifter.setBaseURI('bar/')
-        await gifter.setDefaultContentHash('foo')
+        await gifter.setDefaultGiftContentHash('foo')
         await createGift()
       })
 
       it('returns with new content hash once claimed', async () => {
         await gifter.openAndClaim(tokenId, 'foo2', { from: receiver1 })
-        await gifter.tokenURI(tokenId).should.eventually.eq('bar/foo2')
+        await erc1155.uri(tokenId).should.eventually.eq('bar/foo2')
       })
     })
   })

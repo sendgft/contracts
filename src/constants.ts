@@ -2,6 +2,11 @@ export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
 export const TEST_MNEMONIC = 'funny door sample enrich female wedding stereo crane setup shop dwarf dismiss'
 
+export const TokenType = {
+  GIFT: 1,
+  CARD: 2,
+}
+
 export const DEFAULT_WALLETS: Record<string, string> = {
   test: `0x0b5Ce60a5cD884d68dFB124F956667386ee676dd`,
   hua: `0xae48Ec9718e887f52758Cd1DeE1236b98CdfBA93`,
@@ -14,6 +19,5 @@ export const LOCAL_DEVNET_ADDRESSES: Record<string, string> = {
   GFT_TOKEN_2: '0xC958d67a398d2aBa305A47749cb747067C2E8733',
   GFT_TOKEN_3: '0xd777f2d9A761fc560e60742209bA99c0a4524fCb',
   Dex: '0xe945eCffd213Ded0707Bc85D128688880f3D9607',
-  CardMarket: '0x8a6447e7d4a261ed5c0C81Db1324C3d3C4402E16',
-  Gifter: '0xC3a51657Fd28A0441BA1C2D6A002dCdbdF1C8183',
+  Gifter: '0x8a6447e7d4a261ed5c0C81Db1324C3d3C4402E16',
 }

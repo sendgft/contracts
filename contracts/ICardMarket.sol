@@ -1,29 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./INftBase.sol";
-import "./IDex.sol";
-import "./GiftLib.sol";
+import { CardParams, Asset } from "./Lib.sol";
+import { IDex } from "./IDex.sol";
 
 
-abstract contract ICardMarket is INftBase {
-  struct CardParams {
-    address owner;
-    string contentHash;
-    GiftLib.Asset fee;
-  }
-
-  struct Card {
-    CardParams params;
-    bool enabled;
-  }
-
+interface ICardMarket {
   /**
    * @dev Get card info.
    *
    * @param _id Card id.
    */
-  function card(uint _id) view external virtual returns (
+  function card(uint _id) view external returns (
     /* struct getter return values must be fully spelled out - https://github.com/ethereum/solidity/issues/11826 */
     CardParams memory params,
     bool enabled
@@ -32,9 +20,9 @@ abstract contract ICardMarket is INftBase {
   /**
    * Get card id by CID.
    * 
-   * @param _cid CID.
+   * @param _contentHash CID.
    */
-  function cardIdByCid(string calldata _cid) view external virtual returns (uint);
+  function cardIdByCid(string calldata _contentHash) view external returns (uint);
 
   /**
    * @dev Add a new card.
@@ -42,16 +30,17 @@ abstract contract ICardMarket is INftBase {
    * The admin approval signature must be the `contentHash` signed by the admin's private key.
    *
    * @param _params Parameters.
+   * @param _owner Card owner.
    * @param _adminApproval Admin approval signature.
    */
-  function addCard(CardParams calldata _params, bytes calldata _adminApproval) external virtual;
+  function addCard(CardParams calldata _params, address _owner, bytes calldata _adminApproval) external;
 
   /**
    * @dev Set card fee.
    *
    * @param _fee Card fee.
    */
-  function setCardFee(uint _id, GiftLib.Asset calldata _fee) external virtual;
+  function setCardFee(uint _id, Asset calldata _fee) external;
 
   /**
    * @dev Set a card as enabled or disabled.
@@ -59,91 +48,78 @@ abstract contract ICardMarket is INftBase {
    * @param _id The card id.
    * @param _enabled true to enable, false to disable.
    */
-  function setCardEnabled(uint _id, bool _enabled) external virtual;
+  function setCardEnabled(uint _id, bool _enabled) external;
 
   /**
    * Calcualte hash for admins to digitally sign.
    * 
    * @param contentHash CID hash.
    */
-  function calculateSignatureHash(string calldata contentHash) external pure virtual returns (bytes32);
+  function calculateSignatureHash(string calldata contentHash) external pure returns (bytes32);
 
   /**
    * Get dex.
    */
-  function dex() external view virtual returns (IDex);
+  function dex() external view returns (IDex);
 
   /**
    * Set dex.
    *
    * @param _dex Dex to use.
    */
-  function setDex(address _dex) external virtual;
+  function setDex(address _dex) external;
 
   /**
    * Get card usage tax.
    */
-  function tax() external view virtual returns (uint);
+  function tax() external view returns (uint);
 
   /**
    * Set card usage tax.
    *
    * @param _tax Tax rate in basis points (100 = 1%).
    */
-  function setTax(uint _tax) external virtual;
+  function setTax(uint _tax) external;
 
   /**
    * Get allowed fee tokens.
    */
-  function allowedFeeTokens() external view virtual returns (address[] memory);
+  function allowedFeeTokens() external view returns (address[] memory);
 
   /**
    * Get whether given token is allowed to be used as a fee token.
    *
    * @param _token The token.
    */
-  function feeTokenAllowed(address _token) view external virtual returns (bool);
+  function feeTokenAllowed(address _token) view external returns (bool);
 
   /**
    * Set allowed fee tokens.
    *
    * @param _feeTokens Allowed fee tokens.
    */
-  function setAllowedFeeTokens(address[] calldata _feeTokens) external virtual;
-
-  /**
-   * Use given card for a gift.
-   *
-   * @param _id The card id.
-   */
-  function useCard(uint _id) payable external virtual;
-
-  /**
-   * Set base URI.
-   * @param _baseURI base URI.
-   */
-  function setBaseURI(string calldata _baseURI) external virtual;
+  function setAllowedFeeTokens(address[] calldata _feeTokens) external;
 
   /**
    * Get total accumulated withdrawable taxes.
    *
    * @param _feeToken The fee token.
    */
-  function totalTaxes(address _feeToken) external view virtual returns (uint);
+  function totalTaxes(address _feeToken) external view returns (uint);
 
   /**
    * Withdrawable accumulated taxes.
    *
    * @param _feeToken the fee token.
    */
-  function withdrawTaxes(address _feeToken) external virtual;
+  function withdrawTaxes(address _feeToken) external;
 
   /**
    * Get total accumulated withdrawable earnings for all wallets.
    *
    * @param _feeToken the fee token.
    */
-  function totalEarnings(address _feeToken) external view virtual returns (uint);
+  function totalEarnings(address _feeToken) external view returns (uint);
 
   /**
    * Get accumulated withdrawable earnings for given wallet.
@@ -151,34 +127,18 @@ abstract contract ICardMarket is INftBase {
    * @param _wallet Wallet to check for.
    * @param _feeToken the fee token.
    */
-  function earnings(address _wallet, address _feeToken) external view virtual returns (uint);
+  function earnings(address _wallet, address _feeToken) external view returns (uint);
 
   /**
    * Withdraw caller's accumulated earnings.
    *
    * @param _feeToken the fee token.
    */
-  function withdrawEarnings(address _feeToken) external virtual;
+  function withdrawEarnings(address _feeToken) external;
 
   /**
    * @dev Emitted when a new card gets added.
-   * @param tokenId The card NFT token id.
+   * @param id The card NFT token id.
    */
-  event AddCard(
-    uint tokenId
-  );  
-
-  /**
-   * @dev Emitted when a card gets used.
-   * @param tokenId The card NFT token id.
-   * @param fee The total fee.
-   * @param earned The actual fee earned by owner.
-   * @param tax The actual tax taken from the fee.
-   */
-  event UseCard(
-    uint tokenId,
-    uint fee,
-    uint earned,
-    uint tax
-  );  
+  event AddCard( uint id );  
 }

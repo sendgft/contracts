@@ -2,10 +2,11 @@
 import { BigVal, toMinStr } from 'bigval'
 import { artifacts } from 'hardhat'
 
-import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect, signCardApproval } from './utils'
-import { deployCardMarket, deployDummyTokens, deployDummyDex } from '../deploy/modules'
+import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect, signCardApproval, createConfig } from './utils'
+import { deployCardMarket, deployDummyTokens, deployDummyDex, deployGifter } from '../deploy/modules'
 import { getSigners, getContractAt, Context } from '../deploy/utils'
 import { events } from '../src'
+import { TokenType } from '../src/constants'
 
 const DummyToken = artifacts.require("DummyToken")
 
@@ -32,8 +33,11 @@ describe('Card market', () => {
   const evmSnapshot = new EvmSnapshot()
   let signers
   let accounts
-  let cardMarketDeployment
+  let gifterDeployment
+  let gifter
+  let erc1155
   let cardMarket
+  let tokenQuery
   let dex
   let tokens
   let token1
@@ -45,8 +49,11 @@ describe('Card market', () => {
     tokens = await deployDummyTokens()
     token1 = tokens[0]
     dex = await deployDummyDex({}, { tokens })
-    cardMarketDeployment = await deployCardMarket({}, { dex, tokens })
-    cardMarket = await getContractAt('CardMarketV1', cardMarketDeployment.proxy.address)
+    gifterDeployment = await deployGifter({ defaultSigner: signers[0] }, { dex, tokens })
+    gifter = await getContractAt('IGifter', gifterDeployment.diamond.address)
+    erc1155 = await getContractAt('ERC1155Facet', gifterDeployment.diamond.address)
+    cardMarket = await getContractAt('ICardMarket', gifterDeployment.diamond.address)
+    tokenQuery = await getContractAt('ITokenQuery', gifterDeployment.diamond.address)
     randomToken = await DummyToken.new('test', 'test', 18, 0)
 
     // set price for testing
@@ -61,40 +68,17 @@ describe('Card market', () => {
     await evmSnapshot.restore()
   })
 
-  it('returns version', async () => {
-    await cardMarket.getVersion().should.eventually.eq('1')
-  })
-
-  it('returns admin', async () => {
-    await cardMarket.getAdmin().should.eventually.eq(accounts[0])
-  })
-
-  describe('upgrades', () => {
-    it('cannot be done by randoms', async () => {
-      await cardMarket.upgradeTo(ADDRESS_ZERO, { from: accounts[1] }).should.be.rejectedWith('ProxyImpl: must be admin')
-    })
-
-    it('cannot upgrade to null address', async () => {
-      await cardMarket.upgradeTo(ADDRESS_ZERO).should.be.rejectedWith('ProxyImpl: null implementation')
-    })
-
-    it('cannot upgrade to non-valid implementation', async () => {
-      await cardMarket.upgradeTo(token1.address).should.be.rejectedWith('ProxyImpl: invalid implementation')
-    })
-
-    it('can upgrade to same implementation', async () => {
-      await cardMarket.upgradeTo(cardMarketDeployment.impl.address).should.be.fulfilled
-      await cardMarket.getAdmin().should.eventually.eq(accounts[0])
-    })
-  })
-
   describe('allowed fee tokens', () => {
     it('can be set', async () => {
       await cardMarket.allowedFeeTokens().should.eventually.eq(tokens.map(t => t.address))
-      await cardMarket.setAllowedFeeTokens([ tokens[1].address ])
-      await cardMarket.allowedFeeTokens().should.eventually.eq([ tokens[1].address ])
+      await cardMarket.setAllowedFeeTokens([tokens[1].address])
+      await cardMarket.allowedFeeTokens().should.eventually.eq([tokens[1].address])
       await cardMarket.setAllowedFeeTokens([tokens[2].address])
       await cardMarket.allowedFeeTokens().should.eventually.eq([tokens[2].address])
+    })
+
+    it('cannot be set by anon', async () => {
+      await cardMarket.setAllowedFeeTokens([ tokens[1].address ], { from: accounts[1] }).should.be.rejectedWith('must be admin')
     })
   })
 
@@ -104,6 +88,10 @@ describe('Card market', () => {
       await cardMarket.setTax('1')
       await cardMarket.tax().should.eventually.eq('1')
     })
+
+    it('cannot be set by anon', async () => {
+      await cardMarket.setTax('1', { from: accounts[1] }).should.be.rejectedWith('must be admin')
+    })
   })
 
   describe('new card can be added', () => {
@@ -111,16 +99,15 @@ describe('Card market', () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig).should.be.fulfilled
+      }, accounts[0], approvalSig).should.be.fulfilled
 
-      await cardMarket.totalSupply().should.eventually.eq(1)
+      await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(1)
+      const id = await tokenQuery.tokenByType(TokenType.CARD, 1)
 
-      expectCardDataToMatch(await cardMarket.card(1), {
+      expectCardDataToMatch(await cardMarket.card(id), {
         params: {
-          owner: accounts[0],
           contentHash: 'test',
           fee: {
             tokenContract: token1.address,
@@ -135,66 +122,59 @@ describe('Card market', () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig).should.be.fulfilled
+      }, accounts[1], approvalSig).should.be.fulfilled
 
-      expectCardDataToMatch(await cardMarket.card(1), {
-        params: {
-          owner: accounts[1],
-        },
-        enabled: true,
-      })
+      await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(1)
+      const id = await tokenQuery.tokenByType(TokenType.CARD, 1)
+      await tokenQuery.tokenOwner(id).should.eventually.eq(accounts[1])
     })
 
     it('not if admin approval is wrong', async () => {
       const approvalSig = await signCardApproval(cardMarket, signers[1], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig, { from: accounts[1] }).should.be.rejectedWith('must be approved by admin')
+      }, accounts[0], approvalSig, { from: accounts[1] }).should.be.rejectedWith('must be approved by admin')
     })
 
     it('not if using disallowed fee token', async () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: randomToken.address, value: 2 }
-      }, approvalSig).should.be.rejectedWith('unsupported fee token')
+      }, accounts[0], approvalSig).should.be.rejectedWith('unsupported fee token')
     })
 
     it('but not if already added', async () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig).should.be.fulfilled
+      }, accounts[0], approvalSig).should.be.fulfilled
 
       await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 3 }
-      }, approvalSig).should.be.rejectedWith('CardMarket: already added')
+      }, accounts[0], approvalSig).should.be.rejectedWith('already added')
     })
 
     it('and event gets emitted', async () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       const tx = await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig).should.be.fulfilled
+      }, accounts[0], approvalSig).should.be.fulfilled
 
       const eventArgs = extractEventArgs(tx, events.AddCard)
-      expect(eventArgs).to.include({ tokenId: (await cardMarket.lastId()).toString() })
+      const totalCards = await tokenQuery.totalTokensByType(TokenType.CARD)
+      const lastId = await tokenQuery.tokenByType(TokenType.CARD, totalCards)
+      expect(eventArgs).to.include({ id: lastId.toString() })
     })
   })
 
@@ -203,18 +183,17 @@ describe('Card market', () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig)      
+      }, accounts[1], approvalSig)      
     })
 
     it('but not by non-owner', async () => {
-      await cardMarket.setCardEnabled(1, false).should.be.rejectedWith('NftBase: must be owner')
+      await cardMarket.setCardEnabled(1, false).should.be.rejectedWith('Gifter: must be owner')
     })
 
     it('but not if invalid', async () => {
-      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('nonexistent')
+      await cardMarket.setCardEnabled(2, false).should.be.rejectedWith('Gifter: must be owner')
     })
 
     it('if valid card', async () => {
@@ -231,18 +210,17 @@ describe('Card market', () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig)
+      }, accounts[1], approvalSig)
     })
 
     it('but not by non-owner', async () => {
-      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('must be owner')
+      await cardMarket.setCardFee(1, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('Gifter: must be owner')
     })
 
     it('but not if invalid', async () => {
-      await cardMarket.setCardFee(2, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('nonexistent token')
+      await cardMarket.setCardFee(2, { tokenContract: token1.address, value: 3 }).should.be.rejectedWith('Gifter: must be owner')
     })
 
     it('if valid card', async () => {
@@ -260,45 +238,69 @@ describe('Card market', () => {
   })
 
   describe('card can be used', () => {
+    let createGift
+    let card1Id
+    let card2Id
+
     beforeEach(async () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[1],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: toMinStr('4 coins') }
-      }, approvalSig)
+      }, accounts[1], approvalSig)
 
       const approvalSig2 = await signCardApproval(cardMarket, signers[0], 'test2')
 
       await cardMarket.addCard({
-        owner: accounts[2],
         contentHash: 'test2',
         fee: { tokenContract: token1.address, value: toMinStr('10 coins') }
-      }, approvalSig2)
+      }, accounts[2], approvalSig2)
+
+      const totalCards = await tokenQuery.totalTokensByType(TokenType.CARD)
+      card1Id = (await tokenQuery.tokenByType(TokenType.CARD, totalCards - 1)).toNumber()
+      card2Id = (await tokenQuery.tokenByType(TokenType.CARD, totalCards)).toNumber()
+
+      createGift = async (cardId, args = {}) => {
+        return await gifter.create(
+          {
+            recipient: accounts[2],
+            config: createConfig(cardId),
+            message: 'The quick brown fox jumped over the lazy dog',
+            weiValue: '0',
+            fee: {
+              tokenContract: token1.address,
+              value: '0'
+            },
+            erc20: [],
+            nft: [],
+          },
+          args
+        )
+      }
     })
 
     it('unless disabled', async () => {
-      await cardMarket.setCardEnabled(1, false, { from: accounts[1] })
-      await cardMarket.useCard(1).should.be.rejectedWith('not enabled')
+      await cardMarket.setCardEnabled(card1Id, false, { from: accounts[1] })
+      await createGift(card1Id, { value: '0' }).should.be.rejectedWith('not enabled')
     })
 
     describe('and fee gets paid', () => {
       it('unless not enough provided', async () => {
         // price: native/token1 = 2, thus for a fee of 4 token1, we need to send 2 native
-        await cardMarket.useCard(1, { value: toMinStr('1.9 coins') }).should.be.rejectedWith('input insufficient')
+        await createGift(card1Id, { value: toMinStr('1.9 coins') }).should.be.rejectedWith('input insufficient')
       })
 
       it('if enough provided', async () => {
-        await cardMarket.useCard(1, { value: toMinStr('2 coins') }).should.be.fulfilled
+        await createGift(card1Id, { value: toMinStr('2 coins') }).should.be.fulfilled
       })
 
-      it('and event getes emitted', async () => {
-        const tx = await cardMarket.useCard(1, { value: toMinStr('2 coins') }).should.be.fulfilled
+      it('and event gets emitted', async () => {
+        const tx = await createGift(card1Id, { value: toMinStr('2 coins') })
 
         const eventArgs = extractEventArgs(tx, events.UseCard)
         expect(eventArgs).to.include({ 
-          tokenId: '1',
+          cardId: '1',
           fee: toMinStr('4 coins'),
           earned: toMinStr('3.6 coins'),
           // tax: toMinStr('0.4 coins'),
@@ -312,8 +314,8 @@ describe('Card market', () => {
         await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq('0')
         await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq('0')
 
-        await cardMarket.useCard(1, { value: toMinStr('2 coins') })
-        await cardMarket.useCard(2, { value: toMinStr('5 coins') })
+        await createGift(card1Id, { value: toMinStr('2 coins') })
+        await createGift(card2Id, { value: toMinStr('5 coins') })
 
         await cardMarket.totalTaxes(token1.address).should.eventually.eq(toMinStr('1.4 coins'))
         await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('12.6 coins'))
@@ -324,7 +326,7 @@ describe('Card market', () => {
       it('and tax can be withdrawn', async () => {
         await cardMarket.totalTaxes(token1.address).should.eventually.eq('0')
 
-        await cardMarket.useCard(1, { value: toMinStr('2 coins') })
+        await createGift(card1Id, { value: toMinStr('2 coins') })
 
         const preBal = BigVal.from(await token1.balanceOf(accounts[0]))
 
@@ -335,7 +337,7 @@ describe('Card market', () => {
         const postBal = BigVal.from(await token1.balanceOf(accounts[0]))
         postBal.sub(preBal).toMinScale().toString().should.eql(toMinStr('0.4 coins'))
 
-        await cardMarket.useCard(2, { value: toMinStr('5 coins') })
+        await createGift(card2Id, { value: toMinStr('5 coins') })
 
         await cardMarket.totalTaxes(token1.address).should.eventually.eq(toMinStr('1 coins'))
       })
@@ -345,8 +347,8 @@ describe('Card market', () => {
         await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('0'))
         await cardMarket.earnings(accounts[2], token1.address).should.eventually.eq(toMinStr('0'))
 
-        await cardMarket.useCard(1, { value: toMinStr('2 coins') })
-        await cardMarket.useCard(2, { value: toMinStr('5 coins') })
+        await createGift(card1Id, { value: toMinStr('2 coins') })
+        await createGift(card2Id, { value: toMinStr('5 coins') })
 
         await cardMarket.totalEarnings(token1.address).should.eventually.eq(toMinStr('12.6 coins'))
         await cardMarket.earnings(accounts[1], token1.address).should.eventually.eq(toMinStr('3.6 coins'))
@@ -382,32 +384,23 @@ describe('Card market', () => {
       const approvalSig = await signCardApproval(cardMarket, signers[0], 'test')
 
       await cardMarket.addCard({
-        owner: accounts[0],
         contentHash: 'test',
         fee: { tokenContract: token1.address, value: 2 }
-      }, approvalSig)
+      }, accounts[0], approvalSig)
     })
 
     it('must be a valid id', async () => {
-      await cardMarket.tokenURI(2).should.be.rejectedWith('NftBase: URI query for nonexistent token')
+      await erc1155.uri(2).should.be.rejectedWith('invalid token')
     })
 
     describe('baseURI', async () => {
       it('returns with empty base URI', async () => {
-        await cardMarket.tokenURI(1).should.eventually.eq('test')
-      })
-
-      it('base URI can be set, but not just by anyone', async () => {
-        await cardMarket.setBaseURI('https://google.com', { from: accounts[2] }).should.be.rejectedWith('ProxyImpl: must be admin')
-      })
-
-      it('base URI can be set by admin', async () => {
-        await cardMarket.setBaseURI('https://google.com').should.be.fulfilled
+        await erc1155.uri(1).should.eventually.eq('test')
       })
 
       it('returns with non-empty base URI', async () => {
-        await cardMarket.setBaseURI('https://smoke.some/')
-        await cardMarket.tokenURI(1).should.eventually.eq('https://smoke.some/test')
+        await gifter.setBaseURI('https://smoke.some/')
+        await erc1155.uri(1).should.eventually.eq('https://smoke.some/test')
       })
     })
   })

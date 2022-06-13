@@ -2,9 +2,8 @@
 pragma solidity ^0.8.0;
 
 // import "hardhat/console.sol";
-
-import "./IDex.sol";
-import "./IERC20.sol";
+import { IDex } from "./IDex.sol";
+import { IERC20 } from "./utils/IERC20.sol";
 
 contract DummyDex is IDex {
   // price = native token/token
