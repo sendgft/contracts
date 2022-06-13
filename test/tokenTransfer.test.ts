@@ -6,7 +6,7 @@ import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect, signCardApproval, 
 import { deployDummyTokens, deployDummyDex, deployGifter } from '../deploy/modules'
 import { getSigners, getContractAt, Context } from '../deploy/utils'
 import { events } from '../src'
-import { TokenType } from '../src/constants'
+import { TOKEN_TYPE } from '../src/constants'
 
 
 describe('Token transfer', () => {
@@ -121,16 +121,16 @@ describe('Token transfer', () => {
     await tokenQuery.tokenOwner(2).should.eventually.eq(accounts[0])
     await tokenQuery.tokenOwner(3).should.eventually.eq(accounts[0])
 
-    await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(3)
-    await tokenQuery.totalTokensOwnedByType(TokenType.CARD, accounts[0]).should.eventually.eq(3)
+    await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD).should.eventually.eq(3)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.CARD, accounts[0]).should.eventually.eq(3)
 
     // gifts
     await tokenQuery.tokenOwner(4).should.eventually.eq(accounts[0])
     await tokenQuery.tokenOwner(5).should.eventually.eq(accounts[0])
     await tokenQuery.tokenOwner(6).should.eventually.eq(accounts[0])
 
-    await tokenQuery.totalTokensByType(TokenType.GIFT).should.eventually.eq(3)
-    await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, accounts[0]).should.eventually.eq(3)
+    await tokenQuery.totalTokensByType(TOKEN_TYPE.GIFT).should.eventually.eq(3)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, accounts[0]).should.eventually.eq(3)
   })
 
   it('single transfers are tracked', async () => {
@@ -138,23 +138,23 @@ describe('Token transfer', () => {
 
     await tokenQuery.tokenOwner(1).should.eventually.eq(accounts[1])
 
-    await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(3)
-    await tokenQuery.totalTokensOwnedByType(TokenType.CARD, accounts[0]).should.eventually.eq(2)
-    await tokenQuery.tokenOwnedByType(TokenType.CARD, accounts[0], 1).should.eventually.eq(3)
-    await tokenQuery.tokenOwnedByType(TokenType.CARD, accounts[0], 2).should.eventually.eq(2)
-    await tokenQuery.totalTokensOwnedByType(TokenType.CARD, accounts[1]).should.eventually.eq(1)
-    await tokenQuery.tokenOwnedByType(TokenType.CARD, accounts[1], 1).should.eventually.eq(1)
+    await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD).should.eventually.eq(3)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.CARD, accounts[0]).should.eventually.eq(2)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.CARD, accounts[0], 1).should.eventually.eq(3)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.CARD, accounts[0], 2).should.eventually.eq(2)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.CARD, accounts[1]).should.eventually.eq(1)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.CARD, accounts[1], 1).should.eventually.eq(1)
 
     await erc1155.safeTransferFrom(accounts[0], accounts[2], 6, 1, []) // last gift
 
     await tokenQuery.tokenOwner(6).should.eventually.eq(accounts[2])
 
-    await tokenQuery.totalTokensByType(TokenType.GIFT).should.eventually.eq(3)
-    await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, accounts[0]).should.eventually.eq(2)
-    await tokenQuery.tokenOwnedByType(TokenType.GIFT, accounts[0], 1).should.eventually.eq(4)
-    await tokenQuery.tokenOwnedByType(TokenType.GIFT, accounts[0], 2).should.eventually.eq(5)
-    await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, accounts[2]).should.eventually.eq(1)
-    await tokenQuery.tokenOwnedByType(TokenType.GIFT, accounts[2], 1).should.eventually.eq(6)
+    await tokenQuery.totalTokensByType(TOKEN_TYPE.GIFT).should.eventually.eq(3)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, accounts[0]).should.eventually.eq(2)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, accounts[0], 1).should.eventually.eq(4)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, accounts[0], 2).should.eventually.eq(5)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, accounts[2]).should.eventually.eq(1)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, accounts[2], 1).should.eventually.eq(6)
   })
 
   it('batch transfers are tracked', async () => {
@@ -167,18 +167,18 @@ describe('Token transfer', () => {
     await tokenQuery.tokenOwner(5).should.eventually.eq(accounts[0])
     await tokenQuery.tokenOwner(6).should.eventually.eq(accounts[0])
 
-    await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(3)
-    await tokenQuery.totalTokensOwnedByType(TokenType.CARD, accounts[0]).should.eventually.eq(0)
-    await tokenQuery.totalTokensOwnedByType(TokenType.CARD, accounts[1]).should.eventually.eq(3)
-    await tokenQuery.tokenOwnedByType(TokenType.CARD, accounts[1], 1).should.eventually.eq(1)
-    await tokenQuery.tokenOwnedByType(TokenType.CARD, accounts[1], 2).should.eventually.eq(2)
-    await tokenQuery.tokenOwnedByType(TokenType.CARD, accounts[1], 3).should.eventually.eq(3)
+    await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD).should.eventually.eq(3)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.CARD, accounts[0]).should.eventually.eq(0)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.CARD, accounts[1]).should.eventually.eq(3)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.CARD, accounts[1], 1).should.eventually.eq(1)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.CARD, accounts[1], 2).should.eventually.eq(2)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.CARD, accounts[1], 3).should.eventually.eq(3)
 
-    await tokenQuery.totalTokensByType(TokenType.GIFT).should.eventually.eq(3)
-    await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, accounts[0]).should.eventually.eq(2)
-    await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, accounts[1]).should.eventually.eq(1)
-    await tokenQuery.tokenOwnedByType(TokenType.GIFT, accounts[1], 1).should.eventually.eq(4)
-    await tokenQuery.tokenOwnedByType(TokenType.GIFT, accounts[0], 1).should.eventually.eq(6)
-    await tokenQuery.tokenOwnedByType(TokenType.GIFT, accounts[0], 2).should.eventually.eq(5)
+    await tokenQuery.totalTokensByType(TOKEN_TYPE.GIFT).should.eventually.eq(3)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, accounts[0]).should.eventually.eq(2)
+    await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, accounts[1]).should.eventually.eq(1)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, accounts[1], 1).should.eventually.eq(4)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, accounts[0], 1).should.eventually.eq(6)
+    await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, accounts[0], 2).should.eventually.eq(5)
   })
 })

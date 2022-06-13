@@ -5,7 +5,7 @@ import { Contract } from '@ethersproject/contracts'
 
 import { createLog, deployContract, getContractAt, execMethod, assertSameAddress, Context } from '../utils'
 import { FacetCutAction, getSelectors } from '../utils/diamond'
-import { ADDRESS_ZERO, TokenType  } from '../../src/constants'
+import { ADDRESS_ZERO  } from '../../src/constants'
 import { toMinStr } from 'bigval'
 import { ethers } from 'hardhat'
 

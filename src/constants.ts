@@ -2,7 +2,7 @@ export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
 export const TEST_MNEMONIC = 'funny door sample enrich female wedding stereo crane setup shop dwarf dismiss'
 
-export const TokenType = {
+export const TOKEN_TYPE = {
   GIFT: 1,
   CARD: 2,
 }

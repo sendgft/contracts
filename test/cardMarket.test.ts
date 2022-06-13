@@ -6,7 +6,7 @@ import { EvmSnapshot, ADDRESS_ZERO, extractEventArgs, expect, signCardApproval, 
 import { deployCardMarket, deployDummyTokens, deployDummyDex, deployGifter } from '../deploy/modules'
 import { getSigners, getContractAt, Context } from '../deploy/utils'
 import { events } from '../src'
-import { TokenType } from '../src/constants'
+import { TOKEN_TYPE } from '../src/constants'
 
 const DummyToken = artifacts.require("DummyToken")
 
@@ -103,8 +103,8 @@ describe('Card market', () => {
         fee: { tokenContract: token1.address, value: 2 }
       }, accounts[0], approvalSig).should.be.fulfilled
 
-      await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(1)
-      const id = await tokenQuery.tokenByType(TokenType.CARD, 1)
+      await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD).should.eventually.eq(1)
+      const id = await tokenQuery.tokenByType(TOKEN_TYPE.CARD, 1)
 
       expectCardDataToMatch(await cardMarket.card(id), {
         params: {
@@ -126,8 +126,8 @@ describe('Card market', () => {
         fee: { tokenContract: token1.address, value: 2 }
       }, accounts[1], approvalSig).should.be.fulfilled
 
-      await tokenQuery.totalTokensByType(TokenType.CARD).should.eventually.eq(1)
-      const id = await tokenQuery.tokenByType(TokenType.CARD, 1)
+      await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD).should.eventually.eq(1)
+      const id = await tokenQuery.tokenByType(TOKEN_TYPE.CARD, 1)
       await tokenQuery.tokenOwner(id).should.eventually.eq(accounts[1])
     })
 
@@ -172,8 +172,8 @@ describe('Card market', () => {
       }, accounts[0], approvalSig).should.be.fulfilled
 
       const eventArgs = extractEventArgs(tx, events.AddCard)
-      const totalCards = await tokenQuery.totalTokensByType(TokenType.CARD)
-      const lastId = await tokenQuery.tokenByType(TokenType.CARD, totalCards)
+      const totalCards = await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD)
+      const lastId = await tokenQuery.tokenByType(TOKEN_TYPE.CARD, totalCards)
       expect(eventArgs).to.include({ id: lastId.toString() })
     })
   })
@@ -257,9 +257,9 @@ describe('Card market', () => {
         fee: { tokenContract: token1.address, value: toMinStr('10 coins') }
       }, accounts[2], approvalSig2)
 
-      const totalCards = await tokenQuery.totalTokensByType(TokenType.CARD)
-      card1Id = (await tokenQuery.tokenByType(TokenType.CARD, totalCards - 1)).toNumber()
-      card2Id = (await tokenQuery.tokenByType(TokenType.CARD, totalCards)).toNumber()
+      const totalCards = await tokenQuery.totalTokensByType(TOKEN_TYPE.CARD)
+      card1Id = (await tokenQuery.tokenByType(TOKEN_TYPE.CARD, totalCards - 1)).toNumber()
+      card2Id = (await tokenQuery.tokenByType(TOKEN_TYPE.CARD, totalCards)).toNumber()
 
       createGift = async (cardId, args = {}) => {
         return await gifter.create(

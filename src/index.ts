@@ -18,7 +18,7 @@ export const addresses = deployedAddresses
 
 export const contracts: ContractJsons = require('../contracts.generated.js')
 
-export const { LOCAL_DEVNET_ADDRESSES } = require('./constants')
+export const { LOCAL_DEVNET_ADDRESSES, TOKEN_TYPE } = require('./constants')
 
 const extractEventsFromAbis = (c: any[]): EventAbis => c.reduce((output, contract) => {
   contract.abi.filter(({ type }: any) => type === 'event').forEach((e: any) => {

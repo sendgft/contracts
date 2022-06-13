@@ -7,7 +7,7 @@ import { deployGifter, deployCardMarket, deployDummyDex, deployDummyTokens } fro
 import { getSigners, getContractAt, Context } from '../deploy/utils'
 import { FacetCutAction, getSelectors } from '../deploy/utils/diamond'
 import { events } from '../src'
-import { TokenType  } from '../src/constants'
+import { TOKEN_TYPE  } from '../src/constants'
 
 const DummyNFT = artifacts.require("DummyNFT")
 const TestFacet1 = artifacts.require("TestFacet1")
@@ -197,8 +197,8 @@ describe('Gifter', () => {
         { from: sender1, value: 200 }
       )
 
-      await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(1)
-      let id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+      await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, receiver1).should.eventually.eq(1)
+      let id = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
       let ret = await gifter.gift(id)
       expect(ret.timestamp).not.to.eq(0)
       expectGiftDataToMatch(ret, {
@@ -216,8 +216,8 @@ describe('Gifter', () => {
         }
       })
 
-      await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver2).should.eventually.eq(1)
-      id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver2, 1)
+      await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, receiver2).should.eventually.eq(1)
+      id = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver2, 1)
       ret = await gifter.gift(id)
       expectGiftDataToMatch(ret, {
         sender: sender1,
@@ -299,9 +299,9 @@ describe('Gifter', () => {
       })
 
       it('and open and claim', async () => {
-        await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(2)
+        await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, receiver1).should.eventually.eq(2)
 
-        const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+        const gift1 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
         expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
@@ -330,7 +330,7 @@ describe('Gifter', () => {
           }
         })
 
-        const gift2 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 2)
+        const gift2 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 2)
         expectGiftDataToMatch(await gifter.gift(gift2), {
           sender: sender1,
           claimed: 0,
@@ -392,9 +392,9 @@ describe('Gifter', () => {
       })
 
       it('and claim without opening', async () => {
-        await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(2)
+        await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, receiver1).should.eventually.eq(2)
 
-        const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+        const gift1 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
         expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
@@ -461,9 +461,9 @@ describe('Gifter', () => {
       })
 
       it('and claim without opening, then open and claim later', async () => {
-        await tokenQuery.totalTokensOwnedByType(TokenType.GIFT, receiver1).should.eventually.eq(2)
+        await tokenQuery.totalTokensOwnedByType(TOKEN_TYPE.GIFT, receiver1).should.eventually.eq(2)
 
-        const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+        const gift1 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
         expectGiftDataToMatch(await gifter.gift(gift1), {
           sender: sender1,
           claimed: 0,
@@ -550,7 +550,7 @@ describe('Gifter', () => {
         { from: sender1, value: 100 }
       )
 
-      const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+      const gift1 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
 
       // check event
       const eventArgs = extractEventArgs(tx, events.Created)
@@ -582,12 +582,12 @@ describe('Gifter', () => {
       }
 
       await _s1()
-      const gift1 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+      const gift1 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
       await gifter.totalSent(sender1).should.eventually.eq(1)
       await gifter.sent(sender1, 0).should.eventually.eq(gift1.toString())
 
       await _s1()
-      const gift2 = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 2)
+      const gift2 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 2)
       await gifter.totalSent(sender1).should.eventually.eq(2)
       await gifter.sent(sender1, 1).should.eventually.eq(gift2.toString())
     })
@@ -765,7 +765,7 @@ describe('Gifter', () => {
     it('claim when not owner', async () => {
       await createGift()
 
-      const id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+      const id = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
 
       await gifter.openAndClaim(id, 'content1').should.be.rejectedWith('Gifter: must be owner')
     })
@@ -776,7 +776,7 @@ describe('Gifter', () => {
 
       await createGift()
 
-      const id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+      const id = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
 
       await gifter.openAndClaim(id, 'content1', { from: receiver1 })
       await gifter.openAndClaim(id, 'content1', { from: receiver1 }).should.be.rejectedWith('Gifter: already opened')
@@ -788,7 +788,7 @@ describe('Gifter', () => {
 
       await createGift()
 
-      const id = await tokenQuery.tokenOwnedByType(TokenType.GIFT, receiver1, 1)
+      const id = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
 
       await gifter.claim(id, { from: receiver1 })
       await gifter.claim(id, { from: receiver1 }).should.be.rejectedWith('Gifter: already claimed')
@@ -821,8 +821,8 @@ describe('Gifter', () => {
           { from: sender1, value: 100 }
         )
 
-        const totalGifts = await tokenQuery.totalTokensByType(TokenType.GIFT)
-        tokenId = (await tokenQuery.tokenByType(TokenType.GIFT, totalGifts)).toNumber()
+        const totalGifts = await tokenQuery.totalTokensByType(TOKEN_TYPE.GIFT)
+        tokenId = (await tokenQuery.tokenByType(TOKEN_TYPE.GIFT, totalGifts)).toNumber()
       }
     })
 
