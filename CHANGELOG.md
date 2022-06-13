@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/sendgft/contracts/compare/v1.26.0...v1.27.0) (2022-06-13)
+
+
+### Features
+
+* export TokenType too ([183bbc1](https://github.com/sendgft/contracts/commit/183bbc1c0a6c763b5a306f060b8b731228813dc4))
+
 # [1.26.0](https://github.com/sendgft/contracts/compare/v1.25.1...v1.26.0) (2022-06-13)
 
 ## [1.25.1](https://github.com/sendgft/contracts/compare/v1.25.0...v1.25.1) (2022-06-05)
