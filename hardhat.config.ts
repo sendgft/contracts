@@ -4,7 +4,7 @@ import "@nomiclabs/hardhat-etherscan"
 import 'solidity-coverage'
 import { HardhatUserConfig } from "hardhat/config"
 
-const { ETHERSCAN_API_KEY, SNOWTRACE_API_KEY, MNEMONIC, INFURA_ID } = require('dotenv').config().parsed
+const { ETHERSCAN_API_KEY, SNOWTRACE_API_KEY, POLYGONSCAN_API_KEY, MNEMONIC, INFURA_ID } = require('dotenv').config().parsed
 const { TEST_MNEMONIC } = require('./src/constants')
 
 const config: HardhatUserConfig = {
@@ -63,6 +63,7 @@ const config: HardhatUserConfig = {
     apiKey: {
       goerli: ETHERSCAN_API_KEY,
       avalanche: SNOWTRACE_API_KEY,
+      polygon: POLYGONSCAN_API_KEY,
     }
   },
 

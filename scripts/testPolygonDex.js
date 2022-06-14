@@ -6,7 +6,7 @@ const { BigVal, toMinStr } = require('bigval')
 const ERC20_ABI = require('../abi/ERC20.json')
 const { contracts } = require('../dist')
 
-const mnemonic = process.env.MNEMONIC
+const { MNEMONIC } = require('dotenv').config().parsed
 
 const ADDRESS_USDC = '0x2791bca1f2de4661ed88a30c99a7a9449aa84174'
 const ADDRESS_WMATIC = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270'
@@ -72,7 +72,7 @@ const gas = {
 
 const run = async () => {
   const provider = ethers.providers.getDefaultProvider('https://polygon-rpc.com/')
-  const wallet = ethers.Wallet.fromMnemonic(mnemonic).connect(provider)
+  const wallet = ethers.Wallet.fromMnemonic(MNEMONIC).connect(provider)
 
   console.log(`Account: ${wallet.address}`)
 

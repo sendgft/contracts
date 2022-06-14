@@ -28,9 +28,11 @@
     "setup-deploy-config:local": "./scripts/setupDeployConfig.js --network=localhost",
     "setup-deploy-config:goerli": "./scripts/setupDeployConfig.js --network=goerli",
     "setup-deploy-config:avalanche": "./scripts/setupDeployConfig.js --network=avalanche",
+    "setup-deploy-config:polygon": "./scripts/setupDeployConfig.js --network=polygon",
     "deploy:local": "yarn hardhat run --network localhost ./deploy",
     "deploy:goerli": "yarn hardhat run --network goerli ./deploy",
     "deploy:avalanche": "yarn hardhat run --network avalanche ./deploy",
+    "deploy:polygon": "yarn hardhat run --network polygon ./deploy",
     "release": "tsc && semantic-release",
     "lint": "solhint --config ./.solhint.json contracts/**/*.sol"
   },

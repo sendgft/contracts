@@ -32,6 +32,7 @@ async function main() {
     case 'goerli':
       releaseInfo.deployDummyTokens = true
     case 'avalanche':
+    case 'polygon':
       releaseInfo.verifyOnEtherscan = true
       releaseInfo.ipfs = {
         api: `pinata://${PINATA_API_KEY}:${PINATA_SECRET}`,

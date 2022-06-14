@@ -12,6 +12,7 @@ import {
   deployDummyDex,
   deployIpfsAssets,
   deployAvaxDex,
+  deployPolygonDex,
 } from './modules'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
@@ -85,6 +86,11 @@ async function main() {
         new ethers.Contract('0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', ERC20_ABI, defaultSigner) // USDC.e
       ])
       break
+    case 'polygon':
+      tokens = tokens.concat([
+        new ethers.Contract('0x2791bca1f2de4661ed88a30c99a7a9449aa84174', ERC20_ABI, defaultSigner) // USDC
+      ])
+      break
     default:
       // do nothing
   }
@@ -95,7 +101,10 @@ async function main() {
     case 'avalanche':
       dex = await deployAvaxDex(ctx)
       break
-      default:
+    case 'polygon':
+      dex = await deployPolygonDex(ctx)
+      break
+    default:
       dex = await deployDummyDex(ctx, { tokens })
   }
 
