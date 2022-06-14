@@ -48,6 +48,8 @@ export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }
       })
 
       deployedAddressesToSave.Gifter = diamond.address
+    } else {
+      diamond = await getContractAt('Gifter', deployedAddressesToSave.Gifter)
     }
 
     let facets: Record<string, Contract> = {}
@@ -61,6 +63,8 @@ export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }
 
       await task.log(`Deployed at ${Object.values(facets).map(f => f.address).join(', ')}`)
     })
+
+    await delay(5000) // wait a bit for endpoint to catch-up
 
     await parentTask.task('Upgrade diamond with facets', async task => {
       const facetCuts = Object.values(facets).map(f => ({

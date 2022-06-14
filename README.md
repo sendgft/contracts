@@ -26,7 +26,7 @@ const ethers = require('ethers')
 const { contracts, addresses } = require('@sendgft/contracts')
 
 const contract = new ethers.Contract(
-  addresses.Gifter.chains[4].address, // rinkeby
+  addresses.Gifter.chains[5].address, // goerli
   contracts.IMaster.abi
 )
 ```
@@ -117,14 +117,14 @@ export PINATA_API_KEY="..."
 export PINATA_SECRET="..."
 ```
 
-**Rinkeby**
+**Goerli testnet**
 
 ```shell
-yarn setup-deploy-config:rinkeby
-yarn deploy:rinkeby
+yarn setup-deploy-config:goerli
+yarn deploy:goerli
 ```
 
-**Avalanche (mainnet)**
+**Avalanche mainnet**
 
 ```shell
 yarn setup-deploy-config:avax

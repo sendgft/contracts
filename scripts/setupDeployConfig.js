@@ -24,7 +24,7 @@ async function main() {
       api = 'http://127.0.0.1:5001/api/v0'
       gateway = 'http://127.0.0.1:5002/ipfs/'
       break
-    case 'rinkeby':
+    case 'goerli':
     case 'avax':
       api = `pinata://${PINATA_API_KEY}:${PINATA_SECRET}`,
       gateway = 'https://ipfs.gft.xyz/ipfs/'
@@ -35,7 +35,7 @@ async function main() {
 
   const releaseInfo = {
     network: argv.network,
-    deployDummyTokens: (['localhost', 'rinkeby'].includes(argv.network)),
+    deployDummyTokens: (['localhost', 'goerli'].includes(argv.network)),
     ipfs: {
       api,
       gateway,
@@ -44,6 +44,10 @@ async function main() {
 
   if (argv.network === 'localhost') {
     releaseInfo.isLocalDevnet = true
+  }
+
+  if (argv.network === 'goerli') {
+    releaseInfo.verifyOnEtherscan = true
   }
 
   fs.writeFileSync(deployConfigFile, JSON.stringify(releaseInfo, null, 2), 'utf8')

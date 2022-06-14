@@ -45,18 +45,9 @@ async function main() {
 
   console.log(`Deploying from: ${defaultSigner.address}`)
 
-  await log.task(`Deployment process`, async task => {
+  await log.task(`Check balance`, async task => {
     const bal = (await getBalance(defaultSigner.address)).toCoinScale()
-
     await task.log(`Balance ${bal.toString()} ETH`)
-
-    if (bal.lt(1)) {
-      await task.log(`Topping up balance from ${signers[0].address} ...`)
-
-      await fundAddress(defaultSigner.address, new BigVal(1, 'coins').sub(bal).toMinScale().toString())
-
-      await task.log(`... topped up!`)
-    }
   })
 
   const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, log)
@@ -119,20 +110,22 @@ async function main() {
   }
   
   // let's verify contract on etherscan
-  if (network.name === 'rinkeby') {
+  if (deployConfig.verifyOnEtherscan) {
     await log.task('Verify contracts on Etherscan', async task => {
       const secondsToWait = 60
       await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
       await delay(secondsToWait * 1000)
 
-      const toVerify = [
-        {
+      const toVerify = []
+
+      if (gifter.diamondConstructorArgs.length) {
+        toVerify.push({
           contract: 'contracts/Gifter.sol:Gifter',
           address: gifter.diamond.address,
           constructorArgs: gifter.diamondConstructorArgs,
-        }
-      ]
-
+        })
+      }
+      
       // const contractFiles = glob.sync(path.join(contractsFolder, '**/*.sol'))
 
       // Object.keys(gifter.facets).forEach(facetName => {
