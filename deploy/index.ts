@@ -16,12 +16,10 @@ import {
 } from './modules'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
-import glob from 'glob'
 
 const ERC20_ABI = require('../abi/ERC20.json')
 const deployConfig = require('../deployConfig.json')
 
-const contractsFolder = path.join(__dirname, '..', 'contracts')
 const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
 const deployedAddresses = require(deployedAddressesJsonFilePath)
 
@@ -43,13 +41,7 @@ async function main() {
 
   const signers = await getSigners()
 
-  let defaultSigner: SignerWithAddress
-
-  if (deployConfig.isLocalDevnet) {
-    defaultSigner = signers[0]
-  } else {
-    defaultSigner = signers[10]
-  }
+  const defaultSigner: SignerWithAddress = signers[0]
 
   console.log(`Deploying from: ${defaultSigner.address}`)
 
