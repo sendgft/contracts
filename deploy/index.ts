@@ -110,14 +110,17 @@ async function main() {
   }
   
   // let's verify contracts on etherscan
-  if ((ctx.verifyOnBlockExplorer || []).length && deployConfig.verifyOnEtherscan) {
+  ctx.verifyOnBlockExplorer = ctx.verifyOnBlockExplorer || []
+  if (ctx.verifyOnBlockExplorer.length && deployConfig.verifyOnEtherscan) {
     await log.task('Verify contracts on Etherscan', async task => {
       const secondsToWait = 60
       await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
       await delay(secondsToWait * 1000)
 
-      await Promise.all(ctx.verifyOnBlockExplorer.map(a => (
-        verifyOnEtherscan({
+      for (let idx in ctx.verifyOnBlockExplorer!) {
+        const a = ctx.verifyOnBlockExplorer![idx]
+        await task.log(`Verifying ${idx + 1} of ${ctx.verifyOnBlockExplorer!.length}: ${a.name}`)
+        await verifyOnEtherscan({
           task,
           name: a.name,
           args: {
@@ -127,7 +130,7 @@ async function main() {
             constructorArguments: a.constructorArgs,
           },
         })
-      )))
+      }
     })
   }
 }
