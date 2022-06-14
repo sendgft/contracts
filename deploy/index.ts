@@ -46,7 +46,7 @@ async function main() {
 
   await log.task(`Check balance`, async task => {
     const bal = (await getBalance(defaultSigner.address)).toCoinScale()
-    await task.log(`Balance ${bal.toString()} ETH`)
+    await task.log(`Balance ${bal.toString()} ETH/native token`)
   })
 
   const getTxParams = await buildGetTxParamsHandler(network, defaultSigner, log)
@@ -80,7 +80,7 @@ async function main() {
   }
 
   switch (network.name) {
-    case 'avax':
+    case 'avalanche':
       tokens = tokens.concat([
         new ethers.Contract('0xa7d7079b0fead91f3e65f86e8915cb59c1a4c664', ERC20_ABI, defaultSigner) // USDC.e
       ])
@@ -92,7 +92,7 @@ async function main() {
   // dex 
   let dex
   switch (network.name) {
-    case 'avax':
+    case 'avalanche':
       dex = await deployAvaxDex(ctx)
       break
       default:
@@ -112,14 +112,14 @@ async function main() {
   // let's verify contracts on etherscan
   ctx.verifyOnBlockExplorer = ctx.verifyOnBlockExplorer || []
   if (ctx.verifyOnBlockExplorer.length && deployConfig.verifyOnEtherscan) {
-    await log.task('Verify contracts on Etherscan', async task => {
+    await log.task('Verify contracts on block explorer', async task => {
       const secondsToWait = 60
-      await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
+      await task.log(`Waiting ${secondsToWait} seconds for block explorer backend to catch up`)
       await delay(secondsToWait * 1000)
 
       for (let idx in ctx.verifyOnBlockExplorer!) {
         const a = ctx.verifyOnBlockExplorer![idx]
-        await task.log(`Verifying ${idx + 1} of ${ctx.verifyOnBlockExplorer!.length}: ${a.name}`)
+        await task.log(`Verifying ${(Number(idx) + 1)} of ${ctx.verifyOnBlockExplorer!.length}: ${a.name}`)
         await verifyOnEtherscan({
           task,
           name: a.name,

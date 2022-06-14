@@ -1,5 +1,5 @@
 export * from './dummy'
-export * from './avax'
+export * from './avalanche'
 export * from './polygon'
 export * from './ipfs'
 export * from './multicall'

@@ -1,12 +1,10 @@
-import DotEnv from 'dotenv'
-DotEnv.config() 
-
 import "@nomiclabs/hardhat-ethers"
 import "@nomiclabs/hardhat-truffle5"
 import "@nomiclabs/hardhat-etherscan"
 import 'solidity-coverage'
 import { HardhatUserConfig } from "hardhat/config"
 
+const { ETHERSCAN_API_KEY, SNOWTRACE_API_KEY, MNEMONIC, INFURA_ID } = require('dotenv').config().parsed
 const { TEST_MNEMONIC } = require('./src/constants')
 
 const config: HardhatUserConfig = {
@@ -37,17 +35,17 @@ const config: HardhatUserConfig = {
     },
     goerli: {
       chainId: 5,
-      url: `https://goerli.infura.io/v3/${process.env.INFURA_ID}`,
+      url: `https://goerli.infura.io/v3/${INFURA_ID}`,
       accounts: {
-        mnemonic: process.env.MNEMONIC,
+        mnemonic: MNEMONIC,
       },
       timeout: 120000,
     },
-    avax: {
+    avalanche: {
       chainId: 43114,
       url: `https://api.avax.network/ext/bc/C/rpc`,
       accounts: {
-        mnemonic: process.env.MNEMONIC,
+        mnemonic: MNEMONIC,
       },
       timeout: 120000,
     },
@@ -55,14 +53,17 @@ const config: HardhatUserConfig = {
       chainId: 137,
       url: `https://polygon-rpc.com/`,
       accounts: {
-        mnemonic: process.env.MNEMONIC,
+        mnemonic: MNEMONIC,
       },
       timeout: 120000,
     },
   },
 
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: {
+      goerli: ETHERSCAN_API_KEY,
+      avalanche: SNOWTRACE_API_KEY,
+    }
   },
 
   mocha: {

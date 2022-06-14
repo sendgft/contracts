@@ -108,15 +108,6 @@ We use the same wallet on every network to deploy from. Deployment always happen
 The deployment script will check to ensure that the wallet nonce is at the expected 
 number prior to deploying. Once the contracts are deployed on a given network, subsequent deployments will simply result in an upgrade call.
 
-Set up the env vars:
-
-```shell
-export MNEMONIC="..."
-export INFURA_ID="..."
-export PINATA_API_KEY="..."
-export PINATA_SECRET="..."
-```
-
 **Goerli testnet**
 
 ```shell
@@ -127,8 +118,8 @@ yarn deploy:goerli
 **Avalanche mainnet**
 
 ```shell
-yarn setup-deploy-config:avax
-yarn deploy:avax
+yarn setup-deploy-config:avalanche
+yarn deploy:avalanche
 ```
 
 **Publishing**

@@ -126,7 +126,7 @@ export const buildGetTxParamsHandler = async (network: any, signer: SignerWithAd
       case 'ethereum':
         gwei = await getLiveGasPrice(log)
         break
-      case 'avax':
+      case 'avalanche':
         gwei = 25
         break
       case 'polygon':
