@@ -4,7 +4,7 @@ import { createLog, deployContract, assertSameAddress, getContractAt, Context } 
 
 
 export const deployAvaxDex = async (ctx: Context = {} as Context) => {
-  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {} } = ctx
+  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {}, verifyOnBlockExplorer = [] } = ctx
 
   let dex: Contract = {} as Contract
 
@@ -23,6 +23,12 @@ export const deployAvaxDex = async (ctx: Context = {} as Context) => {
   } else {
     dex = await getContractAt('IDex', deployedAddressesToSave.Dex)
   }
+
+  verifyOnBlockExplorer.push({
+    name: 'contracts/AvaxDex.sol:AvaxDex',
+    address: dex.address,
+    constructorArgs: [],
+  })
 
   return dex
 }

@@ -21,6 +21,12 @@ export interface NetworkInfo {
 
 export type GetTxParamsHandler = (a: object) => object
 
+export interface VerifyAddressParams {
+  name: string,
+  address: string,
+  constructorArgs: any[],
+}
+
 export interface Context {
   signers: SignerWithAddress[],
   defaultSigner: SignerWithAddress,
@@ -30,6 +36,7 @@ export interface Context {
   deployConfig: any,
   expectedDeployedAddresses?: Record<string, string>,
   deployedAddressesToSave?: any,
+  verifyOnBlockExplorer?: VerifyAddressParams[],
   cids?: any,
 }
 

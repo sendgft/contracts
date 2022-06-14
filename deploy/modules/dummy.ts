@@ -6,7 +6,7 @@ import { ADDRESS_ZERO, DEFAULT_WALLETS } from '../../src/constants'
 
 
 export const deployDummyTokens = async (ctx: Context = {} as Context) => {
-  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {}} = ctx
+  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {}, verifyOnBlockExplorer = []} = ctx
 
   const tokens: Contract[] = []
 
@@ -16,15 +16,16 @@ export const deployDummyTokens = async (ctx: Context = {} as Context) => {
     let token: Contract = {} as Contract
 
     await log.task(`Setup ERC-20: ${symbol}`, async parentTask => {
-      if (!deployedAddressesToSave[symbol]) {
+      const constructorArgs: any[] = [
+        `GFT Dummy Token ${i + 1}`,
+        symbol,
+        18,
+        0,
+      ]
 
+      if (!deployedAddressesToSave[symbol]) {
         await parentTask.task(`Deploy token contract`, async task => {
-          token = await deployContract(ctx, 'DummyToken', [
-            `GFT Dummy Token ${i + 1}`,
-            symbol,
-            18,
-            0,
-          ])
+          token = await deployContract(ctx, 'DummyToken', constructorArgs)
 
           await task.log(`Deployed at ${token.address}`)
 
@@ -37,6 +38,12 @@ export const deployDummyTokens = async (ctx: Context = {} as Context) => {
       } else {
         token = await getContractAt('DummyToken', deployedAddressesToSave[symbol])
       }
+
+      verifyOnBlockExplorer.push({
+        name: 'contracts/DummyToken.sol:DummyToken',
+        address: token.address,
+        constructorArgs,
+      })
 
       await parentTask.task(`Mint balances`, async task => {
         const wallets = Object.values(DEFAULT_WALLETS)
@@ -61,22 +68,31 @@ interface DeployDummyDexParams {
 }
 
 export const deployDummyDex = async (ctx: Context = {} as Context, params?: DeployDummyDexParams) => {
-  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {} } = ctx
+  const { log = createLog(), expectedDeployedAddresses, deployedAddressesToSave = {}, verifyOnBlockExplorer = [] } = ctx
 
   const { tokens = [] } = params || {}
 
   let dex: Contract = {} as Contract
 
   await log.task(`Deploy Dummy DEX`, async parentTask => {
-    dex = await deployContract(ctx, 'DummyDex', [])
+    if (!deployedAddressesToSave.Dex) {
+      dex = await deployContract(ctx, 'DummyDex', [])
+      await parentTask.log(`Deployed at ${dex.address}`)
 
-    await parentTask.log(`Deployed at ${dex.address}`)
+      if (expectedDeployedAddresses) {
+        assertSameAddress(dex.address, expectedDeployedAddresses.Dex, 'Dex')
+      }
 
-    if (expectedDeployedAddresses) {
-      assertSameAddress(dex.address, expectedDeployedAddresses.Dex, 'Dex')
+      deployedAddressesToSave.Dex = dex.address
+    } else {
+      dex = await getContractAt('DummyDex', deployedAddressesToSave.Dex)
     }
 
-    deployedAddressesToSave.Dex = dex.address
+    verifyOnBlockExplorer.push({
+      name: 'contracts/DummyDex.sol:DummyDex',
+      address: dex.address,
+      constructorArgs: [],
+    })
 
     for (let token of tokens) {
       const tokenName = await token.symbol()

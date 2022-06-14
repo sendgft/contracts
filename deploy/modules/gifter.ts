@@ -23,7 +23,7 @@ interface GifterDeployment {
 const CARD_PRICE_STR = '5 coins'
 
 export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }: DeployerGifterArgs): Promise<GifterDeployment> => {
-  const { log = createLog(), defaultSigner, deployedAddressesToSave = {}, expectedDeployedAddresses } = ctx
+  const { log = createLog(), defaultSigner, deployedAddressesToSave = {}, expectedDeployedAddresses, verifyOnBlockExplorer = [] } = ctx
 
   return await log.task(`Deploy Gifter`, async parentTask => {
     let diamond: Contract = {} as Contract
@@ -35,6 +35,12 @@ export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }
       await parentTask.task('Deploy DiamondCut facet', async task => {
         diamondCutFacet = await deployContract(ctx, 'DiamondCutFacet', [])
         await task.log(`Deployed at ${diamondCutFacet.address}`)
+
+        verifyOnBlockExplorer.push({
+          name: 'contracts/diamond/facets/DiamondCutFacet.sol:DiamondCutFacet',
+          address: diamondCutFacet.address,
+          constructorArgs: [],
+        })
       })
 
       await parentTask.task('Deploy Diamond contract', async task => {
@@ -45,6 +51,12 @@ export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }
         if (expectedDeployedAddresses) {
           assertSameAddress(diamond.address, expectedDeployedAddresses.Gifter, 'Gifter')
         }
+
+        verifyOnBlockExplorer.push({
+          name: 'contracts/Gifter.sol:Gifter',
+          address: diamond.address,
+          constructorArgs: diamondConstructorArgs,
+        })
       })
 
       deployedAddressesToSave.Gifter = diamond.address
@@ -57,8 +69,15 @@ export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }
     await parentTask.task('Deploy facets', async task => {
       const facetNames = ['OwnershipFacet', 'ERC1155Facet', 'TokenQueryFacet', 'CardMarketFacet', 'GifterFacet']
       const fd = await Promise.all(facetNames.map(f => deployContract(ctx, f, [])))
+
       facetNames.forEach((f, idx) => {
         facets[f] = fd[idx]
+
+        verifyOnBlockExplorer.push({
+          name: f === 'OwnershipFacet' ? 'contracts/diamond/facets/OwnershipFacet.sol:OwnershipFacet' : `contracts/${f}.sol:${f}`,
+          address: facets[f].address,
+          constructorArgs: [],
+        })
       })
 
       await task.log(`Deployed at ${Object.values(facets).map(f => f.address).join(', ')}`)

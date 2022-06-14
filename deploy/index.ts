@@ -1,11 +1,10 @@
 import _ from 'lodash'
 import { ethers } from 'hardhat'
-import glob from 'glob'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
 
-import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance, Context } from './utils'
+import { createLog, getMatchingNetwork, buildGetTxParamsHandler, getSigners, verifyOnEtherscan, fundAddress, getBalance, Context, VerifyAddressParams } from './utils'
 import { 
   deployGifter, 
   deployMulticall, 
@@ -20,7 +19,6 @@ import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
 const ERC20_ABI = require('../abi/ERC20.json')
 const deployConfig = require('../deployConfig.json')
 
-const contractsFolder = path.join(__dirname, '..', 'contracts')
 const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
 const deployedAddresses = require(deployedAddressesJsonFilePath)
 
@@ -64,6 +62,7 @@ async function main() {
     deployConfig,
     expectedDeployedAddresses: deployConfig.isLocalDevnet ? LOCAL_DEVNET_ADDRESSES : undefined,
     deployedAddressesToSave: deployedAddresses[network.id],
+    verifyOnBlockExplorer: [],
   }
 
   // ipfs
@@ -110,51 +109,25 @@ async function main() {
     })
   }
   
-  // let's verify contract on etherscan
-  if (deployConfig.verifyOnEtherscan) {
+  // let's verify contracts on etherscan
+  if ((ctx.verifyOnBlockExplorer || []).length && deployConfig.verifyOnEtherscan) {
     await log.task('Verify contracts on Etherscan', async task => {
       const secondsToWait = 60
       await task.log(`Waiting ${secondsToWait} seconds for Etherscan backend to catch up`)
       await delay(secondsToWait * 1000)
 
-      const toVerify = []
-
-      if (gifter.diamondConstructorArgs.length) {
-        toVerify.push({
-          contract: 'contracts/Gifter.sol:Gifter',
-          address: gifter.diamond.address,
-          constructorArgs: gifter.diamondConstructorArgs,
+      await Promise.all(ctx.verifyOnBlockExplorer.map(a => (
+        verifyOnEtherscan({
+          task,
+          name: a.name,
+          args: {
+            contract: a.name,
+            network: network.name,
+            address: a.address,
+            constructorArguments: a.constructorArgs,
+          },
         })
-      }
-      
-      const contractFiles = glob.sync(path.join(contractsFolder, '**/*.sol'))
-
-      Object.keys(gifter.facets).forEach(facetName => {
-        const f = contractFiles.find(f => f.endsWith(`${facetName}.sol`))
-        if (!f) {
-          throw new Error(`File not found for: ${facetName}`)
-        }
-        const relPath = f.substring(f.indexOf('contracts/'))
-        console.log(relPath)
-        toVerify.push({
-          contract: `${relPath}:${facetName}`,
-          address: gifter.facets[facetName].contract.address,
-          constructorArgs: [],
-        })
-      })
-
-      // await Promise.all(toVerify.map(a => (
-      //   verifyOnEtherscan({
-      //     task,
-      //     name: a.contract,
-      //     args: {
-      //       contract: a.contract,
-      //       network: network.name,
-      //       address: a.address,
-      //       constructorArguments: a.constructorArgs,
-      //     },
-      //   })
-      // )))
+      )))
     })
   }
 }
