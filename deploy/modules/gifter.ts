@@ -53,11 +53,11 @@ export const deployGifter = async (ctx: Context = {} as Context, { dex, tokens }
     let facets: Record<string, Contract> = {}
 
     await parentTask.task('Deploy facets', async task => {
-      for (let fn of [
-        'OwnershipFacet', 'ERC1155Facet', 'TokenQueryFacet', 'CardMarketFacet', 'GifterFacet'
-      ]) {
-        facets[fn] = await deployContract(ctx, fn, [])
-      }
+      const facetNames = ['OwnershipFacet', 'ERC1155Facet', 'TokenQueryFacet', 'CardMarketFacet', 'GifterFacet']
+      const fd = await Promise.all(facetNames.map(f => deployContract(ctx, f, [])))
+      facetNames.forEach((f, idx) => {
+        facets[f] = fd[idx]
+      })
 
       await task.log(`Deployed at ${Object.values(facets).map(f => f.address).join(', ')}`)
     })
