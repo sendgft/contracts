@@ -584,12 +584,12 @@ describe('Gifter', () => {
       await _s1()
       const gift1 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 1)
       await gifter.totalSent(sender1).should.eventually.eq(1)
-      await gifter.sent(sender1, 0).should.eventually.eq(gift1.toString())
+      await gifter.sent(sender1, 1).should.eventually.eq(gift1.toString())
 
       await _s1()
       const gift2 = await tokenQuery.tokenOwnedByType(TOKEN_TYPE.GIFT, receiver1, 2)
       await gifter.totalSent(sender1).should.eventually.eq(2)
-      await gifter.sent(sender1, 1).should.eventually.eq(gift2.toString())
+      await gifter.sent(sender1, 2).should.eventually.eq(gift2.toString())
     })
   })
 

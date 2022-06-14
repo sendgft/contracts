@@ -142,8 +142,8 @@ contract GifterFacet is BasePlusFacet, IGifter, IERC721Receiver {
     _useCard(cardId, msg.value.sub(_params.weiValue));
 
     // update sender info
-    s.sentGift[sender][s.totalGiftsSent[sender]] = id;
     s.totalGiftsSent[sender] += 1;
+    s.sentGift[sender][s.totalGiftsSent[sender]] = id;
 
     // event
     emit Created(id, _params.message);
