@@ -143,6 +143,11 @@ Then run:
 yarn release
 ```
 
+**Git Subtree**
+
+Note that the `cards/**` folder contents are populated using `git subtree` and the following repos:
+  * `cards/cells-cat-card` = https://github.com/sendgft/cells-cat-card
+
 ## License
 
 MIT (see `LICENSE.md`)
