@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import { ethers } from 'hardhat'
-import { BigVal } from 'bigval'
+import glob from 'glob'
 import path from 'path'
 import fs from 'fs'
 import delay from 'delay'
@@ -20,6 +20,7 @@ import { LOCAL_DEVNET_ADDRESSES } from '../src/constants'
 const ERC20_ABI = require('../abi/ERC20.json')
 const deployConfig = require('../deployConfig.json')
 
+const contractsFolder = path.join(__dirname, '..', 'contracts')
 const deployedAddressesJsonFilePath = path.join(__dirname, '..', 'deployedAddresses.json')
 const deployedAddresses = require(deployedAddressesJsonFilePath)
 
@@ -126,33 +127,34 @@ async function main() {
         })
       }
       
-      // const contractFiles = glob.sync(path.join(contractsFolder, '**/*.sol'))
+      const contractFiles = glob.sync(path.join(contractsFolder, '**/*.sol'))
 
-      // Object.keys(gifter.facets).forEach(facetName => {
-      //   const f = contractFiles.find(f => f.endsWith(`${facetName}.sol`))
-      //   if (!f) {
-      //     throw new Error(`File not found for: ${facetName}`)
-      //   }
-      //   const relPath = f.substring(f.indexOf('contracts/'))
-      //   toVerify.push({
-      //     contract: `${relPath}:${facetName}`,
-      //     address: gifter.facets[facetName].contract.address,
-      //     constructorArgs: [],
-      //   })
-      // })
-
-      await Promise.all(toVerify.map(a => (
-        verifyOnEtherscan({
-          task,
-          name: a.contract,
-          args: {
-            contract: a.contract,
-            network: network.name,
-            address: a.address,
-            constructorArguments: a.constructorArgs,
-          },
+      Object.keys(gifter.facets).forEach(facetName => {
+        const f = contractFiles.find(f => f.endsWith(`${facetName}.sol`))
+        if (!f) {
+          throw new Error(`File not found for: ${facetName}`)
+        }
+        const relPath = f.substring(f.indexOf('contracts/'))
+        console.log(relPath)
+        toVerify.push({
+          contract: `${relPath}:${facetName}`,
+          address: gifter.facets[facetName].contract.address,
+          constructorArgs: [],
         })
-      )))
+      })
+
+      // await Promise.all(toVerify.map(a => (
+      //   verifyOnEtherscan({
+      //     task,
+      //     name: a.contract,
+      //     args: {
+      //       contract: a.contract,
+      //       network: network.name,
+      //       address: a.address,
+      //       constructorArguments: a.constructorArgs,
+      //     },
+      //   })
+      // )))
     })
   }
 }

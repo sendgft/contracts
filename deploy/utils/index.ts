@@ -122,6 +122,9 @@ export const buildGetTxParamsHandler = async (network: any, signer: SignerWithAd
       case 'avax':
         gwei = 25
         break
+      case 'polygon':
+        gwei = 50
+        break
       default:
         gwei = 3
     }

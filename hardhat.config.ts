@@ -51,6 +51,14 @@ const config: HardhatUserConfig = {
       },
       timeout: 120000,
     },
+    polygon: {
+      chainId: 137,
+      url: `https://polygon-rpc.com/`,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+      },
+      timeout: 120000,
+    },
   },
 
   etherscan: {

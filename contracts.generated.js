@@ -25,6 +25,8 @@ module.exports = {
 "TestFacet1": require("./artifacts/contracts/test/TestFacet1.sol/TestFacet1.json"),
 "TestFacet2": require("./artifacts/contracts/test/TestFacet2.sol/TestFacet2.json"),
 "TokenQueryFacet": require("./artifacts/contracts/TokenQueryFacet.sol/TokenQueryFacet.json"),
+"IUniswapV2Router02": require("./artifacts/contracts/UniswapV2Dex.sol/IUniswapV2Router02.json"),
+"UniswapV2Dex": require("./artifacts/contracts/UniswapV2Dex.sol/UniswapV2Dex.json"),
 "CustomIERC1155": require("./artifacts/contracts/utils/CustomIERC1155.sol/CustomIERC1155.json"),
 "CustomIERC1155MetadataURI": require("./artifacts/contracts/utils/CustomIERC1155MetadataURI.sol/CustomIERC1155MetadataURI.json"),
 "IERC20": require("./artifacts/contracts/utils/IERC20.sol/IERC20.json"),
