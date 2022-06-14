@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/sendgft/contracts/compare/v1.30.1...v1.31.0) (2022-06-14)
+
+
+### Features
+
+* switch from rinkeby to goerli ([df646e2](https://github.com/sendgft/contracts/commit/df646e2002a9afa84ba3884dcd10d0aac12318d5))
+
 ## [1.30.1](https://github.com/sendgft/contracts/compare/v1.30.0...v1.30.1) (2022-06-14)
 
 # [1.30.0](https://github.com/sendgft/contracts/compare/v1.29.0...v1.30.0) (2022-06-14)
